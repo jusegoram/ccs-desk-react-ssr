@@ -1,0 +1,105 @@
+import APIModel from 'server/api/util/APIModel'
+import { QueryBuilder } from 'objection'
+import { GraphQLString } from 'graphql'
+import axios from 'axios'
+import ExpectedError from 'server/errors/ExpectedError'
+
+export default class Geography extends APIModel {
+  static knexCreateTable = `
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.string('type').notNullable()
+    table.string('externalId')
+    table.string('name')
+    table.string('streetAddress')
+    table.string('zipcode')
+    table.string('city')
+    table.string('state')
+    table.string('country')
+    table.text('polygonKml')
+    table.specificType('polygon', 'geography(MULTIPOLYGON, 4326)').index()
+    table.float('radius')
+    table.decimal('latitude', 10, 7)
+    table.decimal('longitude', 10, 7)
+    table.specificType('point', 'geography(POINT, 4326)').index()
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+    table.index(['type', 'externalId'])
+  `
+
+  static jsonSchema = {
+    title: 'Region',
+    description: 'A region of the world',
+    type: 'object',
+
+    properties: {
+      id: { type: 'string' },
+      type: { type: 'string' },
+      externalId: { type: ['string', 'null'] },
+      name: { type: ['string', 'null'] },
+      streetAddress: { type: ['string', 'null'] },
+      zipcode: { type: ['string', 'null'] },
+      city: { type: ['string', 'null'] },
+      state: { type: ['string', 'null'] },
+      country: { type: ['string', 'null'] },
+      radius: { type: ['number', 'null'] },
+      latitude: { type: ['number', 'null'] },
+      longitude: { type: ['number', 'null'] },
+      polygonKml: { type: ['string', 'null'] },
+      createdAt: { type: 'string', format: 'date-time' },
+      updatedAt: { type: 'string', format: 'date-time' },
+    },
+  }
+
+  static visible = [
+    'id',
+    'type',
+    'externalId',
+    'name',
+    'polygonKml',
+    'radius',
+    'streetAddress',
+    'zipcode',
+    'city',
+    'state',
+    'country',
+  ]
+
+  static get QueryBuilder() {
+    return class extends QueryBuilder {
+      _contextFilter() {
+        this.whereRaw('FALSE')
+      }
+    }
+  }
+
+  static get relationMappings() {
+    return {}
+  }
+
+  static get mutations() {
+    return {
+      geocode: {
+        description: 'turn an address into a lat/long',
+        type: this.GraphqlTypes.Geography,
+        args: {
+          address: { type: GraphQLString },
+        },
+        resolve: async (root, { address }) => {
+          const encodedAddress = encodeURIComponent(address)
+          const result = await axios.get(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`
+          )
+          if (result.status !== 200) {
+            throw new ExpectedError('We were unable to convert that address into a latitude/longitude pair.')
+          }
+          const { lat, lng } = result.data.results[0].geometry.location
+          return {
+            id: '00000000-0000-0000-0000-000000000000',
+            latitude: lat,
+            longitude: lng,
+          }
+        },
+      },
+    }
+  }
+}
