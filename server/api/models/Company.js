@@ -39,6 +39,14 @@ export default class Company extends APIModel {
           to: 'Employee.companyId',
         },
       },
+      vehicles: {
+        relation: Model.HasManyRelation,
+        modelClass: 'Vehicle',
+        join: {
+          from: 'Company.id',
+          to: 'Vehicle.companyId',
+        },
+      },
     }
   }
 }

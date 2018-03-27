@@ -33,15 +33,6 @@ const graphqlSchema = graphQlBuilder()
       },
     },
   }
-  if (modelClass === models.WorkOrder) {
-    args.near = {
-      type: new GraphQLList(GraphQLFloat),
-      query: async (query, value) => {
-        const [lat, lng, radius] = value
-        return query.near({ lat, lng, radius })
-      },
-    }
-  }
   return args
 })
 .build()
@@ -58,12 +49,12 @@ export default async app => {
           console.log(process.env.JWT_SECRET)
           const jwtPayload = jwt.verify(token, process.env.JWT_SECRET)
           session = await models.Session.query()
-          .eager('account.permissions.workForces')
+          .eager('account')
           .findById(jwtPayload.sessionId)
         }
       } catch (e) {
         session = null
-        res.cookie('token', '')
+        // res.cookie('token', '')
         console.error(e) // eslint-disable-line no-console
       }
       if (req.headers.root === 'ASDF') session = undefined

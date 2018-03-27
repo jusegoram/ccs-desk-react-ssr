@@ -8,6 +8,8 @@ export function up(knex) {
     table.string('name').notNullable()
     table.string('email').notNullable()
     table.string('password').notNullable()
+    table.boolean('root').defaultTo(false).notNullable()
+    table.uuid('employeeId')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -27,8 +29,16 @@ export function up(knex) {
     table.string('phoneNumber')
     table.string('email')
     table.uuid('dataSourceId')
+    table.uuid('currentTimecardId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
+  .createTable('FormTemplate', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.string('name').notNullable()
+    table.jsonb('questions').notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -71,7 +81,17 @@ export function up(knex) {
     // <custom>
     table.timestamp('expiresAt').defaultTo(knex.fn.now())
     table.uuid('accountId')
+    table.string('token')
     // </custom>
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
+  .createTable('Timecard', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.timestamp('deletedAt').index()
+    table.uuid('employeeId').notNullable()
+    table.string('action').notNullable()
+    table.timestamp('timestamp').notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -93,8 +113,12 @@ export function up(knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
+  .alterTable('Account', table => {
+    table.foreign('employeeId').references('Employee.id')
+  })
   .alterTable('Employee', table => {
     table.foreign('companyId').references('Company.id')
+    table.foreign('currentTimecardId').references('Timecard.id')
   })
   .alterTable('Invite', table => {
     table.foreign('senderId').references('Account.id')
@@ -102,6 +126,9 @@ export function up(knex) {
   })
   .alterTable('Session', table => {
     table.foreign('accountId').references('Account.id')
+  })
+  .alterTable('Timecard', table => {
+    table.foreign('employeeId').references('Employee.id')
   })
   .alterTable('Vehicle', table => {
     table.foreign('companyId').references('Company.id')

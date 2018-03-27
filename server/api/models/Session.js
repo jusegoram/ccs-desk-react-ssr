@@ -11,6 +11,7 @@ export default class Session extends APIModel {
     // <custom>
     table.timestamp('expiresAt').defaultTo(knex.fn.now())
     table.uuid('accountId')
+    table.string('token')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -26,6 +27,7 @@ export default class Session extends APIModel {
 
     properties: {
       id: { type: 'string' },
+      token: { type: 'string' },
       accountId: { type: 'string' },
       expiresAt: { type: 'string', format: 'date-time' },
       createdAt: { type: 'string', format: 'date-time' },
@@ -34,7 +36,7 @@ export default class Session extends APIModel {
     },
   }
 
-  static visible = ['id', 'expiresAt', 'account']
+  static visible = ['id', 'token', 'expiresAt', 'account']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
