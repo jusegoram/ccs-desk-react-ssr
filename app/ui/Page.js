@@ -17,7 +17,7 @@ const Page = withApolloProvider(
     React.Children.only(
       <div>
         <Head>
-          <title>CCS Desk{title && ` | ${title}`}</title>
+          <title>Endeavor Fleet{title && ` | ${title}`}</title>
           <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico" />
           <link rel="stylesheet" href="/static/index.fonts.css" />
           <link rel="stylesheet" href="/static/index.styles.css" />

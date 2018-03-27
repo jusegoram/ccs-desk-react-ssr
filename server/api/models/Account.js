@@ -13,9 +13,14 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
     table.string('name').notNullable()
     table.string('email').notNullable()
     table.string('password').notNullable()
+    table.boolean('root').defaultTo(false).notNullable()
+    table.uuid('employeeId')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  `
+  static knexAlterTable = `
+    table.foreign('employeeId').references('Employee.id')
   `
 
   static jsonSchema = {
@@ -28,13 +33,14 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
       name: { type: 'string' },
       email: { type: 'string' },
       password: { type: 'string' },
+      root: { type: 'boolean' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
       deletedAt: { type: ['string', 'null'], format: 'date-time' },
     },
   }
 
-  static visible = ['id', 'name', 'email']
+  static visible = ['id', 'name', 'email', 'token', 'root', 'employee']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -54,6 +60,14 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
         join: {
           from: 'Account.id',
           to: 'Session.accountId',
+        },
+      },
+      employee: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: 'Employee',
+        join: {
+          from: 'Account.employeeId',
+          to: 'Employee.id',
         },
       },
     }
@@ -80,6 +94,7 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
           const tokenPayload = { sessionId: session.id }
           const expiresIn = 2 * 60 * 60 // 2 hours in seconds
           const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn })
+          session.token = token
           res.cookie('token', token)
           return session
         },

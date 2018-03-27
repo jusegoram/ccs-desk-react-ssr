@@ -7,7 +7,7 @@ class Dashboard extends React.Component {
   render() {
     return (
       <Page title="Dashboard" location={this.props.location}>
-        <Layout>Welcome to CCS Desk. Use the navbar on the left to navigate.</Layout>
+        <Layout>Welcome to Endeavor Fleet. Use the navbar on the left to navigate.</Layout>
       </Page>
     )
   }

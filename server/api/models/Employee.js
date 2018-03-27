@@ -11,6 +11,7 @@ export default class Employee extends APIModel {
     table.string('phoneNumber')
     table.string('email')
     table.uuid('dataSourceId')
+    table.uuid('currentTimecardId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
@@ -18,6 +19,7 @@ export default class Employee extends APIModel {
   `
   static knexAlterTable = `
     table.foreign('companyId').references('Company.id')
+    table.foreign('currentTimecardId').references('Timecard.id')
   `
   static jsonSchema = {
     title: 'Employee',
@@ -30,13 +32,14 @@ export default class Employee extends APIModel {
       externalId: { type: 'string' },
       phoneNumber: { type: 'string' },
       email: { type: 'string' },
+      state: { type: 'string' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
       terminatedAt: { type: ['string', 'null'], format: 'date-time' },
     },
   }
 
-  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'workForces']
+  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'timecard']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -54,6 +57,22 @@ export default class Employee extends APIModel {
         join: {
           from: 'Employee.companyId',
           to: 'Company.id',
+        },
+      },
+      account: {
+        relation: Model.HasOneRelation,
+        modelClass: 'Account',
+        join: {
+          from: 'Employee.id',
+          to: 'Account.employeeId',
+        },
+      },
+      currentTimecard: {
+        relation: Model.HasOneRelation,
+        modelClass: 'Timecard',
+        join: {
+          from: 'Employee.currentTimecardId',
+          to: 'Timecard.id',
         },
       },
     }
