@@ -78,93 +78,93 @@ export default class Invite extends APIModel {
   }
   static get mutations() {
     return {
-      create: {
-        description: 'create invite',
-        type: this.GraphqlTypes.Invite,
-        args: {
-          recipient: { type: GraphQLString },
-          recipientName: { type: GraphQLString },
-          permissions: { type: new GraphQLList(this.GraphqlTypes.PermissionInput) },
-        },
-        resolve: async (root, { recipient, recipientName, permissions }, { session }) => {
-          // Validate request
-          if (!session) throw new ExpectedError("You aren't allowed to do that")
-          permissions.forEach(permission => {
-            let validPermission = false
-            session.account.permissions.forEach(userPermission => {
-              if (_.isMatch(permission, _.pickBy(_.pick(userPermission, 'companyId', 'officeId', 'teamId'))))
-                validPermission = true
-            })
-            if (!validPermission)
-              throw new ExpectedError(
-                'You cannot create an account with more permissions than you have. ' +
-                  'Ensure that all provided permissions are at least as specific as one of yours.'
-              )
-          })
-          // Create invite/account/permissions
-          const { Account, Permission } = require('./index')
-          const existingAccount = await Account.query()
-          .where({ email: recipient })
-          .pick(['id'])
-          .first()
-          if (existingAccount) await existingAccount.$loadRelated('owner')
-          const invite = await Invite.query()
-          .upsertGraph(
-            {
-              sender: { '#dbRef': session.account.id },
-              recipient: {
-                ...(existingAccount || {}),
-                email: recipient,
-                owner: {
-                  name: _.get(existingAccount, 'owner.name') || recipientName,
-                  role: 'user',
-                },
-              },
-            },
-            {
-              relate: true,
-            }
-          )
-          .returning('*')
-          await invite.$loadRelated('[sender.owner, recipient.owner]')
-          await Permission.query().upsertGraph(
-            permissions.map(permission => ({
-              ...permission,
-              account: { '#dbRef': invite.recipient.id },
-            }))
-          )
-          // Send invite email
-          const subject = `${session.account.owner.name} has invited you to CCS Desk`
-          const html = inviteEmail({ invite })
-          sendEmail({ recipient, subject, html })
-          // Mark invite as sent
-          await invite
-          .$query()
-          .patch({ status: 'Sent' })
-          .returning('*')
-          console.log(invite)
-          return invite
-        },
-      },
-      accept: {
-        description: 'accept invite',
-        type: this.GraphqlTypes.Invite,
-        args: {
-          token: { type: GraphQLString },
-          password: { type: GraphQLString },
-        },
-        resolve: async (root, { token, password }) => {
-          // Validate request
-          const invite = await Invite.query()
-          .where({ token: token })
-          .first()
-          if (!invite) throw new ExpectedError('Your invitation is no longer valid')
-          await invite.$loadRelated('recipient')
-          await invite.recipient.$query().patch({ password: password })
-          await invite.$query().patch({ status: 'Accepted', token: null })
-          return invite
-        },
-      },
+      // create: {
+      //   description: 'create invite',
+      //   type: this.GraphqlTypes.Invite,
+      //   args: {
+      //     recipient: { type: GraphQLString },
+      //     recipientName: { type: GraphQLString },
+      //     permissions: { type: new GraphQLList(this.GraphqlTypes.PermissionInput) },
+      //   },
+      //   resolve: async (root, { recipient, recipientName, permissions }, { session }) => {
+      //     // Validate request
+      //     if (!session) throw new ExpectedError("You aren't allowed to do that")
+      //     permissions.forEach(permission => {
+      //       let validPermission = false
+      //       session.account.permissions.forEach(userPermission => {
+      //         if (_.isMatch(permission, _.pickBy(_.pick(userPermission, 'companyId', 'officeId', 'teamId'))))
+      //           validPermission = true
+      //       })
+      //       if (!validPermission)
+      //         throw new ExpectedError(
+      //           'You cannot create an account with more permissions than you have. ' +
+      //             'Ensure that all provided permissions are at least as specific as one of yours.'
+      //         )
+      //     })
+      //     // Create invite/account/permissions
+      //     const { Account, Permission } = require('./index')
+      //     const existingAccount = await Account.query()
+      //     .where({ email: recipient })
+      //     .pick(['id'])
+      //     .first()
+      //     if (existingAccount) await existingAccount.$loadRelated('owner')
+      //     const invite = await Invite.query()
+      //     .upsertGraph(
+      //       {
+      //         sender: { '#dbRef': session.account.id },
+      //         recipient: {
+      //           ...(existingAccount || {}),
+      //           email: recipient,
+      //           owner: {
+      //             name: _.get(existingAccount, 'owner.name') || recipientName,
+      //             role: 'user',
+      //           },
+      //         },
+      //       },
+      //       {
+      //         relate: true,
+      //       }
+      //     )
+      //     .returning('*')
+      //     await invite.$loadRelated('[sender.owner, recipient.owner]')
+      //     await Permission.query().upsertGraph(
+      //       permissions.map(permission => ({
+      //         ...permission,
+      //         account: { '#dbRef': invite.recipient.id },
+      //       }))
+      //     )
+      //     // Send invite email
+      //     const subject = `${session.account.owner.name} has invited you to CCS Desk`
+      //     const html = inviteEmail({ invite })
+      //     sendEmail({ recipient, subject, html })
+      //     // Mark invite as sent
+      //     await invite
+      //     .$query()
+      //     .patch({ status: 'Sent' })
+      //     .returning('*')
+      //     console.log(invite)
+      //     return invite
+      //   },
+      // },
+      // accept: {
+      //   description: 'accept invite',
+      //   type: this.GraphqlTypes.Invite,
+      //   args: {
+      //     token: { type: GraphQLString },
+      //     password: { type: GraphQLString },
+      //   },
+      //   resolve: async (root, { token, password }) => {
+      //     // Validate request
+      //     const invite = await Invite.query()
+      //     .where({ token: token })
+      //     .first()
+      //     if (!invite) throw new ExpectedError('Your invitation is no longer valid')
+      //     await invite.$loadRelated('recipient')
+      //     await invite.recipient.$query().patch({ password: password })
+      //     await invite.$query().patch({ status: 'Accepted', token: null })
+      //     return invite
+      //   },
+      // },
     }
   }
 }
