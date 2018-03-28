@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken'
 import { GraphQLInt, GraphQLList, GraphQLFloat } from 'graphql'
 import axios from 'axios'
 import ExpectedError from 'server/errors/ExpectedError'
+import restRouter from 'server/api/restRouter'
 
 Model.knex(knex)
 
@@ -38,6 +39,7 @@ const graphqlSchema = graphQlBuilder()
 .build()
 
 export default async app => {
+  app.use('/api', restRouter)
   app.use(
     '/graphql',
     graphqlExpress(async (req, res) => {

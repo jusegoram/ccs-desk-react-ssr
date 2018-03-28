@@ -21,6 +21,17 @@ exports.seed = async function(knex) {
         },
       ],
       vehicles: [{ externalId: '1111' }, { externalId: '2222' }, { externalId: '3333' }],
+      reportTemplates: [
+        {
+          name: 'Vehicle Condition',
+          state: 'Template',
+          questions: [
+            { questionText: 'Trunk Number', answerType: 'image', order: 1 },
+            { questionText: 'Hood', answerType: 'image', order: 2 },
+            { questionText: 'Tire', answerType: 'image', order: 3 },
+          ],
+        },
+      ],
     },
   ])
   .returning('*')

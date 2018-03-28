@@ -35,13 +35,6 @@ export function up(knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
-  .createTable('FormTemplate', table => {
-    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.string('name').notNullable()
-    table.jsonb('questions').notNullable()
-    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
-    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
-  })
   .createTable('Geography', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.string('type').notNullable()
@@ -75,6 +68,29 @@ export function up(knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
+  .createTable('Report', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.timestamp('deletedAt')
+    table.uuid('creatorId')
+    table.uuid('companyId').notNullable()
+    table.string('name').notNullable()
+    table.string('state').defaultTo('Draft').notNullable()
+    table.timestamp('completedAt')
+    table.index(['name', 'state'])
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
+  .createTable('ReportQuestion', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.uuid('reportId').notNullable()
+    table.integer('order').defaultTo(0).notNullable()
+    table.text('questionText').notNullable()
+    table.string('answerType').notNullable()
+    table.text('answerImageUri')
+    table.text('answerText')
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
   .createTable('Session', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
@@ -104,15 +120,6 @@ export function up(knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
-  .createTable('VehicleReport', table => {
-    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.timestamp('deletedAt').index()
-    table.uuid('employeeId').notNullable()
-    table.uuid('vehicleId').notNullable()
-    table.text('comments')
-    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
-    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
-  })
   .alterTable('Account', table => {
     table.foreign('employeeId').references('Employee.id')
   })
@@ -124,6 +131,13 @@ export function up(knex) {
     table.foreign('senderId').references('Account.id')
     table.foreign('recipientId').references('Account.id')
   })
+  .alterTable('Report', table => {
+    table.foreign('creatorId').references('Account.id')
+    table.foreign('companyId').references('Company.id')
+  })
+  .alterTable('ReportQuestion', table => {
+    table.foreign('reportId').references('Report.id')
+  })
   .alterTable('Session', table => {
     table.foreign('accountId').references('Account.id')
   })
@@ -133,9 +147,13 @@ export function up(knex) {
   .alterTable('Vehicle', table => {
     table.foreign('companyId').references('Company.id')
   })
-  .alterTable('VehicleReport', table => {
-    table.foreign('employeeId').references('Employee.id')
-    table.foreign('vehicleId').references('Vehicle.id')
+  .createTable('vehicleReports', table => { 
+      table.uuid('vehicleId').notNullable()
+      table.uuid('reportId').notNullable()
+      table.primary(['vehicleId', 'reportId'])
+      table.unique('reportId') // a given form response should only belong to one vehicle
+      table.foreign('vehicleId').references('Vehicle.id')
+      table.foreign('reportId').references('Report.id')
   })
 }
 
