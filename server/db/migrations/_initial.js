@@ -71,8 +71,9 @@ export function up(knex) {
   .createTable('Report', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt')
-    table.uuid('creatorId')
     table.uuid('companyId').notNullable()
+    table.uuid('creatorId')
+    table.uuid('vehicleId')
     table.string('name').notNullable()
     table.string('state').defaultTo('Draft').notNullable()
     table.timestamp('completedAt')
@@ -134,6 +135,7 @@ export function up(knex) {
   .alterTable('Report', table => {
     table.foreign('creatorId').references('Account.id')
     table.foreign('companyId').references('Company.id')
+    table.foreign('vehicleId').references('Vehicle.id')
   })
   .alterTable('ReportQuestion', table => {
     table.foreign('reportId').references('Report.id')
@@ -146,14 +148,6 @@ export function up(knex) {
   })
   .alterTable('Vehicle', table => {
     table.foreign('companyId').references('Company.id')
-  })
-  .createTable('vehicleReports', table => { 
-      table.uuid('vehicleId').notNullable()
-      table.uuid('reportId').notNullable()
-      table.primary(['vehicleId', 'reportId'])
-      table.unique('reportId') // a given form response should only belong to one vehicle
-      table.foreign('vehicleId').references('Vehicle.id')
-      table.foreign('reportId').references('Report.id')
   })
 }
 
