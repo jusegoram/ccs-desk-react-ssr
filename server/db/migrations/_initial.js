@@ -110,8 +110,8 @@ export function up(knex) {
     table.timestamp('clockedOutAt').notNullable()
     table.uuid('employeeId').notNullable()
     table.uuid('vehicleId')
-    table.uuid('clockInReportId')
-    table.uuid('clockOutReportId')
+    table.uuid('clockedInReportId')
+    table.uuid('clockedOutReportId')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -149,8 +149,8 @@ export function up(knex) {
   .alterTable('Timecard', table => {
     table.foreign('employeeId').references('Employee.id')
     table.foreign('vehicleId').references('Vehicle.id')
-    table.foreign('clockInReportId').references('Report.id')
-    table.foreign('clockOutReportId').references('Report.id')
+    table.foreign('clockedInReportId').references('Report.id')
+    table.foreign('clockedOutReportId').references('Report.id')
   })
   .alterTable('Vehicle', table => {
     table.foreign('companyId').references('Company.id')

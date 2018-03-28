@@ -10,9 +10,9 @@ export default class Report extends withDeletedAt(APIModel) {
     table.uuid('creatorId')
     table.uuid('vehicleId')
     table.string('name').notNullable()
-    table.string('state').defaultTo('Draft').notNullable()
+    table.boolean('isTemplate').defaultTo(false).notNullable()
     table.timestamp('completedAt')
-    table.index(['name', 'state'])
+    table.index(['isTemplate', 'name'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
@@ -29,8 +29,7 @@ export default class Report extends withDeletedAt(APIModel) {
     properties: {
       id: { type: 'string' },
       name: { type: 'string' },
-      state: { type: 'string' },
-      additionalComments: { type: ['string', 'null'] },
+      isTemplate: { type: 'boolean' },
       completedAt: { type: ['string', 'null'], format: 'date-time' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
@@ -38,7 +37,7 @@ export default class Report extends withDeletedAt(APIModel) {
     },
   }
 
-  static visible = ['id', 'name', 'state', 'createdAt', 'completedAt', 'questions', 'creator', 'vehicle']
+  static visible = ['id', 'name', 'isTemplate', 'createdAt', 'completedAt', 'questions', 'creator', 'vehicle']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {

@@ -32,14 +32,13 @@ export default class Employee extends APIModel {
       externalId: { type: 'string' },
       phoneNumber: { type: 'string' },
       email: { type: 'string' },
-      state: { type: 'string' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
       terminatedAt: { type: ['string', 'null'], format: 'date-time' },
     },
   }
 
-  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'timecard']
+  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'currentTimecard']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
