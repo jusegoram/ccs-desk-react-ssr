@@ -47,6 +47,15 @@ export default class Company extends APIModel {
           to: 'Vehicle.companyId',
         },
       },
+      reportTemplates: {
+        relation: Model.HasManyRelation,
+        modelClass: 'Report',
+        join: {
+          from: 'Company.id',
+          to: 'Report.companyId',
+        },
+        modify: { 'Report.state': 'Template' },
+      },
     }
   }
 }
