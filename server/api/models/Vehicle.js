@@ -14,16 +14,6 @@ export default class Vehicle extends APIModel {
   static knexAlterTable = `
     table.foreign('companyId').references('Company.id')
   `
-  static knexCreateJoinTables = {
-    vehicleReports: `
-      table.uuid('vehicleId').notNullable()
-      table.uuid('reportId').notNullable()
-      table.primary(['vehicleId', 'reportId'])
-      table.unique('reportId') // a given form response should only belong to one vehicle
-      table.foreign('vehicleId').references('Vehicle.id')
-      table.foreign('reportId').references('Report.id')
-    `,
-  }
   static jsonSchema = {
     title: 'Vehicle',
     description: 'An employee',
@@ -48,15 +38,11 @@ export default class Vehicle extends APIModel {
   static get relationMappings() {
     return {
       reports: {
-        relation: Model.ManyToManyRelation,
+        relation: Model.HasManyRelation,
         modelClass: 'Report',
         join: {
           from: 'Vehicle.id',
-          through: {
-            from: 'vehicleReports.vehicleId',
-            to: 'vehicleReports.reportId',
-          },
-          to: 'Report.id',
+          to: 'Report.vehicleId',
         },
       },
     }
