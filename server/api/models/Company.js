@@ -54,7 +54,9 @@ export default class Company extends APIModel {
           from: 'Company.id',
           to: 'Report.companyId',
         },
-        modify: { 'Report.isTemplate': true },
+        modify: qb => {
+          qb.where({ isTemplate: true })
+        },
       },
     }
   }
