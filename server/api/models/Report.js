@@ -6,8 +6,9 @@ export default class Report extends withDeletedAt(APIModel) {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt')
-    table.uuid('creatorId')
     table.uuid('companyId').notNullable()
+    table.uuid('creatorId')
+    table.uuid('vehicleId')
     table.string('name').notNullable()
     table.string('state').defaultTo('Draft').notNullable()
     table.timestamp('completedAt')
@@ -18,6 +19,7 @@ export default class Report extends withDeletedAt(APIModel) {
   static knexAlterTable = `
     table.foreign('creatorId').references('Account.id')
     table.foreign('companyId').references('Company.id')
+    table.foreign('vehicleId').references('Vehicle.id')
   `
   static jsonSchema = {
     title: 'Report',
@@ -36,7 +38,7 @@ export default class Report extends withDeletedAt(APIModel) {
     },
   }
 
-  static visible = ['id', 'name', 'state', 'createdAt', 'completedAt', 'questions', 'creator']
+  static visible = ['id', 'name', 'state', 'createdAt', 'completedAt', 'questions', 'creator', 'vehicle']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -65,6 +67,14 @@ export default class Report extends withDeletedAt(APIModel) {
         },
         modify: qb => {
           qb.orderBy('ReportQuestion.order')
+        },
+      },
+      vehicle: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: 'Vehicle',
+        join: {
+          from: 'Report.vehicleId',
+          to: 'Vehicle.id',
         },
       },
     }
