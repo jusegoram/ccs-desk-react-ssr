@@ -9,8 +9,8 @@ export default class ReportQuestion extends APIModel {
     table.integer('order').defaultTo(0).notNullable()
     table.text('questionText').notNullable()
     table.string('answerType').notNullable()
-    table.text('answerImageUri')
     table.text('answerText')
+    table.text('answerImageUri')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `

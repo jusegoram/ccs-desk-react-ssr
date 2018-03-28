@@ -10,16 +10,16 @@ export default class Timecard extends withDeletedAt(APIModel) {
     table.timestamp('clockedOutAt').notNullable()
     table.uuid('employeeId').notNullable()
     table.uuid('vehicleId')
-    table.uuid('clockInReportId')
-    table.uuid('clockOutReportId')
+    table.uuid('clockedInReportId')
+    table.uuid('clockedOutReportId')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
   static knexAlterTable = `
     table.foreign('employeeId').references('Employee.id')
     table.foreign('vehicleId').references('Vehicle.id')
-    table.foreign('clockInReportId').references('Report.id')
-    table.foreign('clockOutReportId').references('Report.id')
+    table.foreign('clockedInReportId').references('Report.id')
+    table.foreign('clockedOutReportId').references('Report.id')
   `
   static jsonSchema = {
     title: 'Timecard',
@@ -36,7 +36,7 @@ export default class Timecard extends withDeletedAt(APIModel) {
     },
   }
 
-  static visible = ['id', 'clockedInAt', 'clockedOutAt', 'employee', 'vehicle', 'clockInReport', 'clockOutReport']
+  static visible = ['id', 'clockedInAt', 'clockedOutAt', 'employee', 'vehicle', 'clockedInReport', 'clockedOutReport']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -64,19 +64,19 @@ export default class Timecard extends withDeletedAt(APIModel) {
           to: 'Vehicle.id',
         },
       },
-      clockInReport: {
+      clockedInReport: {
         relation: Model.HasOneRelation,
         modelClass: 'Report',
         join: {
-          from: 'Timecard.clockInReportId',
+          from: 'Timecard.clockedInReportId',
           to: 'Report.id',
         },
       },
-      clockOutReport: {
+      clockedOutReport: {
         relation: Model.HasOneRelation,
         modelClass: 'Report',
         join: {
-          from: 'Timecard.clockOutReportId',
+          from: 'Timecard.clockedOutReportId',
           to: 'Report.id',
         },
       },

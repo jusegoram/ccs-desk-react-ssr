@@ -54,7 +54,7 @@ export default class Company extends APIModel {
           from: 'Company.id',
           to: 'Report.companyId',
         },
-        modify: { 'Report.state': 'Template' },
+        modify: { 'Report.isTemplate': true },
       },
     }
   }
