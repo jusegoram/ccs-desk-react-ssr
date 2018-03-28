@@ -106,9 +106,12 @@ export function up(knex) {
   .createTable('Timecard', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
+    table.timestamp('clockedInAt').notNullable()
+    table.timestamp('clockedOutAt').notNullable()
     table.uuid('employeeId').notNullable()
-    table.string('action').notNullable()
-    table.timestamp('timestamp').notNullable()
+    table.uuid('vehicleId')
+    table.uuid('clockInReportId')
+    table.uuid('clockOutReportId')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -145,6 +148,9 @@ export function up(knex) {
   })
   .alterTable('Timecard', table => {
     table.foreign('employeeId').references('Employee.id')
+    table.foreign('vehicleId').references('Vehicle.id')
+    table.foreign('clockInReportId').references('Report.id')
+    table.foreign('clockOutReportId').references('Report.id')
   })
   .alterTable('Vehicle', table => {
     table.foreign('companyId').references('Company.id')
