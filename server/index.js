@@ -45,7 +45,9 @@ export default async app => {
     graphqlExpress(async (req, res) => {
       let session = null
       try {
-        const token = req.headers.cookie && cookie.parse(req.headers.cookie).token
+        const cookieToken = req.headers.cookie && cookie.parse(req.headers.cookie).token
+        const authHeaderToken = req.headers.authentication && req.headers.authentication.split(' ')[1]
+        const token = cookieToken || authHeaderToken
         if (token) {
           console.log(token)
           console.log(process.env.JWT_SECRET)
