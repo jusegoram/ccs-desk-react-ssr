@@ -106,7 +106,7 @@ export function up(knex) {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
     table.uuid('employeeId')
-    table.date('date')
+    table.date('date').notNullable()
     table.timestamp('clockedInAt')
     table.timestamp('clockedOutAt')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
@@ -124,6 +124,7 @@ export function up(knex) {
   .createTable('VehicleClaim', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
+    table.date('date').notNullable()
     table.uuid('employeeId')
     table.uuid('vehicleId')
     table.uuid('startReportId')
