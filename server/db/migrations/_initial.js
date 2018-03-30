@@ -30,6 +30,7 @@ export function up(knex) {
     table.string('email')
     table.uuid('dataSourceId')
     table.uuid('currentTimecardId')
+    table.uuid('currentVehicleId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
@@ -106,12 +107,10 @@ export function up(knex) {
   .createTable('Timecard', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
-    table.timestamp('clockedInAt').notNullable()
-    table.timestamp('clockedOutAt').notNullable()
     table.uuid('employeeId').notNullable()
-    table.uuid('vehicleId')
-    table.uuid('clockedInReportId')
-    table.uuid('clockedOutReportId')
+    table.date('date')
+    table.timestamp('clockedInAt')
+    table.timestamp('clockedOutAt')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -123,6 +122,18 @@ export function up(knex) {
     table.unique(['externalId', 'companyId'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
+  .createTable('VehicleClaim', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.timestamp('deletedAt').index()
+    table.uuid('employeeId').notNullable()
+    table.uuid('vehicleId').notNullable()
+    table.uuid('startReportId')
+    table.uuid('endReportId')
+    table.timestamp('startedAt')
+    table.timestamp('endedAt')
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   })
   .alterTable('Account', table => {
     table.foreign('employeeId').references('Employee.id')
@@ -148,12 +159,15 @@ export function up(knex) {
   })
   .alterTable('Timecard', table => {
     table.foreign('employeeId').references('Employee.id')
-    table.foreign('vehicleId').references('Vehicle.id')
-    table.foreign('clockedInReportId').references('Report.id')
-    table.foreign('clockedOutReportId').references('Report.id')
   })
   .alterTable('Vehicle', table => {
     table.foreign('companyId').references('Company.id')
+  })
+  .alterTable('VehicleClaim', table => {
+    table.foreign('employeeId').references('Employee.id')
+    table.foreign('vehicleId').references('Vehicle.id')
+    table.foreign('startReportId').references('Report.id')
+    table.foreign('endReportId').references('Report.id')
   })
 }
 

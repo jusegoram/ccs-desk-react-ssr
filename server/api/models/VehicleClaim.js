@@ -4,19 +4,24 @@ import { QueryBuilder, Model } from 'objection'
 import { GraphQLString } from 'graphql'
 import ExpectedError from 'server/errors/ExpectedError'
 
-export default class Timecard extends withDeletedAt(APIModel) {
+export default class VehicleClaim extends withDeletedAt(APIModel) {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
     table.uuid('employeeId').notNullable()
-    table.date('date')
-    table.timestamp('clockedInAt')
-    table.timestamp('clockedOutAt')
-    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.uuid('vehicleId').notNullable()
+    table.uuid('startReportId')
+    table.uuid('endReportId')
+    table.timestamp('startedAt')
+    table.timestamp('endedAt')
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   `
   static knexAlterTable = `
     table.foreign('employeeId').references('Employee.id')
+    table.foreign('vehicleId').references('Vehicle.id')
+    table.foreign('startReportId').references('Report.id')
+    table.foreign('endReportId').references('Report.id')
   `
   static jsonSchema = {
     title: 'Timecard',
@@ -33,7 +38,7 @@ export default class Timecard extends withDeletedAt(APIModel) {
     },
   }
 
-  static visible = ['id', 'clockedInAt', 'clockedOutAt', 'employee']
+  static visible = ['id', 'startedAt', 'endedAt', 'employee', 'vehicle', 'startReport', 'endReport']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -49,7 +54,7 @@ export default class Timecard extends withDeletedAt(APIModel) {
         relation: Model.BelongsToOneRelation,
         modelClass: 'Employee',
         join: {
-          from: 'Timecard.employeeId',
+          from: 'VehicleClaim.employeeId',
           to: 'Employee.id',
         },
       },
@@ -57,23 +62,23 @@ export default class Timecard extends withDeletedAt(APIModel) {
         relation: Model.HasOneRelation,
         modelClass: 'Vehicle',
         join: {
-          from: 'Timecard.vehicleId',
+          from: 'VehicleClaim.vehicleId',
           to: 'Vehicle.id',
         },
       },
-      clockedInReport: {
+      startReport: {
         relation: Model.HasOneRelation,
         modelClass: 'Report',
         join: {
-          from: 'Timecard.clockedInReportId',
+          from: 'VehicleClaim.startReportId',
           to: 'Report.id',
         },
       },
-      clockedOutReport: {
+      endReport: {
         relation: Model.HasOneRelation,
         modelClass: 'Report',
         join: {
-          from: 'Timecard.clockedOutReportId',
+          from: 'VehicleClaim.endReportId',
           to: 'Report.id',
         },
       },
@@ -82,11 +87,11 @@ export default class Timecard extends withDeletedAt(APIModel) {
 
   static get mutations() {
     return {
-      create: {
-        description: 'create a timecard',
-        type: this.GraphqlTypes.Timecard,
+      start: {
+        description: 'create a vehicle claim',
+        type: this.GraphqlTypes.VehicleClaim,
         args: {
-          vehicleExternalId: { type: GraphQLString },
+          vehicleId: { type: GraphQLString },
         },
         resolve: async (root, { vehicleExternalId }, { session }) => {
           if (!session) throw new ExpectedError('Unauthorized Access')
