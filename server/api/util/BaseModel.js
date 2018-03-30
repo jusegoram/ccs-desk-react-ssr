@@ -29,7 +29,8 @@ export default applyPlugins(
       if (this.constructor.jsonSchema) {
         for (const key in json) {
           const config = this.constructor.jsonSchema.properties[key]
-          if (config && config.format === 'date-time') json[key] = json[key] && json[key].toISOString()
+          if (config && (config.format === 'date-time' || config.format === 'date'))
+            json[key] = json[key] && json[key].toISOString()
         }
       }
       return json

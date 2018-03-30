@@ -8,6 +8,7 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
+    table.date('date').notNullable()
     table.uuid('employeeId')
     table.uuid('vehicleId')
     table.uuid('startReportId')
@@ -30,6 +31,7 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
 
     properties: {
       id: { type: 'string' },
+      date: { type: ['string', 'null'], format: 'date' },
       claimedAt: { type: ['string', 'null'], format: 'date-time' },
       unclaimedAt: { type: ['string', 'null'], format: 'date-time' },
       createdAt: { type: 'string', format: 'date-time' },
@@ -38,7 +40,7 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
     },
   }
 
-  static visible = ['id', 'claimedAt', 'unclaimedAt', 'employee', 'vehicle', 'startReport', 'endReport']
+  static visible = ['id', 'date', 'claimedAt', 'unclaimedAt', 'employee', 'vehicle', 'startReport', 'endReport']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -48,7 +50,8 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
       _mine() {
         const { session } = this.context()
         if (!session) return this.whereRaw('FALSE')
-        this.where({ employeeId: session.account.employee.id }).whereNull('unclaimedAt')
+        this.where({ employeeId: session.account.employee.id })
+        return this
       }
     }
   }
@@ -98,16 +101,19 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
         args: {
           externalId: { type: GraphQLString },
         },
-        resolve: async (root, { externalId }, { session, moment }) => {
+        resolve: async (root, { externalId }, context) => {
+          const { session, moment } = context
           if (!session) throw new ExpectedError('Unauthorized Access')
           const Vehicle = require('./Vehicle').default
           const vehicle = await Vehicle.query()
+          .mergeContext(context)
           .where({ externalId })
           .first()
           if (!vehicle) throw new ExpectedError('Unable to find a vehicle with that identifier')
           const existingVehicleClaim = await VehicleClaim.query()
+          .mergeContext(context)
+          ._mine()
           .whereNull('unclaimedAt')
-          .where({ employeeId: session.account.employee.id })
           .first()
           if (existingVehicleClaim)
             throw new ExpectedError(
@@ -115,26 +121,25 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
             )
           const vehicleClaim = await VehicleClaim.query()
           .insert({
+            date: moment().format('YYYY-MM-DD'),
             claimedAt: moment().format(),
           })
           .returning('*')
           await vehicleClaim.$relatedQuery('employee').relate(session.account.employee)
           await vehicleClaim.$relatedQuery('vehicle').relate(vehicle)
-          await vehicleClaim.$loadRelated('[employee.currentVehicleClaim, vehicle]')
           return vehicleClaim
         },
       },
       unclaim: {
         description: 'unclaim a vehicle claim',
         type: this.GraphqlTypes.VehicleClaim,
-        args: {
-          id: { type: GraphQLString },
-        },
-        resolve: async (root, { id }, { session, moment }) => {
-          if (!session) throw new ExpectedError('Unauthorized Access')
-          const employeeId = session.account.employee.id
+        args: {},
+        resolve: async (root, args, context) => {
+          const { moment } = context
           const vehicleClaim = await VehicleClaim.query()
-          .where({ id, employeeId })
+          .mergeContext(context)
+          ._mine()
+          .whereNull('unclaimedAt')
           .first()
           if (!vehicleClaim) throw new ExpectedError('Unable to find your vehicle claim. Please try again.')
           await vehicleClaim.$query().patch({ unclaimedAt: moment().format() })
