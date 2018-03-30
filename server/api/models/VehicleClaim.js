@@ -45,6 +45,11 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
       _contextFilter() {
         // this.whereRaw('FALSE')
       }
+      _mine() {
+        const { session } = this.context()
+        if (!session) return this.whereRaw('FALSE')
+        this.where({ employeeId: session.account.employee.id }).whereNull('unclaimedAt')
+      }
     }
   }
 
@@ -59,7 +64,7 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
         },
       },
       vehicle: {
-        relation: Model.HasOneRelation,
+        relation: Model.BelongsToOneRelation,
         modelClass: 'Vehicle',
         join: {
           from: 'VehicleClaim.vehicleId',
@@ -113,9 +118,9 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
             claimedAt: moment().format(),
           })
           .returning('*')
-          await vehicleClaim.$setRelated('employee', session.account.employee)
-          await vehicleClaim.$setRelated('vehicle', vehicle)
-          await vehicleClaim.$loadRelated('[employee, vehicle]')
+          await vehicleClaim.$relatedQuery('employee').relate(session.account.employee)
+          await vehicleClaim.$relatedQuery('vehicle').relate(vehicle)
+          await vehicleClaim.$loadRelated('[employee.currentVehicleClaim, vehicle]')
           return vehicleClaim
         },
       },

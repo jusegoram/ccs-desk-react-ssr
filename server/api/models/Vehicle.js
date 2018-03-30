@@ -45,6 +45,14 @@ export default class Vehicle extends APIModel {
           to: 'Report.vehicleId',
         },
       },
+      vehicle: {
+        relation: Model.HasManyRelation,
+        modelClass: 'VehicleClaim',
+        join: {
+          from: 'Vehicle.id',
+          to: 'VehicleClaim.vehicleId',
+        },
+      },
     }
   }
 }

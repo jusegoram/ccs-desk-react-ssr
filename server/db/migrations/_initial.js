@@ -105,7 +105,7 @@ export function up(knex) {
   .createTable('Timecard', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
-    table.uuid('employeeId').notNullable()
+    table.uuid('employeeId')
     table.date('date')
     table.timestamp('clockedInAt')
     table.timestamp('clockedOutAt')
