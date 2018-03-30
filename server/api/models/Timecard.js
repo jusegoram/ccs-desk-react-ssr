@@ -39,7 +39,7 @@ export default class Timecard extends withDeletedAt(APIModel) {
   static get QueryBuilder() {
     return class extends QueryBuilder {
       _contextFilter() {
-        // this.whereRaw('FALSE')
+        //  this.whereRaw('FALSE')
       }
       _mine() {
         const { session } = this.context()
