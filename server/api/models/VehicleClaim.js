@@ -124,6 +124,23 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
           return vehicleClaim
         },
       },
+      unclaim: {
+        description: 'unclaim a vehicle claim',
+        type: this.GraphqlTypes.VehicleClaim,
+        args: {
+          id: { type: GraphQLString },
+        },
+        resolve: async (root, { id }, { session, moment }) => {
+          if (!session) throw new ExpectedError('Unauthorized Access')
+          const employeeId = session.account.employee.id
+          const vehicleClaim = await VehicleClaim.query()
+          .where({ id, employeeId })
+          .first()
+          if (!vehicleClaim) throw new ExpectedError('Unable to find your vehicle claim. Please try again.')
+          await vehicleClaim.$query().patch({ unclaimedAt: moment().format() })
+          return vehicleClaim
+        },
+      },
     }
   }
 }
