@@ -10,7 +10,7 @@ import { GraphQLInt, GraphQLList, GraphQLFloat } from 'graphql'
 import axios from 'axios'
 import ExpectedError from 'server/errors/ExpectedError'
 import restRouter from 'server/api/restRouter'
-import moment from 'moment-timezone'
+import _moment from 'moment-timezone'
 
 Model.knex(knex)
 
@@ -53,6 +53,7 @@ export default async app => {
           console.log(token)
           console.log(process.env.JWT_SECRET)
           const jwtPayload = jwt.verify(token, process.env.JWT_SECRET)
+          console.log(jwtPayload)
           session = await models.Session.query()
           .eager('account.employee.company')
           .findById(jwtPayload.sessionId)
@@ -62,16 +63,16 @@ export default async app => {
         // res.cookie('token', '')
         console.error(e) // eslint-disable-line no-console
       }
-      // const theirMoment = input => moment.tz(input, req.headers.timezone)
-      // theirMoment.tz = moment.tz
-      // theirMoment.utc = moment.utc
+      const moment = input => _moment.tz(input, req.headers.timezone)
+      moment.tz = _moment.tz
+      moment.utc = _moment.utc
       if (req.headers.root === 'ASDF') session = undefined
       return {
         schema: graphqlSchema,
-        context: { req, res, session },
+        context: { req, res, session, moment },
         rootValue: {
           async onQuery(builder) {
-            await builder.mergeContext({ session })._contextFilter()
+            await builder.mergeContext({ session, moment })._contextFilter()
           },
         },
         pretty: process.env.NODE_ENV === 'development',

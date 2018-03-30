@@ -29,8 +29,6 @@ export function up(knex) {
     table.string('phoneNumber')
     table.string('email')
     table.uuid('dataSourceId')
-    table.uuid('currentTimecardId')
-    table.uuid('currentVehicleId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
@@ -126,12 +124,12 @@ export function up(knex) {
   .createTable('VehicleClaim', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
-    table.uuid('employeeId').notNullable()
-    table.uuid('vehicleId').notNullable()
+    table.uuid('employeeId')
+    table.uuid('vehicleId')
     table.uuid('startReportId')
     table.uuid('endReportId')
-    table.timestamp('startedAt')
-    table.timestamp('endedAt')
+    table.timestamp('claimedAt')
+    table.timestamp('unclaimedAt')
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -140,7 +138,6 @@ export function up(knex) {
   })
   .alterTable('Employee', table => {
     table.foreign('companyId').references('Company.id')
-    table.foreign('currentTimecardId').references('Timecard.id')
   })
   .alterTable('Invite', table => {
     table.foreign('senderId').references('Account.id')
