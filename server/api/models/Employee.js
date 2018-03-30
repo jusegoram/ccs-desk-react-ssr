@@ -1,5 +1,6 @@
 import APIModel from 'server/api/util/APIModel'
 import { QueryBuilder, Model } from 'objection'
+import moment from 'moment'
 
 export default class Employee extends APIModel {
   static knexCreateTable = `
@@ -11,7 +12,6 @@ export default class Employee extends APIModel {
     table.string('phoneNumber')
     table.string('email')
     table.uuid('dataSourceId')
-    table.uuid('currentTimecardId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
@@ -19,7 +19,6 @@ export default class Employee extends APIModel {
   `
   static knexAlterTable = `
     table.foreign('companyId').references('Company.id')
-    table.foreign('currentTimecardId').references('Timecard.id')
   `
   static jsonSchema = {
     title: 'Employee',
@@ -38,7 +37,7 @@ export default class Employee extends APIModel {
     },
   }
 
-  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'currentTimecard']
+  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'currentTimecard', 'currentVehicle']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -70,8 +69,24 @@ export default class Employee extends APIModel {
         relation: Model.HasOneRelation,
         modelClass: 'Timecard',
         join: {
-          from: 'Employee.currentTimecardId',
-          to: 'Timecard.id',
+          from: 'Employee.id',
+          to: 'Timecard.employeeId',
+        },
+        modify: qb => {
+          const { session } = qb.context()
+          qb.where({ date: moment.utc().toDate() }).where({ employeeId: session.account.employee.id })
+        },
+      },
+      currentVehicleClaim: {
+        relation: Model.HasOneRelation,
+        modelClass: 'VehicleClaim',
+        join: {
+          from: 'Employee.currentVehicleClaimId',
+          to: 'VehicleClaim.id',
+        },
+        modify: qb => {
+          const { session } = qb.context()
+          qb.whereNull('endedAt').where({ employeeId: session.account.employee.id })
         },
       },
     }
