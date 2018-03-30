@@ -602,7 +602,7 @@ ajv@^4.9.1:
     co "^4.6.0"
     json-stable-stringify "^1.0.1"
 
-ajv@^5.1.0, ajv@^5.1.1, ajv@^5.1.5, ajv@^5.2.3, ajv@^5.3.0:
+ajv@^5.1.0, ajv@^5.1.5, ajv@^5.2.3, ajv@^5.3.0:
   version "5.5.2"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-5.5.2.tgz#73b5eeca3fab653e3d3f9422b341ad42205dc965"
   dependencies:
@@ -611,7 +611,7 @@ ajv@^5.1.0, ajv@^5.1.1, ajv@^5.1.5, ajv@^5.2.3, ajv@^5.3.0:
     fast-json-stable-stringify "^2.0.0"
     json-schema-traverse "^0.3.0"
 
-ajv@^6.1.0:
+ajv@^6.1.0, ajv@^6.1.1:
   version "6.4.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.4.0.tgz#d3aff78e9277549771daf0164cff48482b754fc6"
   dependencies:
@@ -6107,12 +6107,12 @@ objection-visibility@^0.2.0:
     lodash.omit "~4.5.0"
     lodash.pick "~4.4.0"
 
-objection@^0.9.4:
-  version "0.9.4"
-  resolved "https://registry.yarnpkg.com/objection/-/objection-0.9.4.tgz#708314fd2bb5bb3d5eb83c5badd5d9a1106ecb59"
+"objection@https://github.com/timhuff/objection.js.git#bf2ee0690467078f5e9e21fbecdb62bcf472a3cf":
+  version "1.0.1"
+  resolved "https://github.com/timhuff/objection.js.git#bf2ee0690467078f5e9e21fbecdb62bcf472a3cf"
   dependencies:
-    ajv "^5.1.1"
-    bluebird "^3.5.0"
+    ajv "^6.1.1"
+    bluebird "^3.5.1"
     lodash "^4.17.4"
 
 on-finished@^2.3.0, on-finished@~2.3.0:

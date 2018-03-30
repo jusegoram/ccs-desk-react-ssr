@@ -86,7 +86,7 @@ export default class Employee extends APIModel {
         },
         modify: qb => {
           const { session } = qb.context()
-          qb.whereNull('endedAt').where({ employeeId: session.account.employee.id })
+          qb.whereNull('unclaimedAt').where({ employeeId: session.account.employee.id })
         },
       },
     }
