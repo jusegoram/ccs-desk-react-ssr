@@ -8,12 +8,12 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
-    table.uuid('employeeId').notNullable()
-    table.uuid('vehicleId').notNullable()
+    table.uuid('employeeId')
+    table.uuid('vehicleId')
     table.uuid('startReportId')
     table.uuid('endReportId')
-    table.timestamp('startedAt')
-    table.timestamp('endedAt')
+    table.timestamp('claimedAt')
+    table.timestamp('unclaimedAt')
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   `
@@ -30,15 +30,15 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
 
     properties: {
       id: { type: 'string' },
-      clockedInAt: { type: ['string', 'null'], format: 'date-time' },
-      clockedOutAt: { type: ['string', 'null'], format: 'date-time' },
+      claimedAt: { type: ['string', 'null'], format: 'date-time' },
+      unclaimedAt: { type: ['string', 'null'], format: 'date-time' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
       deletedAt: { type: ['string', 'null'], format: 'date-time' },
     },
   }
 
-  static visible = ['id', 'startedAt', 'endedAt', 'employee', 'vehicle', 'startReport', 'endReport']
+  static visible = ['id', 'claimedAt', 'unclaimedAt', 'employee', 'vehicle', 'startReport', 'endReport']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -87,28 +87,36 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
 
   static get mutations() {
     return {
-      start: {
+      create: {
         description: 'create a vehicle claim',
         type: this.GraphqlTypes.VehicleClaim,
         args: {
-          vehicleId: { type: GraphQLString },
+          externalId: { type: GraphQLString },
         },
-        resolve: async (root, { vehicleExternalId }, { session }) => {
+        resolve: async (root, { externalId }, { session, moment }) => {
           if (!session) throw new ExpectedError('Unauthorized Access')
           const Vehicle = require('./Vehicle').default
           const vehicle = await Vehicle.query()
-          .where({ externalId: vehicleExternalId })
+          .where({ externalId })
           .first()
-
           if (!vehicle) throw new ExpectedError('Unable to find a vehicle with that identifier')
-          const timecard = await Timecard.query()
+          const existingVehicleClaim = await VehicleClaim.query()
+          .whereNull('unclaimedAt')
+          .where({ employeeId: session.account.employee.id })
+          .first()
+          if (existingVehicleClaim)
+            throw new ExpectedError(
+              'You already have a claim on a vehicle. Unclaim that vehicle before claiming a new one.'
+            )
+          const vehicleClaim = await VehicleClaim.query()
           .insert({
-            employeeId: session.account.employee.id,
-            vehicleId: vehicle.id,
+            claimedAt: moment().format(),
           })
           .returning('*')
-          console.log(timecard)
-          return timecard
+          await vehicleClaim.$setRelated('employee', session.account.employee)
+          await vehicleClaim.$setRelated('vehicle', vehicle)
+          await vehicleClaim.$loadRelated('[employee, vehicle]')
+          return vehicleClaim
         },
       },
     }
