@@ -6,7 +6,7 @@ import { builder as graphQlBuilder } from 'objection-graphql'
 import * as models from 'server/api/models'
 import cookie from 'cookie'
 import jwt from 'jsonwebtoken'
-import { GraphQLInt, GraphQLList, GraphQLFloat } from 'graphql'
+import { GraphQLInt, GraphQLList, GraphQLFloat, GraphQLBoolean } from 'graphql'
 import axios from 'axios'
 import ExpectedError from 'server/errors/ExpectedError'
 import restRouter from 'server/api/restRouter'
@@ -34,6 +34,13 @@ const graphqlSchema = graphQlBuilder()
         return query.offset(value)
       },
     },
+    mine: {
+      type: GraphQLBoolean,
+      query: (query, value) => {
+        if (!value || !query._mine) return query
+        return query._mine()
+      },
+    },
   }
   return args
 })
@@ -50,10 +57,7 @@ export default async app => {
         const authHeaderToken = req.headers.authentication && req.headers.authentication.split(' ')[1]
         const token = cookieToken || authHeaderToken
         if (token) {
-          console.log(token)
-          console.log(process.env.JWT_SECRET)
           const jwtPayload = jwt.verify(token, process.env.JWT_SECRET)
-          console.log(jwtPayload)
           session = await models.Session.query()
           .eager('account.employee.company')
           .findById(jwtPayload.sessionId)

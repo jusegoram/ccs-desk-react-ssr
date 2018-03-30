@@ -37,12 +37,16 @@ export default class Employee extends APIModel {
     },
   }
 
-  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'currentTimecard', 'currentVehicle']
+  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'currentTimecard', 'currentVehicleClaim']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
       _contextFilter() {
         // this.whereRaw('FALSE')
+      }
+      _mine() {
+        const { session } = this.context()
+        this.where({ id: session.account.employee.id })
       }
     }
   }
@@ -74,19 +78,19 @@ export default class Employee extends APIModel {
         },
         modify: qb => {
           const { session } = qb.context()
-          qb.where({ date: moment.utc().toDate() }).where({ employeeId: session.account.employee.id })
+          qb.where({ date: moment.utc().toDate() })
         },
       },
       currentVehicleClaim: {
         relation: Model.HasOneRelation,
         modelClass: 'VehicleClaim',
         join: {
-          from: 'Employee.currentVehicleClaimId',
-          to: 'VehicleClaim.id',
+          from: 'Employee.id',
+          to: 'VehicleClaim.employeeId',
         },
         modify: qb => {
           const { session } = qb.context()
-          qb.whereNull('unclaimedAt').where({ employeeId: session.account.employee.id })
+          qb.whereNull('VehicleClaim.unclaimedAt')
         },
       },
     }
