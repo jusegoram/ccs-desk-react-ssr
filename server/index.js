@@ -58,19 +58,16 @@ export default async app => {
         return res.status(409).json({})
       }
       try {
-        console.log('AUTH HEADER', req.headers)
         const useCookieToken = clientContext !== 'Mobile'
         const cookieToken = req.headers.cookie && cookie.parse(req.headers.cookie).token
         const authHeaderToken = req.headers.authorization && req.headers.authorization.split(' ')[1]
         const token = useCookieToken ? cookieToken || authHeaderToken : authHeaderToken
-        console.log('TOKEN', token)
         if (token) {
           const jwtPayload = jwt.verify(token, process.env.JWT_SECRET)
           const { sessionId } = jwtPayload
           session = await models.Session.query()
           .eager('account.employee.company')
           .findById(sessionId)
-          console.log('SESSION', session)
           if (!session) {
             return res
             .cookie('token', '')
