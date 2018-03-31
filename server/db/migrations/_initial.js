@@ -67,27 +67,12 @@ export function up(knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
-  .createTable('Report', table => {
+  .createTable('Question', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.timestamp('deletedAt')
-    table.uuid('companyId').notNullable()
-    table.uuid('creatorId')
-    table.uuid('vehicleId')
-    table.string('name').notNullable()
-    table.boolean('isTemplate').defaultTo(false).notNullable()
-    table.timestamp('completedAt')
-    table.index(['isTemplate', 'name'])
-    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
-    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
-  })
-  .createTable('ReportQuestion', table => {
-    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.uuid('reportId').notNullable()
     table.integer('order').defaultTo(0).notNullable()
-    table.text('questionText').notNullable()
+    table.text('question').notNullable()
     table.string('answerType').notNullable()
-    table.text('answerText')
-    table.text('answerImageUri')
+    table.text('answer')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -97,7 +82,6 @@ export function up(knex) {
     // <custom>
     table.timestamp('expiresAt').defaultTo(knex.fn.now())
     table.uuid('accountId')
-    table.string('token')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -134,6 +118,19 @@ export function up(knex) {
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   })
+  .createTable('Report', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.timestamp('deletedAt')
+    table.uuid('companyId').notNullable()
+    table.uuid('creatorId')
+    table.uuid('vehicleId')
+    table.string('name').notNullable()
+    table.boolean('isTemplate').defaultTo(false).notNullable()
+    table.timestamp('completedAt')
+    table.index(['isTemplate', 'name'])
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
   .alterTable('Account', table => {
     table.foreign('employeeId').references('Employee.id')
   })
@@ -143,14 +140,6 @@ export function up(knex) {
   .alterTable('Invite', table => {
     table.foreign('senderId').references('Account.id')
     table.foreign('recipientId').references('Account.id')
-  })
-  .alterTable('Report', table => {
-    table.foreign('creatorId').references('Account.id')
-    table.foreign('companyId').references('Company.id')
-    table.foreign('vehicleId').references('Vehicle.id')
-  })
-  .alterTable('ReportQuestion', table => {
-    table.foreign('reportId').references('Report.id')
   })
   .alterTable('Session', table => {
     table.foreign('accountId').references('Account.id')
@@ -166,6 +155,19 @@ export function up(knex) {
     table.foreign('vehicleId').references('Vehicle.id')
     table.foreign('startReportId').references('Report.id')
     table.foreign('endReportId').references('Report.id')
+  })
+  .alterTable('Report', table => {
+    table.foreign('creatorId').references('Account.id')
+    table.foreign('companyId').references('Company.id')
+    table.foreign('vehicleId').references('Vehicle.id')
+  })
+  .createTable('reportQuestions', table => { 
+      table.uuid('reportId').notNullable()
+      table.uuid('questionId').notNullable()
+      table.primary(['reportId', 'questionId'])
+      table.unique(['questionId', 'reportId'])
+      table.foreign('reportId').references('Report.id')
+      table.foreign('questionId').references('Question.id')
   })
 }
 

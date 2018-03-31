@@ -21,6 +21,16 @@ export default class Report extends withDeletedAt(APIModel) {
     table.foreign('companyId').references('Company.id')
     table.foreign('vehicleId').references('Vehicle.id')
   `
+  static knexCreateJoinTables = {
+    reportQuestions: `
+      table.uuid('reportId').notNullable()
+      table.uuid('questionId').notNullable()
+      table.primary(['reportId', 'questionId'])
+      table.unique(['questionId', 'reportId'])
+      table.foreign('reportId').references('Report.id')
+      table.foreign('questionId').references('Question.id')
+    `,
+  }
   static jsonSchema = {
     title: 'Report',
     description: 'An template for a form',
@@ -58,14 +68,18 @@ export default class Report extends withDeletedAt(APIModel) {
         },
       },
       questions: {
-        relation: Model.HasManyRelation,
-        modelClass: 'ReportQuestion',
+        relation: Model.ManyToManyRelation,
+        modelClass: 'Question',
         join: {
           from: 'Report.id',
-          to: 'ReportQuestion.reportId',
+          through: {
+            from: 'reportQuestions.reportId',
+            to: 'reportQuestions.questionId',
+          },
+          to: 'Question.id',
         },
         modify: qb => {
-          qb.orderBy('ReportQuestion.order')
+          qb.orderBy('Question.order')
         },
       },
       vehicle: {
