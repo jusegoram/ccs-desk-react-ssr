@@ -1,6 +1,8 @@
 import { withDeletedAt } from 'server/api/util/mixins'
 import APIModel from 'server/api/util/APIModel'
 import { QueryBuilder, Model } from 'objection'
+import { GraphQLString } from 'graphql'
+import ExpectedError from 'server/errors/ExpectedError'
 
 export default class Report extends withDeletedAt(APIModel) {
   static knexCreateTable = `
@@ -78,6 +80,40 @@ export default class Report extends withDeletedAt(APIModel) {
         },
         modify: qb => {
           qb.orderBy('Question.order')
+        },
+      },
+    }
+  }
+
+  static get mutations() {
+    return {
+      create: {
+        description: 'create a report',
+        type: this.GraphqlTypes.Report,
+        args: {
+          templateId: { type: GraphQLString },
+        },
+        resolve: async (root, { templateId }, context) => {
+          const { session, moment } = context
+          if (!session) throw new ExpectedError('Unauthorized Access')
+          const template = await Report.query()
+          .mergeContext(context)
+          .eager('questions')
+          .select('name', 'companyId')
+          .where({ id: templateId })
+          .first()
+          if (!template) throw new ExpectedError('Unable to find the template for the specified report.')
+          const report = await template.$clone()
+          delete report.id
+          report.questions.forEach(question => {
+            delete question.id
+          })
+          const insertedReport = await Report.query()
+          .mergeContext(context)
+          .insertGraph(report)
+          .returning('*')
+          await insertedReport.$relatedQuery('creator').relate(session.account)
+          return insertedReport
         },
       },
     }
