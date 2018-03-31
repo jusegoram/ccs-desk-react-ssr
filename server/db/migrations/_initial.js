@@ -73,8 +73,6 @@ export function up(knex) {
     table.text('question').notNullable()
     table.string('answerType').notNullable()
     table.text('answer')
-    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
-    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
   .createTable('Session', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
