@@ -3,7 +3,8 @@ import { compose } from 'server/api/util'
 import APIModel from 'server/api/util/APIModel'
 import { QueryBuilder, Model } from 'objection'
 import { GraphQLString } from 'graphql'
-import jwt from 'jsonwebtoken'
+import ExpectedError from 'server/errors/ExpectedError'
+import createToken from 'server/api/util/createToken'
 
 export default class Account extends compose(withDeletedAt, withPassword({ allowEmptyPassword: true }))(APIModel) {
   static knexCreateTable = `
@@ -82,18 +83,17 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
           email: { type: GraphQLString },
           password: { type: GraphQLString },
         },
-        resolve: async (root, { email, password }, { res }) => {
+        resolve: async (root, { email, password }, { res, clientContext }) => {
           const account = await Account.query()
           .where({ email })
           .first()
-          if (!await account.verifyPassword(password)) return null
+          if (!account || !await account.verifyPassword(password))
+            throw new ExpectedError('Invalid email and/or password.')
           const session = await account
           .$relatedQuery('sessions')
           .insert({})
           .returning('*')
-          const tokenPayload = { sessionId: session.id }
-          const expiresIn = 2 * 60 * 60 // 2 hours in seconds
-          const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn })
+          const token = createToken({ sessionId: session.id, clientContext })
           session.token = token
           res.cookie('token', token)
           return session
