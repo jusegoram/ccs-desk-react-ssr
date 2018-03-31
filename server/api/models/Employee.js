@@ -37,7 +37,7 @@ export default class Employee extends APIModel {
     },
   }
 
-  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'currentTimecard', 'currentVehicleClaim']
+  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'timecard', 'vehicleClaim']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -69,7 +69,7 @@ export default class Employee extends APIModel {
           to: 'Account.employeeId',
         },
       },
-      currentTimecard: {
+      timecard: {
         relation: Model.HasOneRelation,
         modelClass: 'Timecard',
         join: {
@@ -77,11 +77,10 @@ export default class Employee extends APIModel {
           to: 'Timecard.employeeId',
         },
         modify: qb => {
-          const { session } = qb.context()
-          qb.where({ date: moment.utc().toDate() })
+          qb.whereNull('Timecard.clockedOutAt')
         },
       },
-      currentVehicleClaim: {
+      vehicleClaim: {
         relation: Model.HasOneRelation,
         modelClass: 'VehicleClaim',
         join: {
@@ -89,7 +88,6 @@ export default class Employee extends APIModel {
           to: 'VehicleClaim.employeeId',
         },
         modify: qb => {
-          const { session } = qb.context()
           qb.whereNull('VehicleClaim.unclaimedAt')
         },
       },
