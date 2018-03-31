@@ -1,6 +1,5 @@
-import { withDeletedAt } from 'server/api/util/mixins'
 import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
+import { QueryBuilder } from 'objection'
 
 export default class Question extends APIModel {
   static knexCreateTable = `
@@ -9,8 +8,6 @@ export default class Question extends APIModel {
     table.text('question').notNullable()
     table.string('answerType').notNullable()
     table.text('answer')
-    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
-    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
   static jsonSchema = {
     title: 'Question',
@@ -23,8 +20,6 @@ export default class Question extends APIModel {
       question: { type: 'string' },
       answerType: { type: 'string' },
       answer: { type: ['string', 'null'] },
-      createdAt: { type: 'string', format: 'date-time' },
-      updatedAt: { type: 'string', format: 'date-time' },
     },
   }
 
