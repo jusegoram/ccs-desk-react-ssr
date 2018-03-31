@@ -123,7 +123,6 @@ export function up(knex) {
     table.timestamp('deletedAt')
     table.uuid('companyId').notNullable()
     table.uuid('creatorId')
-    table.uuid('vehicleId')
     table.string('name').notNullable()
     table.boolean('isTemplate').defaultTo(false).notNullable()
     table.timestamp('completedAt')
@@ -159,7 +158,14 @@ export function up(knex) {
   .alterTable('Report', table => {
     table.foreign('creatorId').references('Account.id')
     table.foreign('companyId').references('Company.id')
-    table.foreign('vehicleId').references('Vehicle.id')
+  })
+  .createTable('vehicleReports', table => { 
+      table.uuid('vehicleId').notNullable()
+      table.uuid('reportId').notNullable()
+      table.primary(['vehicleId', 'reportId'])
+      table.unique(['reportId', 'vehicleId'])
+      table.foreign('vehicleId').references('Vehicle.id')
+      table.foreign('reportId').references('Report.id')
   })
   .createTable('reportQuestions', table => { 
       table.uuid('reportId').notNullable()
