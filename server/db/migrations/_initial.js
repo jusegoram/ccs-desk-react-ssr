@@ -122,9 +122,8 @@ export function up(knex) {
     table.uuid('companyId').notNullable()
     table.uuid('creatorId')
     table.string('name').notNullable()
-    table.boolean('isTemplate').defaultTo(false).notNullable()
+    table.uuid('templateId').index()
     table.timestamp('completedAt')
-    table.index(['isTemplate', 'name'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -156,6 +155,7 @@ export function up(knex) {
   .alterTable('Report', table => {
     table.foreign('creatorId').references('Account.id')
     table.foreign('companyId').references('Company.id')
+    table.foreign('templateId').references('Report.id')
   })
   .createTable('vehicleReports', table => { 
       table.uuid('vehicleId').notNullable()
