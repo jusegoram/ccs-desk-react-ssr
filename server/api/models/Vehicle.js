@@ -30,7 +30,8 @@ export default class Vehicle extends APIModel {
   static get QueryBuilder() {
     return class extends QueryBuilder {
       _contextFilter() {
-        // this.whereRaw('FALSE')
+        const { session } = this.context()
+        if (!session) return this.whereRaw('FALSE')
       }
     }
   }

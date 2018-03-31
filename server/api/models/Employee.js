@@ -37,16 +37,25 @@ export default class Employee extends APIModel {
     },
   }
 
-  static visible = ['id', 'name', 'externalId', 'phoneNumber', 'email', 'timecard', 'vehicleClaim']
+  static visible = [
+    'id',
+    'name',
+    'externalId',
+    'phoneNumber',
+    'email',
+    'timecard',
+    'vehicleClaim',
+    'timecards',
+    'vehicleClaims',
+  ]
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
       _contextFilter() {
-        // this.whereRaw('FALSE')
-      }
-      _mine() {
         const { session } = this.context()
-        this.where({ id: session.account.employee.id })
+        if (!session) return this.whereRaw('FALSE')
+        if (session.account.employee) this.where({ id: session.account.employee.id })
+        return this
       }
     }
   }
@@ -89,6 +98,22 @@ export default class Employee extends APIModel {
         },
         modify: qb => {
           qb.whereNull('VehicleClaim.unclaimedAt')
+        },
+      },
+      timecards: {
+        relation: Model.HasManyRelation,
+        modelClass: 'Timecard',
+        join: {
+          from: 'Employee.id',
+          to: 'Timecard.employeeId',
+        },
+      },
+      vehicleClaims: {
+        relation: Model.HasManyRelation,
+        modelClass: 'VehicleClaim',
+        join: {
+          from: 'Employee.id',
+          to: 'VehicleClaim.employeeId',
         },
       },
     }
