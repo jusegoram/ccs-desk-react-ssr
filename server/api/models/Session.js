@@ -1,17 +1,17 @@
-import { withDeletedAt, withPassword } from 'server/api/util/mixins'
+import { withDeletedAt } from 'server/api/util/mixins'
 import APIModel from 'server/api/util/APIModel'
 import { QueryBuilder, Model } from 'objection'
-import { GraphQLString, GraphQLList } from 'graphql'
+import { GraphQLString } from 'graphql'
 import ExpectedError from 'server/errors/ExpectedError'
+import createToken from 'server/api/util/createToken'
 
-export default class Session extends APIModel {
+export default class Session extends withDeletedAt(APIModel) {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
     // <custom>
     table.timestamp('expiresAt').defaultTo(knex.fn.now())
     table.uuid('accountId')
-    table.string('token')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -27,7 +27,6 @@ export default class Session extends APIModel {
 
     properties: {
       id: { type: 'string' },
-      token: { type: 'string' },
       accountId: { type: 'string' },
       expiresAt: { type: 'string', format: 'date-time' },
       createdAt: { type: 'string', format: 'date-time' },
@@ -36,7 +35,7 @@ export default class Session extends APIModel {
     },
   }
 
-  static visible = ['id', 'token', 'expiresAt', 'account']
+  static visible = ['id', 'expiresAt', 'account']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -70,18 +69,28 @@ export default class Session extends APIModel {
 
   static get mutations() {
     return {
-      destroy: {
-        description: 'destroy a session',
+      create: {
+        description: 'create a session',
         type: this.GraphqlTypes.Session,
         args: {
-          id: { type: GraphQLString },
+          email: { type: GraphQLString },
+          password: { type: GraphQLString },
         },
-        resolve: async (root, { id }, { session }, info) => {
-          if (session.id !== id) {
-            throw new ExpectedError('You are not authorized to do that.')
-          }
-          await session.$query().delete()
-          return null
+        resolve: async (root, { email, password }, { res, clientContext }) => {
+          const Account = require('./Account').default
+          const account = await Account.query()
+          .where({ email })
+          .first()
+          if (!account || !await account.verifyPassword(password))
+            throw new ExpectedError('Invalid email and/or password.')
+          const session = await account
+          .$relatedQuery('sessions')
+          .insert({})
+          .returning('*')
+          const token = createToken({ sessionId: session.id, clientContext })
+          session.token = token
+          res.cookie('token', token)
+          return session
         },
       },
     }

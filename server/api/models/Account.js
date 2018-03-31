@@ -2,9 +2,6 @@ import { withDeletedAt, withPassword } from 'server/api/util/mixins'
 import { compose } from 'server/api/util'
 import APIModel from 'server/api/util/APIModel'
 import { QueryBuilder, Model } from 'objection'
-import { GraphQLString } from 'graphql'
-import ExpectedError from 'server/errors/ExpectedError'
-import createToken from 'server/api/util/createToken'
 
 export default class Account extends compose(withDeletedAt, withPassword({ allowEmptyPassword: true }))(APIModel) {
   static knexCreateTable = `
@@ -69,34 +66,6 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
         join: {
           from: 'Account.employeeId',
           to: 'Employee.id',
-        },
-      },
-    }
-  }
-
-  static get mutations() {
-    return {
-      login: {
-        description: 'login to a session',
-        type: this.GraphqlTypes.Session,
-        args: {
-          email: { type: GraphQLString },
-          password: { type: GraphQLString },
-        },
-        resolve: async (root, { email, password }, { res, clientContext }) => {
-          const account = await Account.query()
-          .where({ email })
-          .first()
-          if (!account || !await account.verifyPassword(password))
-            throw new ExpectedError('Invalid email and/or password.')
-          const session = await account
-          .$relatedQuery('sessions')
-          .insert({})
-          .returning('*')
-          const token = createToken({ sessionId: session.id, clientContext })
-          session.token = token
-          res.cookie('token', token)
-          return session
         },
       },
     }
