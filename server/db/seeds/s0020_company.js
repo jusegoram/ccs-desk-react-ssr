@@ -26,9 +26,9 @@ exports.seed = async function(knex) {
           name: 'Vehicle Condition',
           isTemplate: true,
           questions: [
-            { questionText: 'Trunk Number', answerType: 'image', order: 1 },
-            { questionText: 'Hood', answerType: 'image', order: 2 },
-            { questionText: 'Tire', answerType: 'image', order: 3 },
+            { question: 'Trunk Number', answerType: 'image', order: 1 },
+            { question: 'Hood', answerType: 'image', order: 2 },
+            { question: 'Tire', answerType: 'image', order: 3 },
           ],
         },
       ],
