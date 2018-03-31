@@ -24,7 +24,7 @@ export default class Report extends withDeletedAt(APIModel) {
       table.uuid('reportId').notNullable()
       table.uuid('questionId').notNullable()
       table.primary(['reportId', 'questionId'])
-      table.unique(['questionId', 'reportId'])
+      table.unique('questionId')
       table.foreign('reportId').references('Report.id')
       table.foreign('questionId').references('Question.id')
     `,

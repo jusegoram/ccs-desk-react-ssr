@@ -19,7 +19,7 @@ export default class Vehicle extends APIModel {
       table.uuid('vehicleId').notNullable()
       table.uuid('reportId').notNullable()
       table.primary(['vehicleId', 'reportId'])
-      table.unique(['reportId', 'vehicleId'])
+      table.unique('reportId')
       table.foreign('vehicleId').references('Vehicle.id')
       table.foreign('reportId').references('Report.id')
     `,
