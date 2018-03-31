@@ -11,15 +11,15 @@ export default class Report extends withDeletedAt(APIModel) {
     table.uuid('companyId').notNullable()
     table.uuid('creatorId')
     table.string('name').notNullable()
-    table.boolean('isTemplate').defaultTo(false).notNullable()
+    table.uuid('templateId').index()
     table.timestamp('completedAt')
-    table.index(['isTemplate', 'name'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
   static knexAlterTable = `
     table.foreign('creatorId').references('Account.id')
     table.foreign('companyId').references('Company.id')
+    table.foreign('templateId').references('Report.id')
   `
   static knexCreateJoinTables = {
     reportQuestions: `
@@ -39,7 +39,6 @@ export default class Report extends withDeletedAt(APIModel) {
     properties: {
       id: { type: 'string' },
       name: { type: 'string' },
-      isTemplate: { type: 'boolean' },
       completedAt: { type: ['string', 'null'], format: 'date-time' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
@@ -47,7 +46,7 @@ export default class Report extends withDeletedAt(APIModel) {
     },
   }
 
-  static visible = ['id', 'name', 'isTemplate', 'createdAt', 'completedAt', 'questions', 'creator']
+  static visible = ['id', 'name', 'createdAt', 'completedAt', 'questions', 'creator', 'template']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -65,6 +64,14 @@ export default class Report extends withDeletedAt(APIModel) {
         join: {
           from: 'Report.creatorId',
           to: 'Account.id',
+        },
+      },
+      template: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: 'Report',
+        join: {
+          from: 'Report.templateId',
+          to: 'Report.id',
         },
       },
       questions: {
@@ -91,28 +98,36 @@ export default class Report extends withDeletedAt(APIModel) {
         description: 'create a report',
         type: this.GraphqlTypes.Report,
         args: {
-          templateId: { type: GraphQLString },
+          templateName: { type: GraphQLString },
         },
-        resolve: async (root, { templateId }, context) => {
-          const { session, moment } = context
+        resolve: async (root, { templateName }, context) => {
+          const { session } = context
           if (!session) throw new ExpectedError('Unauthorized Access')
+
           const template = await Report.query()
           .mergeContext(context)
           .eager('questions')
-          .select('name', 'companyId')
-          .where({ id: templateId })
+          .select('id', 'name', 'companyId')
+          .where({ name: templateName })
+          .whereNull('templateId')
+          .orderBy('createdAt', 'desc')
           .first()
           if (!template) throw new ExpectedError('Unable to find the template for the specified report.')
+
           const report = await template.$clone()
           delete report.id
           report.questions.forEach(question => {
             delete question.id
           })
+
           const insertedReport = await Report.query()
           .mergeContext(context)
           .insertGraph(report)
           .returning('*')
+
           await insertedReport.$relatedQuery('creator').relate(session.account)
+          await insertedReport.$relatedQuery('template').relate(template)
+
           return insertedReport
         },
       },

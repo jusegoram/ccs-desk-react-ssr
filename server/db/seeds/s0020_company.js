@@ -24,7 +24,6 @@ exports.seed = async function(knex) {
       reportTemplates: [
         {
           name: 'Vehicle Condition',
-          isTemplate: true,
           questions: [
             { question: 'Trunk Number', answerType: 'image', order: 1 },
             { question: 'Hood', answerType: 'image', order: 2 },
