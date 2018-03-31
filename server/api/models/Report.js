@@ -8,7 +8,6 @@ export default class Report extends withDeletedAt(APIModel) {
     table.timestamp('deletedAt')
     table.uuid('companyId').notNullable()
     table.uuid('creatorId')
-    table.uuid('vehicleId')
     table.string('name').notNullable()
     table.boolean('isTemplate').defaultTo(false).notNullable()
     table.timestamp('completedAt')
@@ -19,7 +18,6 @@ export default class Report extends withDeletedAt(APIModel) {
   static knexAlterTable = `
     table.foreign('creatorId').references('Account.id')
     table.foreign('companyId').references('Company.id')
-    table.foreign('vehicleId').references('Vehicle.id')
   `
   static knexCreateJoinTables = {
     reportQuestions: `
@@ -47,7 +45,7 @@ export default class Report extends withDeletedAt(APIModel) {
     },
   }
 
-  static visible = ['id', 'name', 'isTemplate', 'createdAt', 'completedAt', 'questions', 'creator', 'vehicle']
+  static visible = ['id', 'name', 'isTemplate', 'createdAt', 'completedAt', 'questions', 'creator']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -80,14 +78,6 @@ export default class Report extends withDeletedAt(APIModel) {
         },
         modify: qb => {
           qb.orderBy('Question.order')
-        },
-      },
-      vehicle: {
-        relation: Model.BelongsToOneRelation,
-        modelClass: 'Vehicle',
-        join: {
-          from: 'Report.vehicleId',
-          to: 'Vehicle.id',
         },
       },
     }
