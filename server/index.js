@@ -6,11 +6,10 @@ import { builder as graphQlBuilder } from 'objection-graphql'
 import * as models from 'server/api/models'
 import cookie from 'cookie'
 import jwt from 'jsonwebtoken'
-import { GraphQLInt, GraphQLList, GraphQLFloat, GraphQLBoolean } from 'graphql'
-import axios from 'axios'
-import ExpectedError from 'server/errors/ExpectedError'
+import { GraphQLInt, GraphQLBoolean } from 'graphql'
 import restRouter from 'server/api/restRouter'
-import _moment from 'moment-timezone'
+import createToken from 'server/api/util/createToken'
+import createClientMoment from 'server/api/util/createClientMoment'
 
 Model.knex(knex)
 
@@ -51,25 +50,40 @@ export default async app => {
   app.use(
     '/graphql',
     graphqlExpress(async (req, res) => {
+      const moment = createClientMoment(req.headers.timezone)
       let session = null
+      const clientContext = req.headers.clientcontext || 'Website'
+      const clientVersion = req.headers.clientversion
+      if (clientVersion && clientVersion !== '1.0.0') {
+        return res.status(409).json({})
+      }
       try {
+        console.log('AUTH HEADER', req.headers)
+        const useCookieToken = clientContext !== 'Mobile'
         const cookieToken = req.headers.cookie && cookie.parse(req.headers.cookie).token
-        const authHeaderToken = req.headers.authentication && req.headers.authentication.split(' ')[1]
-        const token = cookieToken || authHeaderToken
+        const authHeaderToken = req.headers.authorization && req.headers.authorization.split(' ')[1]
+        const token = useCookieToken ? cookieToken || authHeaderToken : authHeaderToken
+        console.log('TOKEN', token)
         if (token) {
           const jwtPayload = jwt.verify(token, process.env.JWT_SECRET)
+          const { sessionId } = jwtPayload
           session = await models.Session.query()
           .eager('account.employee.company')
-          .findById(jwtPayload.sessionId)
+          .findById(sessionId)
+          console.log('SESSION', session)
+          if (!session) {
+            return res
+            .cookie('token', '')
+            .status(401)
+            .json({})
+          } else {
+            const newToken = createToken({ sessionId, clientContext })
+            res.cookie('token', newToken)
+          }
         }
       } catch (e) {
-        session = null
-        // res.cookie('token', '')
         console.error(e) // eslint-disable-line no-console
       }
-      const moment = input => _moment.tz(input, req.headers.timezone)
-      moment.tz = _moment.tz
-      moment.utc = _moment.utc
       if (req.headers.root === 'ASDF') session = undefined
       return {
         schema: graphqlSchema,
