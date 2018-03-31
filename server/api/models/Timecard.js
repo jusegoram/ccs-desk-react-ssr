@@ -39,12 +39,9 @@ export default class Timecard extends withDeletedAt(APIModel) {
   static get QueryBuilder() {
     return class extends QueryBuilder {
       _contextFilter() {
-        //  this.whereRaw('FALSE')
-      }
-      _mine() {
         const { session } = this.context()
         if (!session) return this.whereRaw('FALSE')
-        this.where({ employeeId: session.account.employee.id })
+        if (session.account.employee) this.where({ employeeId: session.account.employee.id })
         return this
       }
     }
@@ -98,7 +95,6 @@ export default class Timecard extends withDeletedAt(APIModel) {
           if (!session) throw new ExpectedError('Unauthorized Access')
           const existingTimecard = await Timecard.query()
           .mergeContext(context)
-          ._mine()
           .whereNull('clockedOutAt')
           .first()
           if (existingTimecard) throw new ExpectedError('You already have a timecard. Clock out to create a new one.')
@@ -122,7 +118,6 @@ export default class Timecard extends withDeletedAt(APIModel) {
           const { moment } = context
           const timecard = await Timecard.query()
           .mergeContext(context)
-          ._mine()
           .whereNull('clockedOutAt')
           .first()
           if (!timecard) throw new ExpectedError('Unable to find your timecard. Please try again.')

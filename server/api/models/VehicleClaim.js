@@ -45,12 +45,9 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
   static get QueryBuilder() {
     return class extends QueryBuilder {
       _contextFilter() {
-        // this.whereRaw('FALSE')
-      }
-      _mine() {
         const { session } = this.context()
         if (!session) return this.whereRaw('FALSE')
-        this.where({ employeeId: session.account.employee.id })
+        if (session.account.employee) this.where({ employeeId: session.account.employee.id })
         return this
       }
     }
@@ -112,7 +109,6 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
           if (!vehicle) throw new ExpectedError('Unable to find a vehicle with that identifier')
           const existingVehicleClaim = await VehicleClaim.query()
           .mergeContext(context)
-          ._mine()
           .whereNull('unclaimedAt')
           .first()
           if (existingVehicleClaim)
@@ -138,11 +134,11 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
           const { moment } = context
           const vehicleClaim = await VehicleClaim.query()
           .mergeContext(context)
-          ._mine()
           .whereNull('unclaimedAt')
           .first()
           if (!vehicleClaim) throw new ExpectedError('Unable to find your vehicle claim. Please try again.')
           await vehicleClaim.$query().patch({ unclaimedAt: moment().format() })
+          await vehicleClaim.$loadRelated('vehicle')
           return vehicleClaim
         },
       },
