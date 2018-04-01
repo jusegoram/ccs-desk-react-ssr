@@ -97,7 +97,7 @@ export default class Employee extends APIModel {
           to: 'VehicleClaim.employeeId',
         },
         modify: qb => {
-          qb.whereNull('VehicleClaim.unclaimedAt')
+          qb.whereNull('VehicleClaim.returnedAt')
         },
       },
       timecards: {

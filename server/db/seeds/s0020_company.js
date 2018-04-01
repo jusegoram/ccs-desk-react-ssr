@@ -4,6 +4,9 @@ import { Company } from 'server/api/models'
 exports.seed = async function(knex) {
   Model.knex(knex)
 
+  const section = 'Images'
+  const answerType = 'image'
+
   await Company.query()
   .insertGraph([
     {
@@ -25,9 +28,9 @@ exports.seed = async function(knex) {
         {
           name: 'Vehicle Condition',
           questions: [
-            { question: 'Trunk Number', answerType: 'image', order: 1 },
-            { question: 'Hood', answerType: 'image', order: 2 },
-            { question: 'Tire', answerType: 'image', order: 3 },
+            { order: 1, text: 'Truck Number', section, answerType },
+            { order: 2, text: 'Hood', section, answerType },
+            { order: 3, text: 'Tire', section, answerType },
           ],
         },
       ],
