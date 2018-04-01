@@ -92,6 +92,8 @@ export function up(knex) {
     table.date('date').notNullable()
     table.timestamp('clockedInAt')
     table.timestamp('clockedOutAt')
+    table.uuid('clockInLocationId')
+    table.uuid('clockOutLocationId')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -145,6 +147,8 @@ export function up(knex) {
   })
   .alterTable('Timecard', table => {
     table.foreign('employeeId').references('Employee.id')
+    table.foreign('clockInLocationId').references('Geography.id')
+    table.foreign('clockOutLocationId').references('Geography.id')
   })
   .alterTable('Vehicle', table => {
     table.foreign('companyId').references('Company.id')
