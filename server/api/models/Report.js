@@ -112,7 +112,10 @@ export default class Report extends withDeletedAt(APIModel) {
           .whereNull('templateId')
           .orderBy('createdAt', 'desc')
           .first()
-          if (!template) throw new ExpectedError('Unable to find the template for the specified report.')
+          if (!template)
+            throw new ExpectedError(
+              `Unable to find report template named "${templateName}". Please report this to your administrator.`
+            )
 
           const report = await template.$clone()
           delete report.id
