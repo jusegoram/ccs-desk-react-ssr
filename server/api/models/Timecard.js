@@ -1,6 +1,6 @@
 import { withDeletedAt } from 'server/api/util/mixins'
 import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
+import { QueryBuilder, Model, transaction } from 'objection'
 import { GraphQLString } from 'graphql'
 import ExpectedError from 'server/errors/ExpectedError'
 
@@ -93,21 +93,23 @@ export default class Timecard extends withDeletedAt(APIModel) {
         resolve: async (root, args, context) => {
           const { session, moment } = context
           if (!session) throw new ExpectedError('Unauthorized Access')
-          const existingTimecard = await Timecard.query()
-          .mergeContext(context)
-          .whereNull('clockedOutAt')
-          .first()
-          if (existingTimecard) throw new ExpectedError('You already have a timecard. Clock out to create a new one.')
-          const timecard = await Timecard.query()
-          .mergeContext(context)
-          .insert({
-            date: moment().format('YYYY-MM-DD'),
-            clockedInAt: moment().format(),
-          })
-          .returning('*')
+          return await transaction(Timecard, async Timecard => {
+            const existingTimecard = await Timecard.query()
+            .mergeContext(context)
+            .whereNull('clockedOutAt')
+            .first()
+            if (existingTimecard) throw new ExpectedError('You already have a timecard. Clock out to create a new one.')
+            const timecard = await Timecard.query()
+            .mergeContext(context)
+            .insert({
+              date: moment().format('YYYY-MM-DD'),
+              clockedInAt: moment().format(),
+            })
+            .returning('*')
 
-          await timecard.$relatedQuery('employee').relate(session.account.employee)
-          return timecard
+            await timecard.$relatedQuery('employee').relate(session.account.employee)
+            return timecard
+          })
         },
       },
       clockOut: {
@@ -116,13 +118,15 @@ export default class Timecard extends withDeletedAt(APIModel) {
         args: {},
         resolve: async (root, args, context) => {
           const { moment } = context
-          const timecard = await Timecard.query()
-          .mergeContext(context)
-          .whereNull('clockedOutAt')
-          .first()
-          if (!timecard) throw new ExpectedError('Unable to find your timecard. Please try again.')
-          await timecard.$query().patch({ clockedOutAt: moment().format() })
-          return timecard
+          return await transaction(Timecard, async Timecard => {
+            const timecard = await Timecard.query()
+            .mergeContext(context)
+            .whereNull('clockedOutAt')
+            .first()
+            if (!timecard) throw new ExpectedError('Unable to find your timecard. Please try again.')
+            await timecard.$query().patch({ clockedOutAt: moment().format() })
+            return timecard
+          })
         },
       },
     }
