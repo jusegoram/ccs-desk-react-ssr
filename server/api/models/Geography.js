@@ -1,5 +1,5 @@
 import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder } from 'objection'
+import { QueryBuilder, raw } from 'objection'
 import { GraphQLString } from 'graphql'
 import axios from 'axios'
 import ExpectedError from 'server/errors/ExpectedError'
@@ -71,6 +71,13 @@ export default class Geography extends APIModel {
       }
     }
   }
+
+  // $formatDatabaseJson(json) {
+  //   const dbJson = super.$formatDatabaseJson(json)
+  //   if (dbJson.latitude && dbJson.longitude && !dbJson.point)
+  //     dbJson.point = raw('ST_SetSRID(ST_Point(?, ?),4326)', [dbJson.longitude, dbJson.latitude])
+  //   return dbJson
+  // }
 
   static get relationMappings() {
     return {}

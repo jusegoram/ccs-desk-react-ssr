@@ -1,7 +1,7 @@
 import { withDeletedAt } from 'server/api/util/mixins'
 import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
-import { GraphQLString } from 'graphql'
+import { QueryBuilder, Model, transaction } from 'objection'
+import { GraphQLString, GraphQLFloat } from 'graphql'
 import ExpectedError from 'server/errors/ExpectedError'
 
 export default class VehicleClaim extends withDeletedAt(APIModel) {
@@ -117,8 +117,8 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
         type: this.GraphqlTypes.VehicleClaim,
         args: {
           externalId: { type: GraphQLString },
-          latitude: { type: GraphQLString },
-          longitude: { type: GraphQLString },
+          latitude: { type: GraphQLFloat },
+          longitude: { type: GraphQLFloat },
         },
         resolve: async (root, { externalId, latitude, longitude }, context) => {
           const { session, moment } = context
@@ -126,51 +126,57 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
           if (!latitude || !longitude)
             throw new ExpectedError('In order to claim a vehicle, you must specify your location')
           const Vehicle = require('./Vehicle').default
-          const vehicle = await Vehicle.query()
-          .mergeContext(context)
-          .where({ externalId })
-          .first()
-          if (!vehicle) throw new ExpectedError('Unable to find a vehicle with that identifier')
-          const existingVehicleClaim = await VehicleClaim.query()
-          .mergeContext(context)
-          .whereNull('returnedAt')
-          .first()
-          if (existingVehicleClaim)
-            throw new ExpectedError(
-              'You already have a claim on a vehicle. Return that vehicle before claiming a new one.'
-            )
-          const vehicleClaim = await VehicleClaim.query()
-          .insert({
-            date: moment().format('YYYY-MM-DD'),
-            claimedAt: moment().format(),
+          return await transaction(VehicleClaim, Vehicle, async (VehicleClaim, Vehicle) => {
+            const vehicle = await Vehicle.query()
+            .mergeContext(context)
+            .where({ externalId })
+            .first()
+            if (!vehicle) throw new ExpectedError('Unable to find a vehicle with that identifier')
+            const existingVehicleClaim = await VehicleClaim.query()
+            .mergeContext(context)
+            .whereNull('returnedAt')
+            .first()
+            if (existingVehicleClaim)
+              throw new ExpectedError(
+                'You already have a claim on a vehicle. Return that vehicle before claiming a new one.'
+              )
+            const vehicleClaim = await VehicleClaim.query()
+            .insert({
+              date: moment().format('YYYY-MM-DD'),
+              claimedAt: moment().format(),
+            })
+            .returning('*')
+            await vehicleClaim.$relatedQuery('claimLocation').insert({ type: 'location', latitude, longitude })
+            await vehicleClaim.$relatedQuery('employee').relate(session.account.employee)
+            await vehicleClaim.$relatedQuery('vehicle').relate(vehicle)
+            return vehicleClaim
           })
-          .returning('*')
-          await vehicleClaim.$relatedQuery('claimLocation').insert({ latitude, longitude })
-          await vehicleClaim.$relatedQuery('employee').relate(session.account.employee)
-          await vehicleClaim.$relatedQuery('vehicle').relate(vehicle)
-          return vehicleClaim
         },
       },
       return: {
         description: 'return a vehicle claim',
         type: this.GraphqlTypes.VehicleClaim,
         args: {
-          latitude: { type: GraphQLString },
-          longitude: { type: GraphQLString },
+          latitude: { type: GraphQLFloat },
+          longitude: { type: GraphQLFloat },
         },
         resolve: async (root, { latitude, longitude }, context) => {
           const { moment } = context
           if (!latitude || !longitude)
             throw new ExpectedError('In order to return a vehicle, you must specify your location')
-          const vehicleClaim = await VehicleClaim.query()
-          .mergeContext(context)
-          .whereNull('returnedAt')
-          .first()
-          if (!vehicleClaim) throw new ExpectedError('Unable to find your vehicle claim. Please try again.')
-          await vehicleClaim.$relatedQuery('returnLocation').insert({ latitude, longitude })
-          await vehicleClaim.$query().patch({ returnedAt: moment().format() })
-          await vehicleClaim.$loadRelated('vehicle')
-          return vehicleClaim
+          console.log('latitude', latitude)
+          console.log('longitude', longitude)
+          return await transaction(VehicleClaim, async VehicleClaim => {
+            const vehicleClaim = await VehicleClaim.query()
+            .mergeContext(context)
+            .whereNull('returnedAt')
+            .first()
+            if (!vehicleClaim) throw new ExpectedError('Unable to find your vehicle claim. Please try again.')
+            await vehicleClaim.$relatedQuery('returnLocation').insert({ type: 'location', latitude, longitude })
+            await vehicleClaim.$query().patch({ returnedAt: moment().format() })
+            await vehicleClaim.$loadRelated('vehicle')
+            return vehicleClaim
+          })
         },
       },
     }
