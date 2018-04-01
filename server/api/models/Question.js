@@ -5,9 +5,10 @@ export default class Question extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.integer('order').defaultTo(0).notNullable()
-    table.text('question').notNullable()
-    table.string('answerType').notNullable()
+    table.text('text').notNullable()
     table.text('answer')
+    table.string('answerType').notNullable()
+    table.string('section').notNullable()
   `
   static jsonSchema = {
     title: 'Question',
@@ -17,13 +18,14 @@ export default class Question extends APIModel {
     properties: {
       id: { type: 'string' },
       order: { type: 'number' },
-      question: { type: 'string' },
+      text: { type: 'string' },
+      section: { type: 'string' },
       answerType: { type: 'string' },
       answer: { type: ['string', 'null'] },
     },
   }
 
-  static visible = ['id', 'order', 'question', 'answerType', 'answer']
+  static visible = ['id', 'order', 'text', 'section', 'answerType', 'answer']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
