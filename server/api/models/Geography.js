@@ -62,6 +62,8 @@ export default class Geography extends APIModel {
     'city',
     'state',
     'country',
+    'latitude',
+    'longitude',
   ]
 
   static get QueryBuilder() {
@@ -78,10 +80,6 @@ export default class Geography extends APIModel {
   //     dbJson.point = raw('ST_SetSRID(ST_Point(?, ?),4326)', [dbJson.longitude, dbJson.latitude])
   //   return dbJson
   // }
-
-  static get relationMappings() {
-    return {}
-  }
 
   static get mutations() {
     return {

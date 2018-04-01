@@ -1,7 +1,7 @@
 import { withDeletedAt } from 'server/api/util/mixins'
 import APIModel from 'server/api/util/APIModel'
 import { QueryBuilder, Model, transaction } from 'objection'
-import { GraphQLString } from 'graphql'
+import { GraphQLFloat } from 'graphql'
 import ExpectedError from 'server/errors/ExpectedError'
 
 export default class Timecard extends withDeletedAt(APIModel) {
@@ -12,11 +12,15 @@ export default class Timecard extends withDeletedAt(APIModel) {
     table.date('date').notNullable()
     table.timestamp('clockedInAt')
     table.timestamp('clockedOutAt')
+    table.uuid('clockInLocationId')
+    table.uuid('clockOutLocationId')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
   static knexAlterTable = `
     table.foreign('employeeId').references('Employee.id')
+    table.foreign('clockInLocationId').references('Geography.id')
+    table.foreign('clockOutLocationId').references('Geography.id')
   `
   static jsonSchema = {
     title: 'Timecard',
@@ -34,7 +38,7 @@ export default class Timecard extends withDeletedAt(APIModel) {
     },
   }
 
-  static visible = ['id', 'date', 'clockedInAt', 'clockedOutAt', 'employee']
+  static visible = ['id', 'date', 'clockedInAt', 'clockedOutAt', 'employee', 'clockInLocation', 'clockOutLocation']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -81,6 +85,22 @@ export default class Timecard extends withDeletedAt(APIModel) {
           to: 'Report.id',
         },
       },
+      clockInLocation: {
+        relation: Model.HasOneRelation,
+        modelClass: 'Geography',
+        join: {
+          from: 'Timecard.clockInLocationId',
+          to: 'Geography.id',
+        },
+      },
+      clockOutLocation: {
+        relation: Model.HasOneRelation,
+        modelClass: 'Geography',
+        join: {
+          from: 'Timecard.clockOutLocationId',
+          to: 'Geography.id',
+        },
+      },
     }
   }
 
@@ -89,11 +109,15 @@ export default class Timecard extends withDeletedAt(APIModel) {
       create: {
         description: 'create a timecard',
         type: this.GraphqlTypes.Timecard,
-        args: {},
-        resolve: async (root, args, context) => {
+        args: {
+          latitude: { type: GraphQLFloat },
+          longitude: { type: GraphQLFloat },
+        },
+        resolve: async (root, { latitude, longitude }, context) => {
           const { session, moment } = context
           if (!session) throw new ExpectedError('Unauthorized Access')
-          return await transaction(Timecard, async Timecard => {
+          const Geography = require('./Geography').default
+          return await transaction(Timecard, Geography, async (Timecard, Geography) => {
             const existingTimecard = await Timecard.query()
             .mergeContext(context)
             .whereNull('clockedOutAt')
@@ -107,6 +131,12 @@ export default class Timecard extends withDeletedAt(APIModel) {
             })
             .returning('*')
 
+            const location = await Geography.query()
+            .insert({ type: 'location', latitude, longitude })
+            .returning('*')
+            await Timecard.query()
+            .patch({ clockInLocationId: location.id })
+            .where({ id: timecard.id })
             await timecard.$relatedQuery('employee').relate(session.account.employee)
             return timecard
           })
@@ -115,15 +145,25 @@ export default class Timecard extends withDeletedAt(APIModel) {
       clockOut: {
         description: 'clock out a timecard',
         type: this.GraphqlTypes.Timecard,
-        args: {},
-        resolve: async (root, args, context) => {
+        args: {
+          latitude: { type: GraphQLFloat },
+          longitude: { type: GraphQLFloat },
+        },
+        resolve: async (root, { latitude, longitude }, context) => {
           const { moment } = context
-          return await transaction(Timecard, async Timecard => {
+          const Geography = require('./Geography').default
+          return await transaction(Timecard, Geography, async (Timecard, Geography) => {
             const timecard = await Timecard.query()
             .mergeContext(context)
             .whereNull('clockedOutAt')
             .first()
             if (!timecard) throw new ExpectedError('Unable to find your timecard. Please try again.')
+            const location = await Geography.query()
+            .insert({ type: 'location', latitude, longitude })
+            .returning('*')
+            await Timecard.query()
+            .patch({ clockOutLocationId: location.id })
+            .where({ id: timecard.id })
             await timecard.$query().patch({ clockedOutAt: moment().format() })
             return timecard
           })

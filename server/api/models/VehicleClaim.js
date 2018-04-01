@@ -126,7 +126,8 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
           if (!latitude || !longitude)
             throw new ExpectedError('In order to claim a vehicle, you must specify your location')
           const Vehicle = require('./Vehicle').default
-          return await transaction(VehicleClaim, Vehicle, async (VehicleClaim, Vehicle) => {
+          const Geography = require('./Geography').default
+          return await transaction(VehicleClaim, Vehicle, Geography, async (VehicleClaim, Vehicle, Geography) => {
             const vehicle = await Vehicle.query()
             .mergeContext(context)
             .where({ externalId })
@@ -146,7 +147,12 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
               claimedAt: moment().format(),
             })
             .returning('*')
-            await vehicleClaim.$relatedQuery('claimLocation').insert({ type: 'location', latitude, longitude })
+            const location = await Geography.query()
+            .insert({ type: 'location', latitude, longitude })
+            .returning('*')
+            await VehicleClaim.query()
+            .patch({ claimLocationId: location.id })
+            .where({ id: vehicleClaim.id })
             await vehicleClaim.$relatedQuery('employee').relate(session.account.employee)
             await vehicleClaim.$relatedQuery('vehicle').relate(vehicle)
             return vehicleClaim
@@ -166,13 +172,19 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
             throw new ExpectedError('In order to return a vehicle, you must specify your location')
           console.log('latitude', latitude)
           console.log('longitude', longitude)
-          return await transaction(VehicleClaim, async VehicleClaim => {
+          const Geography = require('./Geography').default
+          return await transaction(VehicleClaim, Geography, async (VehicleClaim, Geography) => {
             const vehicleClaim = await VehicleClaim.query()
             .mergeContext(context)
             .whereNull('returnedAt')
             .first()
             if (!vehicleClaim) throw new ExpectedError('Unable to find your vehicle claim. Please try again.')
-            await vehicleClaim.$relatedQuery('returnLocation').insert({ type: 'location', latitude, longitude })
+            const location = await Geography.query()
+            .insert({ type: 'location', latitude, longitude })
+            .returning('*')
+            await VehicleClaim.query()
+            .patch({ returnLocationId: location.id })
+            .where({ id: vehicleClaim.id })
             await vehicleClaim.$query().patch({ returnedAt: moment().format() })
             await vehicleClaim.$loadRelated('vehicle')
             return vehicleClaim
