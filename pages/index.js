@@ -50,7 +50,7 @@ class Timecards extends React.Component {
                       className="card-actions mt-0 h-100"
                       color="primary"
                       onClick={() => {
-                        window.alert('Data download coming soon.')
+                        global.window.alert('Data download coming soon.')
                       }}
                     >
                       <i className="fa fa-download fa-lg" />
