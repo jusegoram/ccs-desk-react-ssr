@@ -6,14 +6,13 @@ import Router from 'next/router'
 import data from 'app/apollo/data'
 
 import NetworkProgressBar from 'app/ui/Layout/NetworkProgressBar'
-import withApolloProvider from 'app/apollo/withApolloProvider'
 import { SessionProvider, LocationProvider } from 'app/util/providers'
 
 // Import Main styles for this application
 import stylesheet from 'app/styles/index.scss'
 import 'react-select/dist/react-select.css'
 
-const Page = withApolloProvider(({ title, authed = true, location, children }) =>
+const Page = ({ title, authed = true, location, children }) =>
   React.Children.only(
     <div>
       <Head>
@@ -35,9 +34,6 @@ const Page = withApolloProvider(({ title, authed = true, location, children }) =
                 Router.replace('/sign-in')
                 return null
               }
-              if (loading) {
-                return null
-              }
               if (!authed && data && data.session) {
                 Router.replace('/')
                 return null
@@ -49,6 +45,5 @@ const Page = withApolloProvider(({ title, authed = true, location, children }) =
       </LocationProvider>
     </div>
   )
-)
 
 export default Page
