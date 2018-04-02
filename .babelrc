@@ -43,7 +43,6 @@
         "extensions": ["css$", "scss$"]
       }
     ],
-    "react-native-web",
     "transform-decorators-legacy"
   ]
 }
