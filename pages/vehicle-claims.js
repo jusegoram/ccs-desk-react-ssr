@@ -47,7 +47,13 @@ class VehicleClaims extends React.Component {
                   <CardHeader style={{ position: 'relative' }}>
                     {/*relative because card-actions is absolute*/}
                     <i className="icon-menu" /> Vehicle Claims
-                    <Button className="card-actions mt-0 h-100" color="primary">
+                    <Button
+                      className="card-actions mt-0 h-100"
+                      color="primary"
+                      onClick={() => {
+                        window.alert('Data download coming soon.')
+                      }}
+                    >
                       <i className="fa fa-download fa-lg" />
                     </Button>
                   </CardHeader>
