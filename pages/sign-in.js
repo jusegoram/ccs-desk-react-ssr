@@ -20,7 +20,6 @@ class SignIn extends React.Component {
                   {createSession => (
                     <Login
                       onSubmit={variables => {
-                        console.log(variables)
                         createSession({ variables })
                       }}
                     />
