@@ -1,7 +1,6 @@
 import React from 'react'
 import Head from 'next/head'
 import { Query } from 'react-apollo'
-import gql from 'graphql-tag'
 import Router from 'next/router'
 
 import data from 'app/apollo/data'
@@ -36,12 +35,12 @@ const Page = withApolloProvider(({ title, authed = true, location, children }) =
                 Router.replace('/sign-in')
                 return null
               }
-              if (!authed && !loading && data && data.session) {
-                Router.replace('/')
-                return children
+              if (loading) {
+                return null
               }
-              if (!data && loading) {
-                return <div>Loading...</div>
+              if (!authed && data && data.session) {
+                Router.replace('/')
+                return null
               }
               return <SessionProvider session={data.session}>{children}</SessionProvider>
             }}
