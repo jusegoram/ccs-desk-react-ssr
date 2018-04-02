@@ -1,14 +1,14 @@
 export default {
   items: [
     {
-      name: 'Employees',
-      url: '/employees',
-      icon: 'icon-people',
+      name: 'Timecards',
+      url: '/timecards',
+      icon: 'icon-clock',
     },
     {
-      name: 'Vehicles',
-      url: '/vehicles',
-      icon: 'icon-speedometer',
+      name: 'Vehicle Claims',
+      url: '/vehicle-claims',
+      icon: 'fa fa-car',
     },
   ],
 }
