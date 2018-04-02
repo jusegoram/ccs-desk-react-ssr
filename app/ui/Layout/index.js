@@ -3,7 +3,7 @@ import React from 'react'
 import { Container } from 'reactstrap'
 
 import Header from 'app/ui/Layout/Header'
-// import Aside from 'app/ui/Layout/Aside'
+import Aside from 'app/ui/Layout/Aside'
 import Sidebar from 'app/ui/Layout/Sidebar'
 
 class Layout extends React.Component {
@@ -54,6 +54,7 @@ class Layout extends React.Component {
               {children}
             </Container>
           </main>
+          <Aside isOpen={this.state.asideIsOpen} />
         </div>
       </div>
     )
