@@ -2,7 +2,7 @@ export default {
   items: [
     {
       name: 'Timecards',
-      url: '/timecards',
+      url: '/',
       icon: 'icon-clock',
     },
     {

@@ -1,6 +1,9 @@
 import React, { Component } from 'react'
 import { Nav, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap'
 import HeaderDropdown from './HeaderDropdown'
+import nav from './_nav'
+import _ from 'lodash'
+import { withLocation } from 'app/util/providers'
 
 class Header extends Component {
   constructor(props) {
@@ -37,13 +40,22 @@ class Header extends Component {
       textAlign: 'center',
       textTransform: 'uppercase',
     }
+    const titleStyle = {
+      letterSpacing: '1px',
+      fontSize: '21px',
+      lineHeight: '60px',
+      padding: 0,
+      textAlign: 'center',
+    }
+    const path = this.props.location.pathname
+    const title = _.find(nav.items, { url: path }).name
     return (
       <header className="app-header navbar">
         <NavbarToggler className="d-lg-none" onClick={this.mobileSidebarToggle}>
           <span className="navbar-toggler-icon" />
         </NavbarToggler>
         <NavbarBrand href="#" style={brandStyle}>
-          CCS Desk
+          Fleet
         </NavbarBrand>
         <NavbarToggler className="d-md-down-none h-100 b-r-1 px-3" onClick={this.sidebarToggle}>
           <span className="navbar-toggler-icon" />
@@ -59,7 +71,10 @@ class Header extends Component {
             <NavLink href="#">Settings</NavLink>
           </NavItem>
         </Nav> */}
-        <Nav className="ml-auto" navbar style={{ marginRight: 20 }}>
+        <Nav className="ml-auto mr-auto" navbar style={titleStyle}>
+          {title}
+        </Nav>
+        <Nav className="mx-1" navbar>
           {/* <HeaderDropdown notif />
           <HeaderDropdown tasks />
           <HeaderDropdown mssgs /> */}
@@ -73,4 +88,4 @@ class Header extends Component {
   }
 }
 
-export default Header
+export default withLocation(Header)
