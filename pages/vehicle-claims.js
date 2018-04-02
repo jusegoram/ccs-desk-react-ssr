@@ -19,9 +19,9 @@ class VehicleClaims extends React.Component {
       {
         Header: 'Claim Length',
         id: 'claimLength',
-        accessor: row => moment(row.returnedAt).diff(row.claimedAt, 'hours', true),
+        accessor: row => moment(row.returnedAt || undefined).diff(row.claimedAt, 'hours', true),
         Cell: ({ row }) =>
-          moment(row.returnedAt)
+          moment(row.returnedAt || undefined)
           .diff(row.claimedAt, 'hours', true)
           .toFixed(1) + ' hours',
       },
@@ -34,8 +34,8 @@ class VehicleClaims extends React.Component {
       {
         Header: 'Returned At',
         id: 'returnedAt',
-        accessor: row => moment(row.returnedAt).valueOf(),
-        Cell: ({ row }) => moment(row.returnedAt).format('h:mm A on MMMM Do'),
+        accessor: row => row.returnedAt,
+        Cell: ({ row }) => (row.returnedAt ? moment(row.returnedAt).format('h:mm A on MMMM Do') : null),
       },
     ]
     return (
