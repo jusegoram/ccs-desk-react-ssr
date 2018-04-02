@@ -42,6 +42,7 @@
       {
         "extensions": ["css$", "scss$"]
       }
-    ]
+    ],
+    "react-native-web"
   ]
 }

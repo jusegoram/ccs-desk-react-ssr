@@ -1,25 +1,16 @@
 import React from 'react'
 
-import { Col, Container, Row } from 'reactstrap'
-
 import Page from 'app/ui/Page'
+import Layout from 'app/ui/Layout'
 
-class SignIn extends React.Component {
+class Dashboard extends React.Component {
   render() {
     return (
-      <Page title="Sign In" location={this.props.location} redirectAuthedUserTo="/" redirectUnauthedUserTo={null}>
-        <div className="app flex-row align-items-center">
-          <Container>
-            <Row className="justify-content-center">
-              <Col md="8" lg="5">
-                Coming Soon
-              </Col>
-            </Row>
-          </Container>
-        </div>
+      <Page title="Dashboard" location={this.props.location}>
+        <Layout>Welcome to Endeavor Fleet. Use the navbar on the left to navigate.</Layout>
       </Page>
     )
   }
 }
 
-export default SignIn
+export default Dashboard
