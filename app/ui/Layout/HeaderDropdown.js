@@ -1,12 +1,12 @@
 import React, { Component } from 'react'
 import { Badge, DropdownItem, DropdownMenu, DropdownToggle, Dropdown, Progress } from 'reactstrap'
-import { compose, withApollo } from 'react-apollo'
+import { compose, withApollo, graphql } from 'react-apollo'
 import gql from 'graphql-tag'
 import { get as p } from 'lodash'
 import Link from 'next/link'
 import cookie from 'cookie'
 
-import { Session_logout } from 'app/mutations/Session'
+import data from 'app/apollo/data'
 import { withSession } from 'app/util/providers'
 
 class HeaderDropdown extends Component {
@@ -23,7 +23,7 @@ class HeaderDropdown extends Component {
   async logout(id) {
     try {
       console.log(this.props)
-      if (id) this.props.Session_destroy({ variables: { id } })
+      if (id) this.props.Session_logout({ variables: { id } })
     } catch (e) {
       console.error(e)
     } finally {
@@ -344,19 +344,6 @@ class HeaderDropdown extends Component {
   }
 }
 
-const SESSION = gql`
-  query session {
-    session {
-      id
-      account {
-        id
-        person {
-          id
-          name
-        }
-      }
-    }
-  }
-`
+const Session_logout = graphql(data.Session.logout.mutation)
 
 export default compose(withApollo, withSession, Session_logout)(HeaderDropdown)
