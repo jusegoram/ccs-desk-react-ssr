@@ -13,10 +13,6 @@ import createClientMoment from 'server/api/util/createClientMoment'
 
 Model.knex(knex)
 
-models.Account.query().then(accounts => {
-  console.log(accounts)
-})
-
 // initialize builder
 const graphqlSchema = graphQlBuilder()
 .selectFiltering(false)
