@@ -33,7 +33,7 @@
         "alias": {
           "server": "./server",
           "app": "./app",
-          "^react-apollo$": "react-apollo/index"
+          "^react-apollo$": "./node_modules/react-apollo/index.js"
         }
       }
     ],
