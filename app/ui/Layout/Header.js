@@ -65,9 +65,9 @@ class Header extends Component {
           <HeaderDropdown mssgs /> */}
           <HeaderDropdown accnt session={this.props.session} />
         </Nav>
-        <NavbarToggler className="d-md-down-none" onClick={this.asideToggle}>
+        {/* <NavbarToggler className="d-md-down-none" onClick={this.asideToggle}>
           <span className="navbar-toggler-icon" />
-        </NavbarToggler>
+        </NavbarToggler> */}
       </header>
     )
   }
