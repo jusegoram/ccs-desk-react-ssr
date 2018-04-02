@@ -14,12 +14,12 @@ exports.seed = async function(knex) {
       employees: [
         {
           name: 'John Smith',
-          externalId: 'jsmith@gmail.com',
+          externalId: 'demo@example.com',
           phoneNumber: '5555555555',
           account: {
             name: 'John Smith',
-            email: 'timhuff@gmail.com',
-            password: 'asdf',
+            email: 'demo@example.com',
+            password: 'demo',
           },
         },
       ],
