@@ -1,3 +1,3 @@
 export default {
-  host: 'https://local.endeavorfleet.com',
+  host: 'https://endeavorfleet.com',
 }
