@@ -18,23 +18,23 @@ class Timecards extends React.Component {
       {
         Header: 'Shift Length',
         id: 'shiftLength',
-        accessor: row => moment(row.clockedOutAt).diff(row.clockedInAt, 'hours', true),
+        accessor: row => moment(row.clockedOutAt || undefined).diff(row.clockedInAt, 'hours', true),
         Cell: ({ row }) =>
-          moment(row.clockedOutAt)
+          moment(row.clockedOutAt || undefined)
           .diff(row.clockedInAt, 'hours', true)
           .toFixed(1) + ' hours',
       },
       {
         Header: 'Clocked In At',
         id: 'clockedInAt',
-        accessor: row => moment(row.clockedInAt).valueOf(),
-        Cell: ({ row }) => moment(row.clockedInAt).format('h:mm A on MMMM Do'),
+        accessor: row => row.clockedInAt,
+        Cell: ({ row }) => (row.clockedInAt ? moment(row.clockedInAt).format('h:mm A on MMMM Do') : null),
       },
       {
         Header: 'Clocked Out At',
         id: 'clockedOutAt',
-        accessor: row => moment(row.clockedOutAt).valueOf(),
-        Cell: ({ row }) => moment(row.clockedOutAt).format('h:mm A on MMMM Do'),
+        accessor: row => row.clockedOutAt,
+        Cell: ({ row }) => (row.clockedOutAt ? moment(row.clockedOutAt).format('h:mm A on MMMM Do') : null),
       },
     ]
     return (
