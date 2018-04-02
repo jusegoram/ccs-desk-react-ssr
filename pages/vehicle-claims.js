@@ -12,32 +12,33 @@ class Timecards extends React.Component {
   render() {
     const columns = [
       { Header: 'Employee', accessor: 'employee.name' },
+      { Header: 'Vehicle ID', accessor: 'vehicle.externalId' },
       {
-        Header: 'Clocked In At',
-        id: 'clockedInAt',
-        accessor: row => moment(row.clockedInAt).valueOf(),
-        Cell: ({ row }) => moment(row.clockedInAt).format('h:mm A'),
-      },
-      {
-        Header: 'Clocked Out At',
-        id: 'clockedOutAt',
-        accessor: row => moment(row.clockedOutAt).valueOf(),
-        Cell: ({ row }) => moment(row.clockedOutAt).format('h:mm A'),
-      },
-      {
-        Header: 'Shift Length',
-        id: 'shiftLength',
-        accessor: row => moment(row.clockedOutAt).diff(row.clockedInAt, 'hours', true),
+        Header: 'Claim Length',
+        id: 'claimLength',
+        accessor: row => moment(row.returnedAt).diff(row.claimedAt, 'hours', true),
         Cell: ({ row }) =>
-          moment(row.clockedOutAt)
-          .diff(row.clockedInAt, 'hours', true)
+          moment(row.returnedAt)
+          .diff(row.claimedAt, 'hours', true)
           .toFixed(1) + ' hours',
+      },
+      {
+        Header: 'Claimed At',
+        id: 'claimedAt',
+        accessor: row => moment(row.claimedAt).valueOf(),
+        Cell: ({ row }) => moment(row.claimedAt).format('h:mm A on MMMM Do'),
+      },
+      {
+        Header: 'Returned At',
+        id: 'returnedAt',
+        accessor: row => moment(row.returnedAt).valueOf(),
+        Cell: ({ row }) => moment(row.returnedAt).format('h:mm A on MMMM Do'),
       },
     ]
     return (
-      <Page title="Dashboard" location={this.props.location}>
+      <Page title="Dashboard" location={this.props.url}>
         <Layout>
-          <Query {...data.Timecard.QUERY}>
+          <Query {...data.VehicleClaim.QUERY} fetchPolicy="cache-and-network" pollInterval={5000}>
             {({ loading, data }) => {
               return (
                 <ReactTable
@@ -45,7 +46,7 @@ class Timecards extends React.Component {
                   filterable
                   className="-striped -highlight"
                   loading={loading}
-                  data={data && data.timecards}
+                  data={data && data.vehicleClaims}
                   defaultPageSize={20}
                   columns={columns}
                   defaultFilterMethod={(filter, row) =>

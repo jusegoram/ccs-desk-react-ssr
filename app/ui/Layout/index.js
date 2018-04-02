@@ -30,7 +30,7 @@ class Layout extends React.Component {
   }
   render() {
     const { sidebarIsOpen, asideIsOpen, sidebarIsCompressed } = this.state
-    const { session, location, style, children } = this.props
+    const { session, style, children } = this.props
     const mainStyle = {
       marginTop: 20,
       marginBottom: 20,
@@ -47,7 +47,7 @@ class Layout extends React.Component {
       <div className={className}>
         <Header session={session} toggleSidebar={this.toggleSidebar} toggleAside={this.toggleAside} />
         <div className="app-body w-100">
-          <Sidebar location={location} toggleCompression={this.toggleSidebarCompression} />
+          <Sidebar toggleCompression={this.toggleSidebarCompression} />
           <main className="main">
             {/* <Breadcrumb /> */}
             <Container style={mainStyle} fluid>
