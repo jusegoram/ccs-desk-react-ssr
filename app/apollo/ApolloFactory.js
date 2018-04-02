@@ -8,6 +8,7 @@ import Promise from 'bluebird'
 import alert from 'sweetalert'
 import ExpectedError from 'server/errors/ExpectedError'
 import { bindAll } from 'lodash'
+import config from 'app/config'
 
 // Polyfill fetch() on the server (used by apollo-client)
 if (!process.browser) {
@@ -102,7 +103,7 @@ export default class ApolloFactory {
       onError(this.errorHandler),
       ...this.links,
       createHttpLink({
-        uri: 'http://localhost:3000/graphql',
+        uri: config.host + '/graphql',
         credentials: 'same-origin',
         fetch: this.createFetch(),
       })

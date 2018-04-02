@@ -1,6 +1,9 @@
 import React from 'react'
 
 import { Col, Container, Row } from 'reactstrap'
+import { Mutation } from 'react-apollo'
+
+import data from 'app/apollo/data'
 
 import Page from 'app/ui/Page'
 import Login from 'app/ui/Form/Login'
@@ -13,7 +16,16 @@ class SignIn extends React.Component {
           <Container>
             <Row className="justify-content-center">
               <Col md="8" lg="5">
-                <Login />
+                <Mutation {...data.Session.create}>
+                  {createSession => (
+                    <Login
+                      onSubmit={variables => {
+                        console.log(variables)
+                        createSession({ variables })
+                      }}
+                    />
+                  )}
+                </Mutation>
               </Col>
             </Row>
           </Container>

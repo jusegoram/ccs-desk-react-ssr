@@ -87,6 +87,7 @@ export default class Session extends withDeletedAt(APIModel) {
           .$relatedQuery('sessions')
           .insert({})
           .returning('*')
+          await session.$loadRelated('account.employee.company')
           const token = createToken({ sessionId: session.id, clientContext })
           session.token = token
           res.cookie('token', token)

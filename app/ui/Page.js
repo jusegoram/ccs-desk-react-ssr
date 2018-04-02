@@ -4,6 +4,8 @@ import { Query } from 'react-apollo'
 import gql from 'graphql-tag'
 import Router from 'next/router'
 
+import data from 'app/apollo/data'
+
 import NetworkProgressBar from 'app/ui/Layout/NetworkProgressBar'
 import withApolloProvider from 'app/apollo/withApolloProvider'
 import { SessionProvider, LocationProvider } from 'app/util/providers'
@@ -28,9 +30,10 @@ const Page = withApolloProvider(
           {!redirectAuthedUserTo && !redirectUnauthedUserTo ? (
             children
           ) : (
-            <Query query={SESSION} fetchPolicy="cache-and-network">
+            <Query {...data.Session.GET} fetchPolicy="cache-and-network">
               {result => {
                 const { loading, data } = result
+                console.log('data', data)
                 if (redirectUnauthedUserTo && !loading && (!data || !data.session)) {
                   Router.replace(redirectUnauthedUserTo)
                   return null
@@ -50,17 +53,5 @@ const Page = withApolloProvider(
       </div>
     )
 )
-
-const SESSION = gql`
-  query session {
-    session {
-      id
-      account {
-        id
-        name
-      }
-    }
-  }
-`
 
 export default Page
