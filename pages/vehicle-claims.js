@@ -3,12 +3,13 @@ import ReactTable from 'react-table'
 import { Query } from 'react-apollo'
 import moment from 'moment-timezone'
 
+import withApolloProvider from 'app/apollo/withApolloProvider'
 import data from 'app/apollo/data'
 
 import Page from 'app/ui/Page'
 import Layout from 'app/ui/Layout'
 
-class Timecards extends React.Component {
+class VehicleClaims extends React.Component {
   render() {
     const columns = [
       { Header: 'Employee', accessor: 'employee.name' },
@@ -45,7 +46,7 @@ class Timecards extends React.Component {
                   style={{ backgroundColor: 'white', height: 'calc(100vh - 100px)' }}
                   filterable
                   className="-striped -highlight"
-                  loading={loading}
+                  loading={!data.vehicleClaims && loading}
                   data={data && data.vehicleClaims}
                   defaultPageSize={20}
                   columns={columns}
@@ -64,4 +65,4 @@ class Timecards extends React.Component {
   }
 }
 
-export default Timecards
+export default withApolloProvider(VehicleClaims)
