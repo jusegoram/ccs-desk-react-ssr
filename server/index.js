@@ -10,6 +10,11 @@ import { GraphQLInt, GraphQLBoolean } from 'graphql'
 import restRouter from 'server/api/restRouter'
 import createToken from 'server/api/util/createToken'
 import createClientMoment from 'server/api/util/createClientMoment'
+import CSV from 'easy-csv'
+import moment from 'moment-timezone'
+import stream from 'stream'
+
+const { Readable } = stream
 
 Model.knex(knex)
 
@@ -44,8 +49,60 @@ const graphqlSchema = graphQlBuilder()
   return args
 })
 .build()
-
 export default async app => {
+  app.get('/download/vehicleClaims', async (req, res) => {
+    const vehicleClaims = await models.VehicleClaim.query()
+    .select()
+    .eager('[employee vehicle]')
+    const data = vehicleClaims.map(c => ({
+      Name: c.employee.name,
+      Date: moment(c.date).format('MM/DD/YYYY'),
+      'Vechicle ID': c.vehicle.externalId,
+      'Claimed At': !c.claimedAt ? '' : moment.tz(c.claimedAt, 'America/Chicago').format('h:mm A'),
+      'Returned At': !c.returnedAt ? '' : moment.tz(c.returnedAt, 'America/Chicago').format('h:mm A'),
+      'Duration (hours)': !(c.claimedAt && c.returnedAt)
+        ? 'N/A'
+        : moment(c.returnedAt)
+        .diff(c.claimedAt, 'hours', true)
+        .toFixed(1),
+    }))
+    const csv = await CSV.toCSV(data)
+    const csvStream = new Readable()
+    csvStream.push(csv)
+    csvStream.push(null)
+    res.writeHead(200, {
+      'Content-Type': 'text/csv',
+      'Access-Control-Allow-Origin': '*',
+      'Content-Disposition': 'attachment; filename=VehicleClaims.csv',
+    })
+    csvStream.pipe(res)
+  })
+  app.get('/download/timecards', async (req, res) => {
+    const timecards = await models.Timecard.query()
+    .select()
+    .eager('employee')
+    const data = timecards.map(t => ({
+      Name: t.employee.name,
+      Date: moment(t.date).format('MM/DD/YYYY'),
+      'Clock In': !t.clockedInAt ? '' : moment.tz(t.clockedInAt, 'America/Chicago').format('h:mm A'),
+      'Clock Out': !t.clockedOutAt ? '' : moment.tz(t.clockedOutAt, 'America/Chicago').format('h:mm A'),
+      'Duration (hours)': !(t.clockedInAt && t.clockedOutAt)
+        ? 'N/A'
+        : moment(t.clockedOutAt)
+        .diff(t.clockedInAt, 'hours', true)
+        .toFixed(1),
+    }))
+    const csv = await CSV.toCSV(data)
+    const csvStream = new Readable()
+    csvStream.push(csv)
+    csvStream.push(null)
+    res.writeHead(200, {
+      'Content-Type': 'text/csv',
+      'Access-Control-Allow-Origin': '*',
+      'Content-Disposition': 'attachment; filename=Timecards.csv',
+    })
+    csvStream.pipe(res)
+  })
   app.use('/api', restRouter)
   app.use(
     '/graphql',
