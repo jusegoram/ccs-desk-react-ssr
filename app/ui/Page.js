@@ -30,6 +30,7 @@ const Page = ({ title, authed = true, location, children }) =>
           <Query {...data.Session.GET} fetchPolicy="cache-and-network">
             {result => {
               const { loading, data } = result
+              if (loading && !data.session) return null
               if (authed && !loading && (!data || !data.session)) {
                 Router.replace('/sign-in')
                 return null
