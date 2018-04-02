@@ -3,6 +3,7 @@ import ReactTable from 'react-table'
 import { Query } from 'react-apollo'
 import moment from 'moment-timezone'
 
+import withApolloProvider from 'app/apollo/withApolloProvider'
 import data from 'app/apollo/data'
 
 import Page from 'app/ui/Page'
@@ -63,4 +64,4 @@ class Timecards extends React.Component {
   }
 }
 
-export default Timecards
+export default withApolloProvider(Timecards)

@@ -3,6 +3,7 @@ import React from 'react'
 import { Col, Container, Row } from 'reactstrap'
 import { Mutation } from 'react-apollo'
 
+import withApolloProvider from 'app/apollo/withApolloProvider'
 import data from 'app/apollo/data'
 
 import Page from 'app/ui/Page'
@@ -34,4 +35,4 @@ class SignIn extends React.Component {
   }
 }
 
-export default SignIn
+export default withApolloProvider(SignIn)
