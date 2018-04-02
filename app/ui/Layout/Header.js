@@ -59,7 +59,7 @@ class Header extends Component {
             <NavLink href="#">Settings</NavLink>
           </NavItem>
         </Nav> */}
-        <Nav className="ml-auto" navbar>
+        <Nav className="ml-auto" navbar style={{ marginRight: 20 }}>
           {/* <HeaderDropdown notif />
           <HeaderDropdown tasks />
           <HeaderDropdown mssgs /> */}
