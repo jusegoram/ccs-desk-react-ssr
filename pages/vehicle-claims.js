@@ -52,7 +52,10 @@ class VehicleClaims extends React.Component {
                       className="card-actions mt-0 h-100"
                       color="primary"
                       onClick={() => {
-                        alert('Data download coming soon.')
+                        window.open('https://endeavorfleet.com/download/vehicleClaims')
+                        alert(
+                          "The download should be starting. If it hasn't, verify that your popup blocker isn't preventing it from opening."
+                        )
                       }}
                     >
                       <i className="fa fa-download fa-lg" />
