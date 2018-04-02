@@ -54,7 +54,7 @@ class Layout extends React.Component {
               {children}
             </Container>
           </main>
-          <Aside isOpen={this.state.asideIsOpen} />
+          {/* <Aside isOpen={this.state.asideIsOpen} /> */}
         </div>
       </div>
     )
