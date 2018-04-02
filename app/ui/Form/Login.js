@@ -6,8 +6,8 @@ import Link from 'next/link'
 
 class LoginForm extends Component {
   state = {
-    email: 'admin@example.com',
-    password: 'demo',
+    email: '',
+    password: '',
   }
   render() {
     return (
