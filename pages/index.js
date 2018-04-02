@@ -3,6 +3,7 @@ import ReactTable from 'react-table'
 import { Query } from 'react-apollo'
 import moment from 'moment-timezone'
 import { Card, CardHeader, CardBody, Button } from 'reactstrap'
+import alert from 'sweetalert'
 
 import withApolloProvider from 'app/apollo/withApolloProvider'
 import data from 'app/apollo/data'
@@ -50,7 +51,7 @@ class Timecards extends React.Component {
                       className="card-actions mt-0 h-100"
                       color="primary"
                       onClick={() => {
-                        if (process.browser) global.window.alert('Data download coming soon.')
+                        alert('Data download coming soon.')
                       }}
                     >
                       <i className="fa fa-download fa-lg" />
