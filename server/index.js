@@ -66,7 +66,7 @@ export default async app => {
           const jwtPayload = jwt.verify(token, process.env.JWT_SECRET)
           const { sessionId } = jwtPayload
           session = await models.Session.query()
-          .eager('account.employee.company')
+          .eager('account.employee.company') //update this in session mutations
           .findById(sessionId)
           if (!session) {
             return res

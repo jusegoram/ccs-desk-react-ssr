@@ -1,5 +1,5 @@
 import { Model } from 'objection'
-import { Company } from 'server/api/models'
+import { Company, Account } from 'server/api/models'
 
 exports.seed = async function(knex) {
   Model.knex(knex)
@@ -37,4 +37,9 @@ exports.seed = async function(knex) {
     },
   ])
   .returning('*')
+  await Account.query().insertGraph({
+    name: 'Joe Admin',
+    email: 'admin@example.com',
+    password: 'demo',
+  })
 }
