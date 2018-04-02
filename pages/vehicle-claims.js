@@ -52,9 +52,9 @@ class VehicleClaims extends React.Component {
                       </a>
                     </div>
                   </CardHeader>
-                  <CardBody>
+                  <CardBody className="p-0">
                     <ReactTable
-                      style={{ backgroundColor: 'white', height: 'calc(100vh - 100px)' }}
+                      style={{ backgroundColor: 'white', height: 'calc(100vh - 146px)' }}
                       filterable
                       className="-striped -highlight"
                       loading={!data.vehicleClaims && loading}
