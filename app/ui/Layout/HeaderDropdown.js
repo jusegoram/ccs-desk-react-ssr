@@ -152,7 +152,7 @@ class HeaderDropdown extends Component {
           <DropdownItem header tag="div" className="text-center">
             <strong>{`${p(props, 'session.account.name') || ''}`}</strong>
           </DropdownItem>
-          <DropdownItem>
+          {/* <DropdownItem>
             <i className="fa fa-user" /> Account
           </DropdownItem>
           <Link href="/invites/create">
@@ -164,7 +164,7 @@ class HeaderDropdown extends Component {
             <DropdownItem>
               <i className="fa icon-book-open" /> View Invites
             </DropdownItem>
-          </Link>
+          </Link> */}
           <DropdownItem onClick={() => this.logout(p(props, 'session.id'))}>
             <i className="fa fa-lock" /> Logout
           </DropdownItem>
