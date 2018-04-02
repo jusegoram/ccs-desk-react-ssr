@@ -1,3 +1,4 @@
+import autobind from 'autobind-decorator'
 import { ApolloClient } from 'apollo-client'
 import { createHttpLink } from 'apollo-link-http'
 import { InMemoryCache } from 'apollo-cache-inmemory'
@@ -7,7 +8,6 @@ import { onError } from 'apollo-link-error'
 import Promise from 'bluebird'
 import alert from 'sweetalert'
 import ExpectedError from 'server/errors/ExpectedError'
-import { bindAll } from 'lodash'
 import config from 'app/config'
 
 // Polyfill fetch() on the server (used by apollo-client)
@@ -26,48 +26,40 @@ export default class ApolloFactory {
     return globalApollo
   }
 
-  constructor() {
-    this.links = []
-    this.fetchMiddleware = []
-    this.requestListeners = []
-    this.errorListeners = []
-    this.client = null
-    bindAll(
-      this,
-      'addLink',
-      'addRequestListener',
-      'removeRequestListener',
-      'addFetchMiddleware',
-      'addErrorListener',
-      'createFetch',
-      'errorHandler',
-      'createClient'
-    )
-  }
+  links = []
+  fetchMiddleware = []
+  requestListeners = []
+  errorListeners = []
+  client = null
 
   /* <API> */
+  @autobind
   addLink(link) {
     if (this.client) return
     this.middleware.push(link)
   }
 
+  @autobind
   addRequestListener(callback) {
     this.requestListeners.push(callback)
   }
+  @autobind
   removeRequestListener(callback) {
     const index = this.requestListeners.indexOf(callback)
     if (index !== -1) this.requestListeners.splice(1, index)
   }
+  @autobind
   addFetchMiddleware(middleware) {
     if (this.client) return
     this.fetchMiddleware.push(middleware)
   }
+  @autobind
   addErrorListener(callback) {
     if (this.client) return
     this.errorListeners.push(callback)
   }
   /* </API> */
-
+  @autobind
   createFetch() {
     const fetchMiddleware = this.fetchMiddleware
     return async (uri, options) => {
@@ -77,6 +69,7 @@ export default class ApolloFactory {
       return request
     }
   }
+  @autobind
   errorHandler(errorInfo) {
     if (process.browser) {
       const { graphQLErrors, networkError } = errorInfo
@@ -96,7 +89,7 @@ export default class ApolloFactory {
       this.errorListeners.forEach(listener => listener(errorInfo))
     }
   }
-
+  @autobind
   createClient(initialState) {
     if (this.client) return this.client
     const link = concat(
