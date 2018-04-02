@@ -11,7 +11,7 @@ import Login from 'app/ui/Form/Login'
 class SignIn extends React.Component {
   render() {
     return (
-      <Page title="Sign In" location={this.props.url} authed={false} redirectUnauthedUserTo={null}>
+      <Page title="Sign In" location={this.props.url} authed={false}>
         <div className="app flex-row align-items-center">
           <Container>
             <Row className="justify-content-center">
