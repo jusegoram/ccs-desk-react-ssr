@@ -1,14 +1,19 @@
 export default {
   items: [
     {
-      name: 'Timecards',
+      name: 'Employees',
       url: '/',
-      icon: 'icon-clock',
+      icon: 'icon-people',
     },
-    {
-      name: 'Vehicle Claims',
-      url: '/vehicle-claims',
-      icon: 'fa fa-car',
-    },
+    // {
+    //   name: 'Timecards',
+    //   url: '/',
+    //   icon: 'icon-clock',
+    // },
+    // {
+    //   name: 'Vehicle Claims',
+    //   url: '/vehicle-claims',
+    //   icon: 'fa fa-car',
+    // },
   ],
 }

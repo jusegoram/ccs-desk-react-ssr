@@ -49,6 +49,7 @@ export default class Employee extends APIModel {
     'vehicleClaim',
     'timecards',
     'vehicleClaims',
+    'company',
   ]
 
   static get QueryBuilder() {
