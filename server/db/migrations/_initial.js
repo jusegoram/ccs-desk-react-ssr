@@ -21,6 +21,24 @@ export function up(knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
+  .createTable('DataImport', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.uuid('dataSourceId')
+    table.string('status').defaultTo('pending')
+    table.text('error')
+    table.timestamp('downloadedAt')
+    table.timestamp('completedAt')
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
+  .createTable('DataSource', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.string('service')
+    table.string('name')
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+    table.unique(['service', 'name'])
+  })
   .createTable('Employee', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('terminatedAt')
@@ -161,6 +179,9 @@ export function up(knex) {
   .alterTable('Account', table => {
     table.foreign('employeeId').references('Employee.id')
     table.foreign('companyId').references('Company.id')
+  })
+  .alterTable('DataImport', table => {
+    table.foreign('dataSourceId').references('DataSource.id')
   })
   .alterTable('Employee', table => {
     table.foreign('companyId').references('Company.id')
