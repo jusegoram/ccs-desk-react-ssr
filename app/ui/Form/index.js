@@ -5,7 +5,7 @@ class Form extends Component {
   constructor(props) {
     super(props)
     this.onSubmit = this.onSubmit.bind(this)
-    this.submitCallback = props.onEverySubmit || _.once(props.onSubmit)
+    this.submitCallback = props.onSubmit
   }
   onSubmit(event) {
     event.preventDefault()

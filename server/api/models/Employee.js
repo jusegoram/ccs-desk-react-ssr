@@ -73,6 +73,30 @@ export default class Employee extends APIModel {
           to: 'Company.id',
         },
       },
+      workGroups: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'WorkGroup',
+        join: {
+          from: 'Employee.id',
+          through: {
+            from: 'workGroupTechs.techId',
+            to: 'workGroupTechs.workGroupId',
+          },
+          to: 'WorkGroup.id',
+        },
+      },
+      managedWorkGroups: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'WorkGroup',
+        join: {
+          from: 'Employee.id',
+          through: {
+            from: 'workGroupManagers.managerId',
+            to: 'workGroupManagers.workGroupId',
+          },
+          to: 'WorkGroup.id',
+        },
+      },
       account: {
         relation: Model.HasOneRelation,
         modelClass: 'Account',

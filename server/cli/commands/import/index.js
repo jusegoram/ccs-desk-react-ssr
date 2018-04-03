@@ -28,6 +28,7 @@ module.exports = async ({ service, name }) => {
   const dataSource = await DataSource.query()
   .where({ service, name })
   .first()
+  if (!dataSource) throw new Error('Unable to find that data source')
   const dataImport = await DataImport.query()
   .insert({ dataSourceId: dataSource.id })
   .returning('*')

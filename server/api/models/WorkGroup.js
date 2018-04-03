@@ -85,8 +85,8 @@ export default class WorkGroup extends APIModel {
         join: {
           from: 'WorkGroup.id',
           through: {
-            from: 'workForceManagers.workForceId',
-            to: 'workForceManagers.managerId',
+            from: 'workGroupManagers.workGroupId',
+            to: 'workGroupManagers.managerId',
           },
           to: 'Employee.id',
         },
@@ -97,8 +97,8 @@ export default class WorkGroup extends APIModel {
         join: {
           from: 'WorkGroup.id',
           through: {
-            from: 'workForceTechs.workForceId',
-            to: 'workForceTechs.techId',
+            from: 'workGroupTechs.workGroupId',
+            to: 'workGroupTechs.techId',
           },
           to: 'Employee.id',
         },
