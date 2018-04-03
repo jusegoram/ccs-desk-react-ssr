@@ -1,12 +1,11 @@
 import _ from 'lodash'
-import moment from 'moment'
 import Promise from 'bluebird'
 import ObjectStreamTransform from 'server/cli/commands/import/util/ObjectStreamTransform'
 import { transaction } from 'objection'
-import { WorkForce, Company, Employee } from 'server/api/models'
+import { WorkGroup, Company, Employee } from 'server/api/models'
 import sanitizeName from 'server/util/sanitizeName'
 
-const models = [WorkForce, Company, Employee]
+const models = [WorkGroup, Company, Employee]
 
 const serviceW2Company = {
   'Goodman Analytics': 'Goodman',
@@ -47,14 +46,14 @@ const serviceW2Company = {
 */
 let srData = null
 
-const getDtvWorkForces = async w2Company => {
-  const ensureDtvWorkForces = async type => {
-    const workForces = await WorkForce.query().where({ companyId: w2Company.id, type })
-    if (workForces.length !== 0) return workForces
-    return await createAllWorkForcesOfType(type)
+const getDtvWorkGroups = async w2Company => {
+  const ensureDtvWorkGroups = async type => {
+    const workGroups = await WorkGroup.query().where({ companyId: w2Company.id, type })
+    if (workGroups.length !== 0) return workGroups
+    return await createAllWorkGroupsOfType(type)
   }
-  const createAllWorkForcesOfType = async type => {
-    const knex = WorkForce.knex()
+  const createAllWorkGroupsOfType = async type => {
+    const knex = WorkGroup.knex()
     const namesForType = _.map(
       await knex
       .distinct(type)
@@ -63,7 +62,7 @@ const getDtvWorkForces = async w2Company => {
       type
     )
     return await Promise.mapSeries(namesForType, async name => {
-      return await WorkForce.query().insert({
+      return await WorkGroup.query().insert({
         companyId: w2Company.id,
         externalId: name,
         name,
@@ -72,10 +71,10 @@ const getDtvWorkForces = async w2Company => {
     })
   }
   return await Promise.props({
-    'Service Region': ensureDtvWorkForces('Service Region'),
-    Office: ensureDtvWorkForces('Office'),
-    DMA: ensureDtvWorkForces('DMA'),
-    Division: ensureDtvWorkForces('Division'),
+    'Service Region': ensureDtvWorkGroups('Service Region'),
+    Office: ensureDtvWorkGroups('Office'),
+    DMA: ensureDtvWorkGroups('DMA'),
+    Division: ensureDtvWorkGroups('Division'),
   })
 }
 
@@ -93,20 +92,20 @@ const streamToArray = async (stream, transformCallback) =>
     })
   })
 
-let workForces = null
+let workGroups = null
 
-const ensureWorkForce = async ({ type, companyId, externalId, name }) => {
-  workForces[type] = workForces[type] || {}
-  if (workForces[type][externalId]) return workForces[type][externalId]
+const ensureWorkGroup = async ({ type, companyId, externalId, name }) => {
+  workGroups[type] = workGroups[type] || {}
+  if (workGroups[type][externalId]) return workGroups[type][externalId]
   const queryProps = { type, companyId, externalId }
-  workForces[type][externalId] =
-    (await WorkForce.query()
+  workGroups[type][externalId] =
+    (await WorkGroup.query()
     .where(queryProps)
     .first()) ||
-    (await WorkForce.query()
+    (await WorkGroup.query()
     .insert({ ...queryProps, name })
     .returning('*'))
-  return workForces[type][externalId]
+  return workGroups[type][externalId]
 }
 
 const upsertTech = async ({ companyId, techData, dataSource }) => {
@@ -167,10 +166,10 @@ const ensureCompany = async name => {
 }
 
 export default async ({ csvObjStream, dataSource }) => {
-  await transaction(...models, async (WorkForce, Company, Employee) => {
+  await transaction(...models, async (WorkGroup, Company, Employee) => {
     const w2CompanyName = serviceW2Company[dataSource.service]
     srData = _.keyBy(
-      await WorkForce.knex()
+      await WorkGroup.knex()
       .select('Service Region', 'Office', 'DMA', 'Division')
       .from('directv_sr_data')
       .where({ HSP: w2CompanyName }),
@@ -179,7 +178,7 @@ export default async ({ csvObjStream, dataSource }) => {
 
     const w2Company = await ensureCompany(w2CompanyName)
 
-    workForces = await getDtvWorkForces(w2Company)
+    workGroups = await getDtvWorkGroups(w2Company)
 
     const techDatas = await streamToArray(csvObjStream, data => {
       if (data['Tech Type'] === 'W2' || !data['Tech Type']) data['Tech Type'] = w2CompanyName
@@ -202,33 +201,33 @@ export default async ({ csvObjStream, dataSource }) => {
         async techData => {
           const employee = await upsertTech({ companyId, techData, dataSource })
 
-          await employee.$loadRelated('workForces')
+          await employee.$loadRelated('workGroups')
 
           const techSR = techData['Service Region']
 
-          const relatedWorkForcesById = _.keyBy(employee.workForces, 'id')
-          const ensureRelated = async workForce => {
-            if (workForce && !relatedWorkForcesById[workForce.id]) {
-              await employee.$relatedQuery('workForces').relate(workForce)
-              relatedWorkForcesById[workForce.id] = workForce
+          const relatedWorkGroupsById = _.keyBy(employee.workGroups, 'id')
+          const ensureRelated = async workGroup => {
+            if (workGroup && !relatedWorkGroupsById[workGroup.id]) {
+              await employee.$relatedQuery('workGroups').relate(workGroup)
+              relatedWorkGroupsById[workGroup.id] = workGroup
             }
           }
 
-          const teamWorkForce = await ensureWorkForce({
+          const teamWorkGroup = await ensureWorkGroup({
             type: 'Team',
             companyId: w2Company.id,
             externalId: techData['Team ID'],
             name: techData['Team ID'],
           })
           const supervisor = await upsertSupervisor({ companyId, techData, dataSource })
-          await supervisor.$loadRelated('managedWorkForces')
-          if (!_.find(supervisor.managedWorkForces, { id: teamWorkForce.id })) {
-            await supervisor.$relatedQuery('managedWorkForces').relate(teamWorkForce)
+          await supervisor.$loadRelated('managedWorkGroups')
+          if (!_.find(supervisor.managedWorkGroups, { id: teamWorkGroup.id })) {
+            await supervisor.$relatedQuery('managedWorkGroups').relate(teamWorkGroup)
           }
 
-          await ensureRelated(teamWorkForce)
+          await ensureRelated(teamWorkGroup)
           await ensureRelated(
-            await ensureWorkForce({
+            await ensureWorkGroup({
               type: 'Company',
               companyId: w2Company.id,
               externalId: w2Company.name,
@@ -236,7 +235,7 @@ export default async ({ csvObjStream, dataSource }) => {
             })
           )
           await ensureRelated(
-            await ensureWorkForce({
+            await ensureWorkGroup({
               type: 'Company',
               companyId,
               externalId: company.name,
@@ -245,7 +244,7 @@ export default async ({ csvObjStream, dataSource }) => {
           )
           const techSrData = srData[techSR]
           await ensureRelated(
-            await ensureWorkForce({
+            await ensureWorkGroup({
               type: 'Service Region',
               companyId: w2Company.id,
               externalId: techSR,
@@ -254,7 +253,7 @@ export default async ({ csvObjStream, dataSource }) => {
           )
           if (techSrData) {
             await ensureRelated(
-              await ensureWorkForce({
+              await ensureWorkGroup({
                 type: 'Office',
                 companyId: w2Company.id,
                 externalId: techSrData['Office'],
@@ -262,7 +261,7 @@ export default async ({ csvObjStream, dataSource }) => {
               })
             )
             await ensureRelated(
-              await ensureWorkForce({
+              await ensureWorkGroup({
                 type: 'DMA',
                 companyId: w2Company.id,
                 externalId: techSrData['DMA'],
@@ -270,7 +269,7 @@ export default async ({ csvObjStream, dataSource }) => {
               })
             )
             await ensureRelated(
-              await ensureWorkForce({
+              await ensureWorkGroup({
                 type: 'Division',
                 companyId: w2Company.id,
                 externalId: techSrData['Division'],
