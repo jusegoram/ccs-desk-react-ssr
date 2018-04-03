@@ -253,6 +253,13 @@ export function up(knex) {
       table.foreign('workGroupId').references('WorkGroup.id')
       table.foreign('managerId').references('Employee.id')
   })
+  .createTable('directv_sr_data', table => { 
+      table.string('Service Region').index()
+      table.string('Office')
+      table.string('DMA')
+      table.string('Division')
+      table.string('HSP')
+  })
 }
 
 export function down(knex) {
