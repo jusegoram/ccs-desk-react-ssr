@@ -14,8 +14,10 @@ exports.seed = async function(knex) {
       employees: [
         {
           name: 'Agent Smith',
+          email: 'agent@example.com',
           externalId: 'agent@example.com',
           phoneNumber: '5555555555',
+          role: 'Agent',
           account: {
             name: 'Agent Smith',
             email: 'agent@example.com',
