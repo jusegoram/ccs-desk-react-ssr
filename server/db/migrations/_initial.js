@@ -10,6 +10,7 @@ export function up(knex) {
     table.string('password').notNullable()
     table.boolean('root').defaultTo(false).notNullable()
     table.uuid('employeeId')
+    table.uuid('companyId')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -25,12 +26,23 @@ export function up(knex) {
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
     table.string('externalId').notNullable()
+    table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')
     table.string('phoneNumber')
     table.string('email')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
+  .createTable('FeatureSet', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.timestamp('terminatedAt')
+    table.uuid('companyId').notNullable()
+    table.boolean('hasAddressBook').defaultTo(false).notNullable()
+    table.boolean('hasTimecards').defaultTo(false).notNullable()
+    table.boolean('hasVehicleClaims').defaultTo(false).notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -74,6 +86,17 @@ export function up(knex) {
     table.text('answer')
     table.string('answerType').notNullable()
     table.string('section').notNullable()
+  })
+  .createTable('Report', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.timestamp('deletedAt')
+    table.uuid('companyId').notNullable()
+    table.uuid('creatorId')
+    table.string('name').notNullable()
+    table.uuid('templateId').index()
+    table.timestamp('completedAt')
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
   .createTable('Session', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
@@ -121,26 +144,38 @@ export function up(knex) {
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   })
-  .createTable('Report', table => {
+  .createTable('WorkGroup', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.timestamp('deletedAt')
-    table.uuid('companyId').notNullable()
-    table.uuid('creatorId')
+    table.timestamp('deletedAt').index()
+    // <custom>
+    table.uuid('companyId')
+    table.string('type').notNullable() // 'Company', 'Office', 'Team', 'DMA', 'Service Region', 'Division'
+    table.string('externalId').notNullable()
     table.string('name').notNullable()
-    table.uuid('templateId').index()
-    table.timestamp('completedAt')
+    table.unique(['companyId', 'type', 'externalId'])
+    table.uuid('geographyId')
+    // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
   .alterTable('Account', table => {
     table.foreign('employeeId').references('Employee.id')
+    table.foreign('companyId').references('Company.id')
   })
   .alterTable('Employee', table => {
+    table.foreign('companyId').references('Company.id')
+  })
+  .alterTable('FeatureSet', table => {
     table.foreign('companyId').references('Company.id')
   })
   .alterTable('Invite', table => {
     table.foreign('senderId').references('Account.id')
     table.foreign('recipientId').references('Account.id')
+  })
+  .alterTable('Report', table => {
+    table.foreign('creatorId').references('Account.id')
+    table.foreign('companyId').references('Company.id')
+    table.foreign('templateId').references('Report.id')
   })
   .alterTable('Session', table => {
     table.foreign('accountId').references('Account.id')
@@ -161,10 +196,17 @@ export function up(knex) {
     table.foreign('claimLocationId').references('Geography.id')
     table.foreign('returnLocationId').references('Geography.id')
   })
-  .alterTable('Report', table => {
-    table.foreign('creatorId').references('Account.id')
+  .alterTable('WorkGroup', table => {
+    table.foreign('geographyId').references('Geography.id')
     table.foreign('companyId').references('Company.id')
-    table.foreign('templateId').references('Report.id')
+  })
+  .createTable('reportQuestions', table => { 
+      table.uuid('reportId').notNullable()
+      table.uuid('questionId').notNullable()
+      table.primary(['reportId', 'questionId'])
+      table.unique('questionId')
+      table.foreign('reportId').references('Report.id')
+      table.foreign('questionId').references('Question.id')
   })
   .createTable('vehicleReports', table => { 
       table.uuid('vehicleId').notNullable()
@@ -174,13 +216,21 @@ export function up(knex) {
       table.foreign('vehicleId').references('Vehicle.id')
       table.foreign('reportId').references('Report.id')
   })
-  .createTable('reportQuestions', table => { 
-      table.uuid('reportId').notNullable()
-      table.uuid('questionId').notNullable()
-      table.primary(['reportId', 'questionId'])
-      table.unique('questionId')
-      table.foreign('reportId').references('Report.id')
-      table.foreign('questionId').references('Question.id')
+  .createTable('workGroupTechs', table => { 
+      table.uuid('workGroupId').notNullable()
+      table.uuid('techId').notNullable()
+      table.primary(['workGroupId', 'techId'])
+      table.unique(['techId', 'workGroupId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('techId').references('Employee.id')
+  })
+  .createTable('workGroupManagers', table => { 
+      table.uuid('workGroupId').notNullable()
+      table.uuid('managerId').notNullable()
+      table.primary(['workGroupId', 'managerId'])
+      table.unique(['managerId', 'workGroupId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('managerId').references('Employee.id')
   })
 }
 
