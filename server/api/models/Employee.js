@@ -1,6 +1,5 @@
 import APIModel from 'server/api/util/APIModel'
 import { QueryBuilder, Model } from 'objection'
-import moment from 'moment'
 
 export default class Employee extends APIModel {
   static knexCreateTable = `
@@ -8,6 +7,7 @@ export default class Employee extends APIModel {
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
     table.string('externalId').notNullable()
+    table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')
     table.string('phoneNumber')
     table.string('email')
@@ -28,6 +28,7 @@ export default class Employee extends APIModel {
     properties: {
       id: { type: 'string' },
       name: { type: 'string' },
+      role: { type: 'string' },
       externalId: { type: 'string' },
       phoneNumber: { type: 'string' },
       email: { type: 'string' },
@@ -40,6 +41,7 @@ export default class Employee extends APIModel {
   static visible = [
     'id',
     'name',
+    'role',
     'externalId',
     'phoneNumber',
     'email',
@@ -54,7 +56,8 @@ export default class Employee extends APIModel {
       _contextFilter() {
         const { session } = this.context()
         if (!session) return this.whereRaw('FALSE')
-        if (session.account.employee) this.where({ id: session.account.employee.id })
+        if (session.account.employee && session.account.employee.role === 'tech')
+          this.where({ id: session.account.employee.id })
         return this
       }
     }
