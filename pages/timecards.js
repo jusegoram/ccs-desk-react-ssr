@@ -11,26 +11,43 @@ import data from 'app/apollo/data'
 import Page from 'app/ui/Page'
 import Layout from 'app/ui/Layout'
 
-class Employees extends React.Component {
+class Timecards extends React.Component {
   render() {
     const columns = [
-      { Header: 'Employee', accessor: 'name' },
+      { Header: 'Employee', accessor: 'employee.name' },
       {
-        Header: 'Company',
-        accessor: 'company.name',
+        Header: 'Shift Length',
+        id: 'shiftLength',
+        accessor: row => moment(row.clockedOutAt || undefined).diff(row.clockedInAt, 'hours', true),
+        Cell: ({ row }) =>
+          moment(row.clockedOutAt || undefined)
+          .diff(row.clockedInAt, 'hours', true)
+          .toFixed(1) + ' hours',
+      },
+      {
+        Header: 'Clocked In At',
+        id: 'clockedInAt',
+        accessor: row => row.clockedInAt,
+        Cell: ({ row }) => (row.clockedInAt ? moment(row.clockedInAt).format('h:mm A on MMMM Do') : null),
+      },
+      {
+        Header: 'Clocked Out At',
+        id: 'clockedOutAt',
+        accessor: row => row.clockedOutAt,
+        Cell: ({ row }) => (row.clockedOutAt ? moment(row.clockedOutAt).format('h:mm A on MMMM Do') : null),
       },
     ]
     return (
       <Page title="Dashboard" location={this.props.url}>
         <Layout>
-          <Query {...data.Employee.QUERY} fetchPolicy="cache-and-network">
+          <Query {...data.Timecard.QUERY} fetchPolicy="cache-and-network" pollInterval={5000}>
             {({ loading, data }) => {
               return (
                 <Card>
                   <CardHeader style={{ position: 'relative' }}>
                     {/*relative because card-actions is absolute*/}
-                    <i className="icon-menu" /> Employees
-                    {/* <Button
+                    <i className="icon-menu" /> Timecards
+                    <Button
                       className="card-actions mt-0 h-100"
                       color="primary"
                       onClick={() => {
@@ -41,15 +58,15 @@ class Employees extends React.Component {
                       }}
                     >
                       <i className="fa fa-download fa-lg" />
-                    </Button> */}
+                    </Button>
                   </CardHeader>
                   <CardBody className="p-0">
                     <ReactTable
                       style={{ backgroundColor: 'white', height: 'calc(100vh - 146px)' }}
                       filterable
                       className="-striped -highlight"
-                      loading={!data.employees && loading}
-                      data={data && data.employees}
+                      loading={!data.timecards && loading}
+                      data={data && data.timecards}
                       defaultPageSize={20}
                       columns={columns}
                       defaultFilterMethod={(filter, row) =>
@@ -69,4 +86,4 @@ class Employees extends React.Component {
   }
 }
 
-export default withApolloProvider(Employees)
+export default withApolloProvider(Timecards)
