@@ -4,7 +4,7 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: 'localhost',
-      database: 'endeavor',
+      database: 'ccs',
       multipleStatements: true,
       charset: 'utf8',
     },
@@ -23,10 +23,10 @@ module.exports = {
   production: {
     client: 'postgresql',
     connection: {
-      host: 'endeavorfleet.coevycwg7sov.us-east-1.rds.amazonaws.com',
+      host: '',
       user: 'master',
       password: process.env.PRODUCTION_PASSWORD,
-      database: 'endeavor',
+      database: 'fleet',
       multipleStatements: true,
       charset: 'utf8',
     },
