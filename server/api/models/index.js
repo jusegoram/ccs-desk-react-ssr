@@ -1,5 +1,7 @@
 export Account from './Account.js'
 export Company from './Company.js'
+export DataImport from './DataImport.js'
+export DataSource from './DataSource.js'
 export Employee from './Employee.js'
 export FeatureSet from './FeatureSet.js'
 export Geography from './Geography.js'

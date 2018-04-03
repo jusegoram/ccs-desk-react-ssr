@@ -10,28 +10,17 @@ exports.seed = async function(knex) {
   await Company.query()
   .insertGraph([
     {
-      name: 'Company A',
+      name: 'CCS',
       employees: [
         {
-          name: 'John Smith',
-          externalId: 'demo@example.com',
+          name: 'Agent Smith',
+          externalId: 'agent@example.com',
           phoneNumber: '5555555555',
           account: {
-            name: 'John Smith',
-            email: 'demo@example.com',
+            name: 'Agent Smith',
+            email: 'agent@example.com',
             password: 'demo',
           },
-        },
-      ],
-      vehicles: [{ externalId: '1111' }, { externalId: '2222' }, { externalId: '3333' }],
-      reportTemplates: [
-        {
-          name: 'Vehicle Condition',
-          questions: [
-            { order: 1, text: 'Truck Number', section, answerType },
-            { order: 2, text: 'Hood', section, answerType },
-            { order: 3, text: 'Tire', section, answerType },
-          ],
         },
       ],
     },
