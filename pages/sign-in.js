@@ -17,7 +17,7 @@ class SignIn extends React.Component {
           <Container>
             <Row className="justify-content-center">
               <Col md="8" lg="5">
-                <Mutation {...data.Session.create}>
+                <Mutation {...data.Session.create} fetchPolicy="network-only">
                   {createSession => (
                     <Login
                       onSubmit={variables => {

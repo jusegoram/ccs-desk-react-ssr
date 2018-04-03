@@ -4,6 +4,7 @@ import ObjectStreamTransform from 'server/cli/commands/import/util/ObjectStreamT
 import { transaction } from 'objection'
 import { WorkGroup, Company, Employee } from 'server/api/models'
 import sanitizeName from 'server/util/sanitizeName'
+import moment from 'moment-timezone'
 
 const models = [WorkGroup, Company, Employee]
 
