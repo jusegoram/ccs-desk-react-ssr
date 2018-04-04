@@ -35,6 +35,16 @@ export default class Session {
     refetchQueries: ['session'],
   }
 
+  static M_mimic = {
+    mutation: gql`
+      mutation Session_mimic($accountId: String!) {
+        Session_mimic(accountId: $accountId) {
+          ${props}
+        }
+      }
+    `,
+  }
+
   static logout = {
     mutation: gql`
       mutation Session_logout {

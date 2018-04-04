@@ -7,6 +7,7 @@ exports.seed = async function(knex) {
   await Company.query()
   .insertGraph([
     {
+      '#id': 'ccsCompany',
       name: 'CCS',
       employees: [
         {
@@ -20,6 +21,7 @@ exports.seed = async function(knex) {
             externalId: 'agent@example.com',
             name: 'Agent Smith',
             type: 'Tech',
+            company: { '#ref': 'ccsCompany' },
             techs: [{ '#ref': 'employee1' }],
           },
           account: {

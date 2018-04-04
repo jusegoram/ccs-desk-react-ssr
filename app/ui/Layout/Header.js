@@ -47,8 +47,7 @@ class Header extends Component {
       padding: 0,
       textAlign: 'center',
     }
-    const path = this.props.location.pathname
-    const title = _.find(nav.items, { url: path }).name
+    const title = this.props.title
     return (
       <header className="app-header navbar">
         <NavbarToggler className="d-lg-none" onClick={this.mobileSidebarToggle}>
