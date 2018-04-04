@@ -52,6 +52,8 @@ export function up(knex) {
     table.string('name')
     table.string('phoneNumber')
     table.string('email')
+    table.string('skills')
+    table.string('schedule')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])

@@ -129,10 +129,12 @@ export default async ({ csvObjStream, dataSource }) => {
       const latitude = techData['Start Latitude'] / 1000000 || null
       const longitude = techData['Start Longitude'] / 1000000 || null
       const update = {
-        name: sanitizeName(techData['Tech Full Name']),
-        phoneNumber: techData['Tech Mobile Phone #'],
         dataSourceId: dataSource.id,
         terminatedAt: null,
+        name: sanitizeName(techData['Tech Full Name']),
+        phoneNumber: techData['Tech Mobile Phone #'],
+        skills: techData['Skill Package'],
+        schedule: techData['Tech Schedule'],
       }
       const startLatLong = latitude && longitude && { latitude, longitude }
       const employee = await upsertEmployee({ query, update, startLatLong })

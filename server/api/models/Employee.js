@@ -15,6 +15,8 @@ export default class Employee extends APIModel {
     table.string('name')
     table.string('phoneNumber')
     table.string('email')
+    table.string('skills')
+    table.string('schedule')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])
@@ -39,6 +41,8 @@ export default class Employee extends APIModel {
       timezone: { type: ['string', 'null'] },
       phoneNumber: { type: ['string', 'null'] },
       email: { type: ['string', 'null'] },
+      skills: { type: ['string', 'null'] },
+      schedule: { type: ['string', 'null'] },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
       terminatedAt: { type: ['string', 'null'], format: 'date-time' },
@@ -53,6 +57,8 @@ export default class Employee extends APIModel {
     'phoneNumber',
     'timezone',
     'email',
+    'skills',
+    'schedule',
     'timecard',
     'vehicleClaim',
     'timecards',
