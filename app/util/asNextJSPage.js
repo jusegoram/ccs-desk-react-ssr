@@ -88,11 +88,11 @@ export default Component => {
                   const { loading, data } = result
                   if (loading && !data.session) return null
                   if (Component.authed && !loading && (!data || !data.session)) {
-                    Router.replace('/sign-in')
+                    Router.replace('/')
                     return null
                   }
                   if (Component.authed === false && data && data.session) {
-                    Router.replace('/')
+                    Router.replace('/employees')
                     return null
                   }
                   return (
