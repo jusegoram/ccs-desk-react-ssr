@@ -32,16 +32,6 @@ class Employee extends React.Component {
                 <Row>
                   <Col xs="12" md="6">
                     <Card>
-                      <CardHeader>Actions</CardHeader>
-                      <CardBody style={{ textAlign: 'center' }}>
-                        <Button color="primary" style={{ width: '100%', maxWidth: 200 }}>
-                          Log Call
-                        </Button>
-                      </CardBody>
-                    </Card>
-                  </Col>
-                  <Col xs="12" md="6">
-                    <Card>
                       <CardHeader>Basic Info</CardHeader>
                       <CardBody className="p-0">
                         <Table className="m-0" striped>
@@ -62,12 +52,32 @@ class Employee extends React.Component {
                               <th>Phone Number</th>
                               <td>{employee.phoneNumber}</td>
                             </tr>
+                            {employee.email && (
+                              <tr>
+                                <th>Email</th>
+                                <td>{employee.email}</td>
+                              </tr>
+                            )}
                             <tr>
-                              <th>Email</th>
-                              <td>{employee.email}</td>
+                              <th>Skills</th>
+                              <td>{employee.skills}</td>
+                            </tr>
+                            <tr>
+                              <th>Schedule</th>
+                              <td>{employee.schedule}</td>
                             </tr>
                           </tbody>
                         </Table>
+                      </CardBody>
+                    </Card>
+                  </Col>
+                  <Col xs="12" md="6">
+                    <Card>
+                      <CardHeader>Actions</CardHeader>
+                      <CardBody style={{ textAlign: 'center' }}>
+                        <Button color="primary" style={{ width: '100%', maxWidth: 200 }}>
+                          Log Call
+                        </Button>
                       </CardBody>
                     </Card>
                   </Col>
@@ -105,7 +115,7 @@ class Employee extends React.Component {
                             </CardHeader>
                             <CardBody className="p-0">
                               <ReactTable
-                                style={{ backgroundColor: 'white', height: 480 }}
+                                style={{ backgroundColor: 'white' }}
                                 filterable
                                 className="-striped -highlight"
                                 loading={!data.workGroups && loading}
