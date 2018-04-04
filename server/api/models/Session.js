@@ -49,6 +49,7 @@ export default class Session extends withDeletedAt(APIModel) {
     }
   }
 
+  static defaultEagerRelations = '[rootAccount, account.employee.company]'
   static get relationMappings() {
     return {
       account: {
@@ -88,12 +89,34 @@ export default class Session extends withDeletedAt(APIModel) {
             throw new ExpectedError('Invalid email and/or password.')
           const session = await account
           .$relatedQuery('sessions')
-          .insert({ rootAccountId: account.id })
+          .insert({})
           .returning('*')
-          await session.$loadRelated('account.employee.company')
+          if (account.root) {
+            await session.$relatedQuery('rootAccount').relate(account)
+          }
           const token = createToken({ sessionId: session.id, clientContext })
           session.token = token
           res.cookie('token', token)
+          await session.$loadRelated(Session.defaultEagerRelations)
+          return session
+        },
+      },
+      mimic: {
+        description: 'create a session that mimics an account',
+        type: this.GraphqlTypes.Session,
+        args: {
+          accountId: { type: GraphQLString },
+        },
+        resolve: async (root, { accountId }, { session }) => {
+          console.log(session)
+          if (!session.rootAccount) throw new ExpectedError('You are not allowed to do that.')
+          const Account = require('./Account').default
+          const account = await Account.query()
+          .where({ id: accountId })
+          .first()
+          await session.$relatedQuery('rootAccount').relate(session.account)
+          await session.$relatedQuery('account').relate(account)
+          await session.$loadRelated(Session.defaultEagerRelations)
           return session
         },
       },

@@ -1,9 +1,7 @@
 import React from 'react'
 import ReactTable from 'react-table'
 import { Query, Mutation } from 'react-apollo'
-import moment from 'moment-timezone'
 import { Card, CardHeader, CardBody, Button } from 'reactstrap'
-import alert from 'sweetalert'
 
 import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
@@ -24,11 +22,11 @@ class Accounts extends React.Component {
                 Header: 'Action',
                 id: 'action',
                 filterable: false,
-                Cell: ({ row }) => (
+                Cell: ({ original }) => (
                   <Button
                     size="sm"
-                    onPress={() => {
-                      mimic({ variables: { accountId: row.id } })
+                    onClick={() => {
+                      mimic({ variables: { accountId: original.id } })
                     }}
                   >
                     Mimic
