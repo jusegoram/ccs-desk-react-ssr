@@ -73,7 +73,7 @@ class Header extends Component {
         <Nav className="ml-auto mr-auto" navbar style={titleStyle}>
           {title}
         </Nav>
-        <Nav className="mx-1" navbar>
+        <Nav className="mr-3" navbar>
           {/* <HeaderDropdown notif />
           <HeaderDropdown tasks />
           <HeaderDropdown mssgs /> */}
