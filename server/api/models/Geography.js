@@ -16,14 +16,16 @@ export default class Geography extends APIModel {
     table.string('state')
     table.string('country')
     table.text('polygonKml')
-    table.specificType('polygon', 'geography(MULTIPOLYGON, 4326)').index()
+    table.specificType('polygon', 'geography(MULTIPOLYGON, 4326)')
     table.float('radius')
     table.decimal('latitude', 10, 7)
     table.decimal('longitude', 10, 7)
-    table.specificType('point', 'geography(POINT, 4326)').index()
+    table.specificType('point', 'geography(POINT, 4326)')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
     table.index(['type', 'externalId'])
+    table.index(['type', 'polygon'])
+    table.index(['type', 'point'])
   `
 
   static jsonSchema = {
