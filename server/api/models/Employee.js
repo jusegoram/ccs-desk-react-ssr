@@ -9,8 +9,8 @@ export default class Employee extends APIModel {
     table.uuid('companyId').notNullable()
     table.uuid('workGroupId')
     table.uuid('startLocationId')
-    table.string('timezone').notNullable()
     table.string('externalId').notNullable()
+    table.string('timezone')
     table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')
     table.string('phoneNumber')
@@ -36,7 +36,7 @@ export default class Employee extends APIModel {
       name: { type: 'string' },
       role: { type: 'string' },
       externalId: { type: 'string' },
-      timezone: { type: 'string' },
+      timezone: { type: ['string', 'null'] },
       phoneNumber: { type: ['string', 'null'] },
       email: { type: ['string', 'null'] },
       createdAt: { type: 'string', format: 'date-time' },
@@ -184,6 +184,9 @@ export default class Employee extends APIModel {
         join: {
           from: 'Employee.startLocationId',
           to: 'Geography.id',
+        },
+        modify: qb => {
+          qb.where('Geography.type', 'Start Location')
         },
       },
     }
