@@ -9,7 +9,14 @@ exports.seed = function(knex) {
   .then(() => knex.migrate.latest())
 }
 
-const keepTables = ['knex_migrations', 'knex_migrations_lock', 'topology.layer', 'topology.topology', 'spatial_ref_sys']
+const keepTables = [
+  'knex_migrations',
+  'knex_migrations_lock',
+  'topology.layer',
+  'topology.topology',
+  'spatial_ref_sys',
+  'timezones',
+]
 
 // keepTables.push(...['Company', 'Office', 'Team', 'Tech'])
 
