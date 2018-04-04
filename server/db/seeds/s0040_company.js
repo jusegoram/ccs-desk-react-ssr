@@ -1,5 +1,5 @@
 import { Model } from 'objection'
-import { Company, Account } from 'server/api/models'
+import { Company } from 'server/api/models'
 
 exports.seed = async function(knex) {
   Model.knex(knex)
@@ -28,6 +28,7 @@ exports.seed = async function(knex) {
             name: 'Agent Smith',
             email: 'agent@example.com',
             password: 'demo',
+            company: { '#ref': 'ccsCompany' },
             permissions: [{ type: 'read' }],
           },
         },
