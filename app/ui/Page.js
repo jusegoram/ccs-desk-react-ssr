@@ -16,7 +16,7 @@ const Page = ({ title, authed = true, location, children }) =>
   React.Children.only(
     <div>
       <Head>
-        <title>Endeavor Fleet{title && ` | ${title}`}</title>
+        <title>CCS Desk{title && ` | ${title}`}</title>
         <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico" />
         <link rel="stylesheet" href="/static/index.fonts.css" />
         <link rel="stylesheet" href="/static/index.styles.css" />
