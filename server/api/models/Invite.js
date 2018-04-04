@@ -3,7 +3,7 @@ import { QueryBuilder, Model } from 'objection'
 import { GraphQLString, GraphQLList } from 'graphql'
 import ExpectedError from 'server/errors/ExpectedError'
 import _ from 'lodash'
-import sendEmail from 'server/api/util/sendEmail'
+import sendEmail from 'server/util/sendEmail'
 import inviteEmail from 'server/emails/invite'
 
 export default class Invite extends APIModel {

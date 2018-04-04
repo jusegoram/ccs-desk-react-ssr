@@ -8,7 +8,7 @@ import { onError } from 'apollo-link-error'
 import Promise from 'bluebird'
 import alert from 'sweetalert'
 import ExpectedError from 'server/errors/ExpectedError'
-import config from 'app/config'
+import config from 'server/config'
 
 // Polyfill fetch() on the server (used by apollo-client)
 if (!process.browser) {

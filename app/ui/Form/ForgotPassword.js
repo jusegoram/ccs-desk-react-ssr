@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Mutation } from 'react-apollo'
 import ApolloData from 'app/apollo/data'
 import Router from 'next/router'
+import alert from 'sweetalert'
 
 export default class ForgotPasswordForm extends Component {
   state = { email: '' }
@@ -21,6 +22,12 @@ export default class ForgotPasswordForm extends Component {
                 <Form
                   onSubmit={async () => {
                     await requestPasswordReset()
+                    await alert(
+                      'Success',
+                      'If an account is associated with the provided email address, ' +
+                        'a password reset link has been sent to it. Check your email to continue.',
+                      'success'
+                    )
                     Router.replace('/')
                   }}
                 >
