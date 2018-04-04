@@ -62,10 +62,12 @@ const getDtvWorkGroups = async w2Company => {
       .where({ HSP: w2Company.name }),
       type
     )
+    const order = workGroupOrders[type]
     return await Promise.mapSeries(namesForType, async name => {
       return await WorkGroup.query().insert({
         companyId: w2Company.id,
         externalId: name,
+        order,
         name,
         type,
       })
@@ -95,16 +97,27 @@ const streamToArray = async (stream, transformCallback) =>
 
 let workGroups = null
 
+const workGroupOrders = {
+  Company: 0,
+  Division: 1,
+  DMA: 2,
+  Office: 3,
+  'Service Region': 4,
+  Team: 5,
+  Tech: 6,
+}
+
 const ensureWorkGroup = async ({ type, companyId, externalId, name }) => {
   workGroups[type] = workGroups[type] || {}
   if (workGroups[type][externalId]) return workGroups[type][externalId]
   const queryProps = { type, companyId, externalId }
+  const order = workGroupOrders[type]
   workGroups[type][externalId] =
     (await WorkGroup.query()
     .where(queryProps)
     .first()) ||
     (await WorkGroup.query()
-    .insert({ ...queryProps, name })
+    .insert({ ...queryProps, order, name })
     .returning('*'))
   return workGroups[type][externalId]
 }
@@ -122,6 +135,7 @@ const upsertTech = async ({ companyId, techData, dataSource }) => {
 const upsertSupervisor = async ({ companyId, techData, dataSource }) => {
   const query = { companyId, externalId: techData['Tech Team Supervisor Login'] }
   const update = {
+    role: 'Manager',
     name: sanitizeName(techData['Team Name']),
     phoneNumber: techData['Tech Team Supervisor Mobile #'],
     dataSourceId: dataSource.id,

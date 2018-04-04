@@ -33,8 +33,8 @@ export default class Employee extends APIModel {
       name: { type: 'string' },
       role: { type: 'string' },
       externalId: { type: 'string' },
-      phoneNumber: { type: 'string' },
-      email: { type: 'string' },
+      phoneNumber: { type: ['string', 'null'] },
+      email: { type: ['string', 'null'] },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
       terminatedAt: { type: ['string', 'null'], format: 'date-time' },
@@ -53,6 +53,7 @@ export default class Employee extends APIModel {
     'timecards',
     'vehicleClaims',
     'company',
+    'workGroups',
   ]
 
   static get QueryBuilder() {
@@ -101,6 +102,9 @@ export default class Employee extends APIModel {
             to: 'workGroupTechs.workGroupId',
           },
           to: 'WorkGroup.id',
+        },
+        modify: qb => {
+          qb.orderBy('WorkGroup.order')
         },
       },
       managedWorkGroups: {

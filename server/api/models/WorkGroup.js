@@ -9,6 +9,7 @@ export default class WorkGroup extends APIModel {
     table.timestamp('deletedAt').index()
     // <custom>
     table.uuid('companyId')
+    table.integer('order').notNullable()
     table.string('type').notNullable() // 'Company', 'Office', 'Team', 'DMA', 'Service Region', 'Division'
     table.string('externalId').notNullable()
     table.string('name').notNullable()
@@ -55,6 +56,7 @@ export default class WorkGroup extends APIModel {
     properties: {
       id: { type: 'string' },
       // <custom>
+      order: { type: 'number' },
       type: { type: 'string' },
       externalId: { type: ['string', 'null'] },
       name: { type: 'string' },
@@ -65,7 +67,7 @@ export default class WorkGroup extends APIModel {
     },
   }
 
-  static visible = ['id', 'company', 'type', 'name', 'phoneNumber', 'email', 'employees', 'managers']
+  static visible = ['id', 'company', 'order', 'type', 'name', 'phoneNumber', 'email', 'employees', 'managers']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -73,6 +75,7 @@ export default class WorkGroup extends APIModel {
         const { session } = this.context()
         if (session === undefined) return
         if (session === null) return this.whereRaw('FALSE')
+        this.orderBy('WorkGroup.order')
       }
     }
   }
