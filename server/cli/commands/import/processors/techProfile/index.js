@@ -158,18 +158,20 @@ export default async ({ csvObjStream, dataSource }) => {
       .eager('startLocation')
       .where(query)
       .first()
-      let startLocation =
+      const startLocation =
         startLatLong &&
         (await Geography.query().upsertGraph({
           type: 'Start Location',
           ...(employee && employee.startLocation),
           ...startLatLong,
         }))
+      const timezone = startLocation && (await startLocation.getTimezone())
       if (!employee) {
         employee = await Employee.query()
         .insertGraph({
           ...query,
           ...update,
+          timezone,
           startLocationId: startLocation && startLocation.id,
         })
         .returning('*')
@@ -178,6 +180,7 @@ export default async ({ csvObjStream, dataSource }) => {
         .where(query)
         .update({
           ...update,
+          timezone,
           startLocationId: startLocation && startLocation.id,
         })
         .returning('*')
