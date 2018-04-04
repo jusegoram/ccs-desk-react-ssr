@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 import { withDeletedAt, withPassword } from 'server/api/util/mixins'
 import { compose, sendEmail, APIModel } from 'server/api/util'
 import passwordResetEmail from 'server/emails/passwordReset'
+import ExpectedError from 'server/errors/ExpectedError'
 
 export default class Account extends compose(withDeletedAt, withPassword({ allowEmptyPassword: true }))(APIModel) {
   static knexCreateTable = `
@@ -13,7 +14,7 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
     table.specificType('order', 'SERIAL')
     // <custom>
     table.string('name').notNullable()
-    table.string('email').notNullable()
+    table.string('email').notNullable().unique()
     table.string('password').notNullable()
     table.boolean('root').defaultTo(false).notNullable()
     table.uuid('employeeId')
@@ -120,6 +121,34 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
               subject: 'Reset Your CCS Desk Password',
               html: html,
             })
+            return null
+          })
+        },
+      },
+      resetPassword: {
+        description: 'create a session',
+        type: this.GraphqlTypes.Account,
+        args: {
+          password: { type: GraphQLString },
+          token: { type: GraphQLString },
+        },
+        resolve: async (root, { password, token }) => {
+          return transaction(Account, async Account => {
+            let payload = null
+            try {
+              payload = jwt.verify(token, process.env.PASSWORD_RESET_JWT_SECRET)
+            } catch (e) {
+              throw new ExpectedError('Invalid password reset token')
+            }
+            const { email } = payload
+            const account = await Account.query().findOne({ email })
+            if (!account) {
+              throw new ExpectedError('Unable to find the account for this reset token')
+            }
+            console.log('patch', { password })
+            console.log('account', account)
+            account.$set({ password })
+            await account.$query().patch({ password })
             return null
           })
         },

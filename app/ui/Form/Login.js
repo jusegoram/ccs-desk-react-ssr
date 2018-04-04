@@ -30,7 +30,7 @@ class LoginForm extends Component {
                   autoComplete="off"
                   autoFocus
                   required
-                  onChange={e => this.setState({ email: e.target.value })}
+                  onChange={e => this.setState({ email: e.target.value.toLowerCase() })}
                   value={this.state.email}
                 />
               </InputGroup>
