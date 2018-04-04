@@ -180,6 +180,7 @@ export function up(knex) {
     table.timestamp('deletedAt').index()
     // <custom>
     table.uuid('companyId')
+    table.integer('order').notNullable()
     table.string('type').notNullable() // 'Company', 'Office', 'Team', 'DMA', 'Service Region', 'Division'
     table.string('externalId').notNullable()
     table.string('name').notNullable()
