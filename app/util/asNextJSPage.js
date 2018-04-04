@@ -10,6 +10,8 @@ import { SessionProvider, LocationProvider } from 'app/util/providers'
 import ApolloFactory from 'app/apollo/ApolloFactory'
 import data from 'app/apollo/data'
 
+import Loader from 'app/ui/Loader'
+
 import stylesheet from 'app/styles/index.scss'
 import 'react-select/dist/react-select.css'
 
@@ -86,7 +88,7 @@ export default Component => {
               <Query {...data.Session.GET} fetchPolicy="cache-and-network">
                 {result => {
                   const { loading, data } = result
-                  if (loading && !data.session) return null
+                  if (loading && !data.session) return <Loader />
                   if (Component.authed && !loading && (!data || !data.session)) {
                     Router.replace('/')
                     return null
