@@ -24,4 +24,13 @@ export default class Account {
       }
     `,
   }
+  static M_requestPasswordReset = {
+    mutation: gql`
+      mutation Account_requestPasswordReset($email: String!){
+        Account_requestPasswordReset(email: $email){
+          ${props}
+        }
+      }
+    `,
+  }
 }
