@@ -30,16 +30,22 @@ class Employee extends React.Component {
             return (
               <div>
                 <Row>
-                  <Col xs="12" md="6">
+                  <Col>
+                    <h2>{employee.name}</h2>
+                  </Col>
+                  <Col style={{ textAlign: 'end' }}>
+                    <Button size="sm" color="primary">
+                      Log Call
+                    </Button>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col xs="12" md="4">
                     <Card>
                       <CardHeader>Basic Info</CardHeader>
                       <CardBody className="p-0">
                         <Table className="m-0" striped>
                           <tbody>
-                            <tr>
-                              <th>Name</th>
-                              <td>{employee.name}</td>
-                            </tr>
                             <tr>
                               <th>Employee ID</th>
                               <td>{employee.externalId}</td>
@@ -52,33 +58,25 @@ class Employee extends React.Component {
                               <th>Phone Number</th>
                               <td>{employee.phoneNumber}</td>
                             </tr>
-                            {employee.email && (
-                              <tr>
-                                <th>Email</th>
-                                <td>{employee.email}</td>
-                              </tr>
-                            )}
                             <tr>
-                              <th>Skills</th>
-                              <td>{employee.skills}</td>
-                            </tr>
-                            <tr>
-                              <th>Schedule</th>
-                              <td>{employee.schedule}</td>
+                              <th>Email</th>
+                              <td>{employee.email}</td>
                             </tr>
                           </tbody>
                         </Table>
                       </CardBody>
                     </Card>
                   </Col>
-                  <Col xs="12" md="6">
+                  <Col xs="12" md="4">
                     <Card>
-                      <CardHeader>Actions</CardHeader>
-                      <CardBody style={{ textAlign: 'center' }}>
-                        <Button color="primary" style={{ width: '100%', maxWidth: 200 }}>
-                          Log Call
-                        </Button>
-                      </CardBody>
+                      <CardHeader>Schedule</CardHeader>
+                      <CardBody>Schedule</CardBody>
+                    </Card>
+                  </Col>
+                  <Col xs="12" md="4">
+                    <Card>
+                      <CardHeader>Skills</CardHeader>
+                      <CardBody>Skills</CardBody>
                     </Card>
                   </Col>
                 </Row>
