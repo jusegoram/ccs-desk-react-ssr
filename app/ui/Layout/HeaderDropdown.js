@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { Badge, DropdownItem, DropdownMenu, DropdownToggle, Dropdown, Progress } from 'reactstrap'
 import { compose, withApollo, graphql } from 'react-apollo'
-import gql from 'graphql-tag'
 import { get as p } from 'lodash'
 import Link from 'next/link'
 import cookie from 'cookie'
@@ -20,23 +19,11 @@ class HeaderDropdown extends Component {
     }
   }
 
-  async logout(id) {
-    try {
-      console.log(this.props)
-      if (id) this.props.Session_logout({ variables: { id } })
-    } catch (e) {
-      console.error(e)
-    } finally {
-      document.cookie = cookie.serialize('token', '', {
-        maxAge: -1, // Expire the cookie immediately
-      })
-      // Force a reload of all the current queries now that the user is
-      // logged in, so we don't accidentally leave any state around.
-      this.props.client.cache.reset().then(() => {
-        // Redirect to a more useful page when signed out
-        window.location = '/'
-      })
-    }
+  async logout() {
+    document.cookie = cookie.serialize('token', '', { maxAge: -1 })
+    this.props.client.cache.reset().then(() => {
+      window.location = '/'
+    })
   }
 
   toggle() {
