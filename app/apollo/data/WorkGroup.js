@@ -14,6 +14,15 @@ const props = `
 `
 export default class WorkGroup {
   static props = props
+  static QUERY = {
+    query: gql`
+      query workGroups {
+        workGroups {
+          ${props}
+        }
+      }
+    `,
+  }
   static QUERY_idIn = {
     query: gql`
       query workGroups($ids: [String!]!) {
