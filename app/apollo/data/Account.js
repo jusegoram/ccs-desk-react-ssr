@@ -33,4 +33,13 @@ export default class Account {
       }
     `,
   }
+  static M_resetPassword = {
+    mutation: gql`
+      mutation Account_resetPassword($token: String!, $password: String!){
+        Account_resetPassword(token: $token, password: $password){
+          ${props}
+        }
+      }
+    `,
+  }
 }
