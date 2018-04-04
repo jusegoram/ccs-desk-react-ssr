@@ -132,6 +132,7 @@ export function up(knex) {
     table.timestamp('deletedAt').index()
     // <custom>
     table.timestamp('expiresAt').defaultTo(knex.fn.now())
+    table.uuid('rootAccountId')
     table.uuid('accountId')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
