@@ -2,7 +2,7 @@ export default {
   items: [
     {
       name: 'Employees',
-      url: '/',
+      url: '/employees',
       icon: 'icon-people',
     },
     // {
