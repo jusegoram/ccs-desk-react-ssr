@@ -7,7 +7,7 @@ export function up(knex) {
     table.specificType('order', 'SERIAL')
     // <custom>
     table.string('name').notNullable()
-    table.string('email').notNullable()
+    table.string('email').notNullable().unique()
     table.string('password').notNullable()
     table.boolean('root').defaultTo(false).notNullable()
     table.uuid('employeeId')
@@ -45,6 +45,7 @@ export function up(knex) {
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
     table.uuid('workGroupId')
+    table.string('timezone').notNullable()
     table.string('externalId').notNullable()
     table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')
@@ -190,6 +191,15 @@ export function up(knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
+  .createTable('WorkSchedule', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.uuid('employeeId').notNullable()
+    table.string('day').notNullable()
+    table.time('start').notNullable()
+    table.time('end').notNullable()
+    table.unique(['employeeId', 'day'])
+    table.index(['start', 'end'])
+  })
   .alterTable('Account', table => {
     table.foreign('employeeId').references('Employee.id')
     table.foreign('companyId').references('Company.id')
@@ -235,6 +245,9 @@ export function up(knex) {
   .alterTable('WorkGroup', table => {
     table.foreign('geographyId').references('Geography.id')
     table.foreign('companyId').references('Company.id')
+  })
+  .alterTable('WorkSchedule', table => {
+    table.foreign('employeeId').references('Employee.id')
   })
   .createTable('permissionWorkGroups', table => { 
       table.uuid('permissionId').notNullable()
