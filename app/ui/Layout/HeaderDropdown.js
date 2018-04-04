@@ -165,6 +165,11 @@ class HeaderDropdown extends Component {
               <i className="fa icon-book-open" /> View Invites
             </DropdownItem>
           </Link> */}
+          <Link href="/root/mimic">
+            <DropdownItem onClick={() => this.logout(p(props, 'session.id'))}>
+              <i className="fa fa-user-circle" /> Mimic User
+            </DropdownItem>
+          </Link>
           <DropdownItem onClick={() => this.logout(p(props, 'session.id'))}>
             <i className="fa fa-lock" /> Logout
           </DropdownItem>
