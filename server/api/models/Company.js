@@ -31,6 +31,14 @@ export default class Company extends APIModel {
 
   static get relationMappings() {
     return {
+      workGroups: {
+        relation: Model.HasManyRelation,
+        modelClass: 'WorkGroup',
+        join: {
+          from: 'Company.id',
+          to: 'WorkGroup.companyId',
+        },
+      },
       featureSet: {
         relation: Model.HasManyRelation,
         modelClass: 'FeatureSet',

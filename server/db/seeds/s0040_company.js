@@ -7,6 +7,17 @@ exports.seed = async function(knex) {
   await Company.query()
   .insertGraph([
     {
+      name: 'Goodman',
+      workGroups: [
+        {
+          '#id': 'goodman',
+          type: 'Company',
+          name: 'Goodman',
+          externalId: 'Goodman',
+        },
+      ],
+    },
+    {
       '#id': 'ccsCompany',
       name: 'CCS',
       employees: [
@@ -30,7 +41,7 @@ exports.seed = async function(knex) {
             password: 'demo',
             root: true,
             company: { '#ref': 'ccsCompany' },
-            permissions: [{ type: 'read' }],
+            permissions: [{ type: 'read', workGroups: [{ '#ref': 'goodman' }] }],
           },
         },
         {
