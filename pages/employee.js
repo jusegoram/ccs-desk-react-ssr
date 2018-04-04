@@ -105,7 +105,7 @@ class Employee extends React.Component {
                             </CardHeader>
                             <CardBody className="p-0">
                               <ReactTable
-                                style={{ backgroundColor: 'white', height: 500 }}
+                                style={{ backgroundColor: 'white', height: 480 }}
                                 filterable
                                 className="-striped -highlight"
                                 loading={!data.workGroups && loading}

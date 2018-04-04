@@ -38,14 +38,7 @@ export default Component => {
         try {
           const client = ApolloFactory.getInstance().createClient()
           // Run all GraphQL queries
-          await getDataFromTree(
-            <ApolloProvider client={client}>
-              <Component {...initialProps} />
-            </ApolloProvider>,
-            {
-              router: location,
-            }
-          )
+          await getDataFromTree(AsNextJSPage.getReactNode({ location, apollo: client }), { router: location })
           serverSideApolloState = client.extract()
         } catch (error) {
           console.error('There was a server-side error fetching data with apollo') // eslint-disable-line no-console
@@ -71,9 +64,8 @@ export default Component => {
       this.apollo = ApolloFactory.getInstance().createClient(this.props.serverSideApolloState)
     }
 
-    render() {
-      const { location } = this.props
-      return React.Children.only(
+    static getReactNode({ location, apollo }) {
+      return (
         <div>
           <Head>
             <title>CCS Desk{Component.title && ` | ${Component.title}`}</title>
@@ -82,7 +74,7 @@ export default Component => {
             <link rel="stylesheet" href="/static/index.styles.css" />
             <style dangerouslySetInnerHTML={{ __html: stylesheet }} />
           </Head>
-          <ApolloProvider client={this.apollo}>
+          <ApolloProvider client={apollo}>
             <LocationProvider location={location}>
               <NetworkProgressBar />
               <Query {...data.Session.GET} fetchPolicy="cache-and-network">
@@ -108,6 +100,10 @@ export default Component => {
           </ApolloProvider>
         </div>
       )
+    }
+    render() {
+      const { location } = this.props
+      return React.Children.only(AsNextJSPage.getReactNode({ location, apollo: this.apollo }))
     }
   }
 }
