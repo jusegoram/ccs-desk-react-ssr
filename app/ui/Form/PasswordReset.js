@@ -34,7 +34,7 @@ export default class PasswordReset extends Component {
                       return
                     }
                     await resetPassword({ variables: { password, token } })
-                    alert('Success', 'Your password has been reset. Sign in to continue.')
+                    alert('Success', 'Your password has been reset. Sign in to continue.', 'success')
                     Router.replace('/')
                   }}
                 >

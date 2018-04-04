@@ -4,6 +4,7 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: 'localhost',
+      password: process.env.DB_PASSWORD_DEVELOPMENT,
       database: 'ccs',
       multipleStatements: true,
       charset: 'utf8',
@@ -25,7 +26,7 @@ module.exports = {
     connection: {
       host: '',
       user: 'master',
-      password: process.env.PRODUCTION_PASSWORD,
+      password: process.env.DB_PASSWORD_PRODUCTION,
       database: 'fleet',
       multipleStatements: true,
       charset: 'utf8',

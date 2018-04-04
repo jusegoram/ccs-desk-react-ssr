@@ -1,8 +1,9 @@
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
+import config from 'server/config'
 
 export default ({ invite }) => {
-  const inviteUrl = `${process.env.HOST}/invites/accept/${invite.token}`
+  const inviteUrl = `${config.host}/invites/accept/${invite.token}`
   return ReactDOMServer.renderToStaticMarkup(
     <div>
       <h2>Welcome to CCS Desk!</h2>
