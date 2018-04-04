@@ -43,11 +43,11 @@ export default class ForgotPasswordForm extends Component {
                   </InputGroup>
                   <Row>
                     <Col xs="6">
-                      <Button color="primary" className="px-4">
+                      <Button color="primary" className="px-4" type="submit">
                         Send
                       </Button>
                     </Col>
-                    <Col xs="6" className="text-right">
+                    <Col xs="6" className="text-right pull-right">
                       <Link href="/sign-in">
                         <Button color="link" className="px-0">
                           Back to Sign In
