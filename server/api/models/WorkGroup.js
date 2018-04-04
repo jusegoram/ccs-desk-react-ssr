@@ -79,6 +79,14 @@ export default class WorkGroup extends APIModel {
 
   static get relationMappings() {
     return {
+      company: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: 'Company',
+        join: {
+          from: 'WorkGroup.companyId',
+          to: 'Company.id',
+        },
+      },
       managers: {
         relation: Model.ManyToManyRelation,
         modelClass: 'Employee',
