@@ -8,6 +8,10 @@ const props = `
     id
     name
   }
+  employee {
+    id
+    role
+  }
 `
 export default class Account {
   static props = props

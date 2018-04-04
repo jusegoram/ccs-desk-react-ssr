@@ -2,6 +2,7 @@ import React from 'react'
 import ReactTable from 'react-table'
 import { Query, Mutation } from 'react-apollo'
 import { Card, CardHeader, CardBody, Button } from 'reactstrap'
+import alert from 'sweetalert'
 
 import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
@@ -10,14 +11,16 @@ import Layout from 'app/ui/Layout'
 
 class Accounts extends React.Component {
   render() {
+    const { account, rootAccount } = this.props.session
     return (
       <Layout>
+        {account.id !== rootAccount.id && <div>You are currently mimicing {account.name}</div>}
         <Mutation {...data.Session.M_mimic}>
           {mimic => {
             const columns = [
               { Header: 'Name', accessor: 'name' },
               { Header: 'Company', accessor: 'company.name' },
-              { Header: 'Role', accessor: 'role' },
+              { Header: 'Role', accessor: 'employee.role' },
               {
                 Header: 'Action',
                 id: 'action',
@@ -25,8 +28,9 @@ class Accounts extends React.Component {
                 Cell: ({ original }) => (
                   <Button
                     size="sm"
-                    onClick={() => {
-                      mimic({ variables: { accountId: original.id } })
+                    onClick={async () => {
+                      await mimic({ variables: { accountId: original.id } })
+                      alert('Success', `You are now mimicing ${original.name}`)
                     }}
                   >
                     Mimic
