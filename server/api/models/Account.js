@@ -7,6 +7,7 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
+    table.specificType('order', 'SERIAL')
     // <custom>
     table.string('name').notNullable()
     table.string('email').notNullable()
@@ -48,6 +49,10 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
         const { session } = this.context()
         if (session === undefined) return
         if (session === null) return this.whereRaw('FALSE')
+        if (!session.rootAccount) {
+          this.where({ id: session.account.id })
+        }
+        this.orderByRaw('ABS(? - "Account".order)', session.account.order)
       }
     }
   }
