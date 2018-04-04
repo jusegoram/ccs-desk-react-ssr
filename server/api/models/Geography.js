@@ -88,8 +88,16 @@ export default class Geography extends APIModel {
     }
   }
 
-  async getTimezone() {
-    return
+  getTimezone() {
+    return this.$knex()
+    .from('timezones')
+    .select('name')
+    .whereRaw('ST_Contains(timezones.polygon::geometry, ST_SetSRID(ST_Point(?, ?),4326))', [
+      this.longitude,
+      this.latitude,
+    ])
+    .first()
+    .get('name')
   }
 
   static get mutations() {
