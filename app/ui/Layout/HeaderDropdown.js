@@ -34,7 +34,7 @@ class HeaderDropdown extends Component {
       // logged in, so we don't accidentally leave any state around.
       this.props.client.cache.reset().then(() => {
         // Redirect to a more useful page when signed out
-        window.location = '/sign-in'
+        window.location = '/'
       })
     }
   }
