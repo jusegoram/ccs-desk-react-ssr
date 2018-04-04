@@ -1,4 +1,5 @@
 import React from 'react'
+import Router from 'next/router'
 
 import { Col, Container, Row } from 'reactstrap'
 import { Mutation } from 'react-apollo'
@@ -11,6 +12,10 @@ import Login from 'app/ui/Form/Login'
 class SignIn extends React.Component {
   static title = 'Sign In'
   static authed = false
+
+  componentWillMount() {
+    Router.prefetch('/')
+  }
   render() {
     return (
       <div className="app flex-row align-items-center">

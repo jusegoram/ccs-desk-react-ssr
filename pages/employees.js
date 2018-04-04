@@ -19,7 +19,7 @@ class Employees extends React.Component {
         accessor: 'externalId',
         Cell: ({ original }) => (
           <Link shallow href={`/employee/${original.id}`}>
-            {original.externalId}
+            <a href="#">{original.externalId}</a>
           </Link>
         ),
       },
