@@ -76,12 +76,21 @@ export default class Geography extends APIModel {
     }
   }
 
-  // $formatDatabaseJson(json) {
-  //   const dbJson = super.$formatDatabaseJson(json)
-  //   if (dbJson.latitude && dbJson.longitude && !dbJson.point)
-  //     dbJson.point = raw('ST_SetSRID(ST_Point(?, ?),4326)', [dbJson.longitude, dbJson.latitude])
-  //   return dbJson
-  // }
+  $afterUpdate(queryContext) {
+    return Promise.resolve(super.$afterUpdate(queryContext)).then(async () => this.ensurePoint())
+  }
+  $afterInsert(queryContext) {
+    return Promise.resolve(super.$afterInsert(queryContext)).then(async () => this.ensurePoint())
+  }
+  async ensurePoint() {
+    if (this.latitude && this.longitude && !this.point) {
+      await this.$query().patch({ point: raw('ST_SetSRID(ST_Point(?, ?),4326)', this.longitude, this.latitude) })
+    }
+  }
+
+  async getTimezone() {
+    return
+  }
 
   static get mutations() {
     return {
