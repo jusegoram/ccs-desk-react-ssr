@@ -20,6 +20,8 @@ class Employees extends React.Component {
         Cell: ({ original }) => <Link href={`/employee/${original.id}`}>{original.externalId}</Link>,
       },
       { Header: 'Employee', accessor: 'name' },
+      { Header: 'Role', accessor: 'role' },
+      { Header: 'Phone', accessor: 'phoneNumber' },
       {
         Header: 'Company',
         accessor: 'company.name',
