@@ -8,6 +8,7 @@ export default class Employee extends APIModel {
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
     table.uuid('workGroupId')
+    table.string('timezone').notNullable()
     table.string('externalId').notNullable()
     table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')
@@ -33,6 +34,7 @@ export default class Employee extends APIModel {
       name: { type: 'string' },
       role: { type: 'string' },
       externalId: { type: 'string' },
+      timezone: { type: 'string' },
       phoneNumber: { type: ['string', 'null'] },
       email: { type: ['string', 'null'] },
       createdAt: { type: 'string', format: 'date-time' },
@@ -47,6 +49,7 @@ export default class Employee extends APIModel {
     'role',
     'externalId',
     'phoneNumber',
+    'timezone',
     'email',
     'timecard',
     'vehicleClaim',
@@ -163,6 +166,14 @@ export default class Employee extends APIModel {
         join: {
           from: 'Employee.id',
           to: 'VehicleClaim.employeeId',
+        },
+      },
+      workSchedules: {
+        relation: Model.HasManyRelation,
+        modelClass: 'WorkSchedule',
+        join: {
+          from: 'Employee.id',
+          to: 'WorkSchedule.employeeId',
         },
       },
     }

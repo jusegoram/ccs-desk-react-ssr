@@ -28,6 +28,7 @@ exports.seed = async function(knex) {
           email: 'agent@example.com',
           externalId: 'agent@example.com',
           phoneNumber: '5555555555',
+          timezone: 'America/Chicago',
           role: 'Tech',
           workGroup: {
             externalId: 'agent@example.com',
@@ -52,6 +53,7 @@ exports.seed = async function(knex) {
           email: 'agent2@example.com',
           externalId: 'agent2@example.com',
           phoneNumber: '5555555555',
+          timezone: 'America/New_York',
           role: 'Tech',
           workGroup: {
             externalId: 'agent2@example.com',
