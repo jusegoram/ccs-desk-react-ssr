@@ -113,7 +113,7 @@ class Sidebar extends React.Component {
               {badge(item.badge)}
             </RsNavLink>
           ) : (
-            <Link href={url}>
+            <Link shallow href={url}>
               <a className={classes.link} onClick={this.hideMobile}>
                 <i className={classes.icon} />
                 {item.name}
