@@ -6,8 +6,6 @@ import { WorkGroup, Company, Employee, Geography } from 'server/api/models'
 import sanitizeName from 'server/util/sanitizeName'
 import moment from 'moment-timezone'
 
-const models = [WorkGroup, Company, Employee, Geography]
-
 const serviceW2Company = {
   'Goodman Analytics': 'Goodman',
   'DirectSat Analytics': 'DirectSat',
@@ -47,6 +45,7 @@ const serviceW2Company = {
 */
 
 export default async ({ csvObjStream, dataSource }) => {
+  const models = [WorkGroup, Company, Employee, Geography]
   await transaction(...models, async (WorkGroup, Company, Employee, Geography) => {
     let srData = null
 
@@ -154,10 +153,14 @@ export default async ({ csvObjStream, dataSource }) => {
 
     const upsertEmployee = async ({ query, update, startLatLong }) => {
       allEmployeeExternalIds.push(query.externalId)
+
+      // find employee (eager startLocation for the upsert)
       let employee = await Employee.query()
       .eager('startLocation')
       .where(query)
       .first()
+
+      // upsert start location
       const startLocation =
         startLatLong &&
         (await Geography.query().upsertGraph({
@@ -165,7 +168,10 @@ export default async ({ csvObjStream, dataSource }) => {
           ...(employee && employee.startLocation),
           ...startLatLong,
         }))
+      // find timezone based on start location
       const timezone = startLocation && (await startLocation.getTimezone())
+
+      // upsert
       if (!employee) {
         employee = await Employee.query()
         .insertGraph({
@@ -186,6 +192,7 @@ export default async ({ csvObjStream, dataSource }) => {
         .returning('*')
         .first()
       }
+
       return employee
     }
 
