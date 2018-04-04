@@ -1,5 +1,6 @@
 import APIModel from 'server/api/util/APIModel'
 import { QueryBuilder, Model } from 'objection'
+import _ from 'lodash'
 
 export default class Employee extends APIModel {
   static knexCreateTable = `
@@ -59,8 +60,14 @@ export default class Employee extends APIModel {
       _contextFilter() {
         const { session } = this.context()
         if (!session) return this.whereRaw('FALSE')
-        if (session.account.employee && session.account.employee.role === 'tech')
-          this.where({ id: session.account.employee.id })
+        const qb = this
+        qb.joinRelation('workGroups')
+        qb.where(function() {
+          session.account.permissions.forEach(permission => {
+            const workGroupsIds = _.map(permission.workGroups, 'id')
+            this.whereIn('workGroups.id', workGroupsIds)
+          })
+        })
         return this
       }
     }
