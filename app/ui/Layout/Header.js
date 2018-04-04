@@ -55,7 +55,7 @@ class Header extends Component {
           <span className="navbar-toggler-icon" />
         </NavbarToggler>
         <NavbarBrand href="#" style={brandStyle}>
-          Fleet
+          CCS Desk
         </NavbarBrand>
         <NavbarToggler className="d-md-down-none h-100 b-r-1 px-3" onClick={this.sidebarToggle}>
           <span className="navbar-toggler-icon" />

@@ -138,7 +138,7 @@ const upsertEmployee = async ({ query, update }) => {
   .first()
   if (!employee) {
     employee = await Employee.query()
-    .insert({
+    .insertGraph({
       ...query,
       ...update,
     })
@@ -214,6 +214,15 @@ export default async ({ csvObjStream, dataSource }) => {
             }
           }
 
+          const techWorkGroup = await ensureWorkGroup({
+            type: 'Tech',
+            companyId: w2Company.id,
+            externalId: employee.externalId,
+            name: employee.name,
+          })
+          await employee.$query().patch({ workGroupId: techWorkGroup.id })
+          await ensureRelated(techWorkGroup)
+
           const teamWorkGroup = await ensureWorkGroup({
             type: 'Team',
             companyId: w2Company.id,
@@ -225,8 +234,8 @@ export default async ({ csvObjStream, dataSource }) => {
           if (!_.find(supervisor.managedWorkGroups, { id: teamWorkGroup.id })) {
             await supervisor.$relatedQuery('managedWorkGroups').relate(teamWorkGroup)
           }
-
           await ensureRelated(teamWorkGroup)
+
           await ensureRelated(
             await ensureWorkGroup({
               type: 'Company',

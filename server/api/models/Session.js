@@ -11,6 +11,7 @@ export default class Session extends withDeletedAt(APIModel) {
     table.timestamp('deletedAt').index()
     // <custom>
     table.timestamp('expiresAt').defaultTo(knex.fn.now())
+    table.uuid('rootAccountId')
     table.uuid('accountId')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
@@ -35,7 +36,7 @@ export default class Session extends withDeletedAt(APIModel) {
     },
   }
 
-  static visible = ['id', 'expiresAt', 'account']
+  static visible = ['id', 'expiresAt', 'account', 'rootAccount']
 
   static get QueryBuilder() {
     return class extends QueryBuilder {
@@ -57,11 +58,13 @@ export default class Session extends withDeletedAt(APIModel) {
           from: 'Session.accountId',
           to: 'Account.id',
         },
-        filter: builder => {
-          const { session } = builder.context()
-          if (session === undefined) return
-          if (session === null) return builder.whereRaw('FALSE')
-          builder.where({ 'Account.id': session.account.id })
+      },
+      rootAccount: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: 'Account',
+        join: {
+          from: 'Session.rootAccountId',
+          to: 'Account.id',
         },
       },
     }
@@ -85,7 +88,7 @@ export default class Session extends withDeletedAt(APIModel) {
             throw new ExpectedError('Invalid email and/or password.')
           const session = await account
           .$relatedQuery('sessions')
-          .insert({})
+          .insert({ rootAccountId: account.id })
           .returning('*')
           await session.$loadRelated('account.employee.company')
           const token = createToken({ sessionId: session.id, clientContext })

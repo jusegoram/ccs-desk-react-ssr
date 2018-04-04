@@ -43,6 +43,7 @@ export function up(knex) {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
+    table.uuid('workGroupId')
     table.string('externalId').notNullable()
     table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')
@@ -93,6 +94,16 @@ export function up(knex) {
     table.uuid('token').defaultTo(knex.raw("uuid_generate_v4()"))
     table.uuid('senderId').notNullable()
     table.uuid('recipientId').notNullable()
+    // </custom>
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
+  .createTable('Permission', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.timestamp('deletedAt').index()
+    // <custom>
+    table.uuid('accountId')
+    table.string('type').defaultTo('read').notNullable()
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -185,6 +196,7 @@ export function up(knex) {
   })
   .alterTable('Employee', table => {
     table.foreign('companyId').references('Company.id')
+    table.foreign('workGroupId').references('WorkGroup.id')
   })
   .alterTable('FeatureSet', table => {
     table.foreign('companyId').references('Company.id')
@@ -220,6 +232,14 @@ export function up(knex) {
   .alterTable('WorkGroup', table => {
     table.foreign('geographyId').references('Geography.id')
     table.foreign('companyId').references('Company.id')
+  })
+  .createTable('permissionWorkGroups', table => { 
+      table.uuid('permissionId').notNullable()
+      table.uuid('workGroupId').notNullable()
+      table.primary(['permissionId', 'workGroupId'])
+      table.unique(['workGroupId', 'permissionId'])
+      table.foreign('permissionId').references('Permission.id')
+      table.foreign('workGroupId').references('WorkGroup.id')
   })
   .createTable('reportQuestions', table => { 
       table.uuid('reportId').notNullable()
