@@ -6,6 +6,7 @@ export default class Employee extends APIModel {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
+    table.uuid('workGroupId')
     table.string('externalId').notNullable()
     table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')
@@ -19,6 +20,7 @@ export default class Employee extends APIModel {
   `
   static knexAlterTable = `
     table.foreign('companyId').references('Company.id')
+    table.foreign('workGroupId').references('WorkGroup.id')
   `
   static jsonSchema = {
     title: 'Employee',
@@ -72,6 +74,14 @@ export default class Employee extends APIModel {
         join: {
           from: 'Employee.companyId',
           to: 'Company.id',
+        },
+      },
+      workGroup: {
+        relation: Model.HasOneRelation,
+        modelClass: 'WorkGroup',
+        join: {
+          from: 'Employee.workGroupId',
+          to: 'WorkGroup.id',
         },
       },
       workGroups: {

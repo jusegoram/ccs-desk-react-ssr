@@ -7,6 +7,10 @@ const props = `
     id
     name
   }
+  rootAccount {
+    id
+    name
+  }
 `
 export default class Session {
   static props = props
