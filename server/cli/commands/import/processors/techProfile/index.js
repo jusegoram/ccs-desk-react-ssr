@@ -2,11 +2,11 @@ import _ from 'lodash'
 import Promise from 'bluebird'
 import ObjectStreamTransform from 'server/cli/commands/import/util/ObjectStreamTransform'
 import { transaction } from 'objection'
-import { WorkGroup, Company, Employee } from 'server/api/models'
+import { WorkGroup, Company, Employee, Geography } from 'server/api/models'
 import sanitizeName from 'server/util/sanitizeName'
 import moment from 'moment-timezone'
 
-const models = [WorkGroup, Company, Employee]
+const models = [WorkGroup, Company, Employee, Geography]
 
 const serviceW2Company = {
   'Goodman Analytics': 'Goodman',
@@ -45,143 +45,160 @@ const serviceW2Company = {
   //   'End of Day Latitude': '0',
   //   'End of Day Longitude': '0' }
 */
-let srData = null
-
-const getDtvWorkGroups = async w2Company => {
-  const ensureDtvWorkGroups = async type => {
-    const workGroups = await WorkGroup.query().where({ companyId: w2Company.id, type })
-    if (workGroups.length !== 0) return workGroups
-    return await createAllWorkGroupsOfType(type)
-  }
-  const createAllWorkGroupsOfType = async type => {
-    const knex = WorkGroup.knex()
-    const namesForType = _.map(
-      await knex
-      .distinct(type)
-      .from('directv_sr_data')
-      .where({ HSP: w2Company.name }),
-      type
-    )
-    const order = workGroupOrders[type]
-    return await Promise.mapSeries(namesForType, async name => {
-      return await WorkGroup.query().insert({
-        companyId: w2Company.id,
-        externalId: name,
-        order,
-        name,
-        type,
-      })
-    })
-  }
-  return await Promise.props({
-    'Service Region': ensureDtvWorkGroups('Service Region'),
-    Office: ensureDtvWorkGroups('Office'),
-    DMA: ensureDtvWorkGroups('DMA'),
-    Division: ensureDtvWorkGroups('Division'),
-  })
-}
-
-const streamToArray = async (stream, transformCallback) =>
-  new Promise(async (resolve, reject) => {
-    const objArray = []
-    stream
-    .pipe(new ObjectStreamTransform(transformCallback))
-    .on('data', obj => objArray.push(obj))
-    .on('end', () => {
-      resolve(objArray)
-    })
-    .on('error', error => {
-      reject(error)
-    })
-  })
-
-let workGroups = null
-
-const workGroupOrders = {
-  Company: 0,
-  Division: 1,
-  DMA: 2,
-  Office: 3,
-  'Service Region': 4,
-  Team: 5,
-  Tech: 6,
-}
-
-const ensureWorkGroup = async ({ type, companyId, externalId, name }) => {
-  workGroups[type] = workGroups[type] || {}
-  if (workGroups[type][externalId]) return workGroups[type][externalId]
-  const queryProps = { type, companyId, externalId }
-  const order = workGroupOrders[type]
-  workGroups[type][externalId] =
-    (await WorkGroup.query()
-    .where(queryProps)
-    .first()) ||
-    (await WorkGroup.query()
-    .insert({ ...queryProps, order, name })
-    .returning('*'))
-  return workGroups[type][externalId]
-}
-
-const upsertTech = async ({ companyId, techData, dataSource }) => {
-  const query = { companyId, externalId: techData['Tech User ID'] }
-  const update = {
-    name: sanitizeName(techData['Tech Full Name']),
-    phoneNumber: techData['Tech Mobile Phone #'],
-    dataSourceId: dataSource.id,
-    terminatedAt: null,
-  }
-  return await upsertEmployee({ query, update })
-}
-const upsertSupervisor = async ({ companyId, techData, dataSource }) => {
-  const query = { companyId, externalId: techData['Tech Team Supervisor Login'] }
-  const update = {
-    role: 'Manager',
-    name: sanitizeName(techData['Team Name']),
-    phoneNumber: techData['Tech Team Supervisor Mobile #'],
-    dataSourceId: dataSource.id,
-    terminatedAt: null,
-  }
-  return await upsertEmployee({ query, update })
-}
-const allEmployeeExternalIds = []
-
-const upsertEmployee = async ({ query, update }) => {
-  allEmployeeExternalIds.push(query.externalId)
-  let employee = await Employee.query()
-  .where(query)
-  .first()
-  if (!employee) {
-    employee = await Employee.query()
-    .insertGraph({
-      ...query,
-      ...update,
-    })
-    .returning('*')
-  } else {
-    employee = await Employee.query()
-    .where(query)
-    .update(update)
-    .returning('*')
-    .first()
-  }
-  return employee
-}
-
-const companies = {}
-const ensureCompany = async name => {
-  if (companies[name]) return companies[name]
-  companies[name] = await Company.query()
-  .where({ name })
-  .first()
-  if (companies[name]) return companies[name]
-  companies[name] = await Company.query()
-  .insert({ name })
-  .returning('*')
-  return companies[name]
-}
 
 export default async ({ csvObjStream, dataSource }) => {
-  await transaction(...models, async (WorkGroup, Company, Employee) => {
+  await transaction(...models, async (WorkGroup, Company, Employee, Geography) => {
+    let srData = null
+
+    const getDtvWorkGroups = async w2Company => {
+      const ensureDtvWorkGroups = async type => {
+        const workGroups = await WorkGroup.query().where({ companyId: w2Company.id, type })
+        if (workGroups.length !== 0) return workGroups
+        return await createAllWorkGroupsOfType(type)
+      }
+      const createAllWorkGroupsOfType = async type => {
+        const knex = WorkGroup.knex()
+        const namesForType = _.map(
+          await knex
+          .distinct(type)
+          .from('directv_sr_data')
+          .where({ HSP: w2Company.name }),
+          type
+        )
+        const order = workGroupOrders[type]
+        return await Promise.mapSeries(namesForType, async name => {
+          return await WorkGroup.query().insert({
+            companyId: w2Company.id,
+            externalId: name,
+            order,
+            name,
+            type,
+          })
+        })
+      }
+      return await Promise.props({
+        'Service Region': ensureDtvWorkGroups('Service Region'),
+        Office: ensureDtvWorkGroups('Office'),
+        DMA: ensureDtvWorkGroups('DMA'),
+        Division: ensureDtvWorkGroups('Division'),
+      })
+    }
+
+    const streamToArray = async (stream, transformCallback) =>
+      new Promise(async (resolve, reject) => {
+        const objArray = []
+        stream
+        .pipe(new ObjectStreamTransform(transformCallback))
+        .on('data', obj => objArray.push(obj))
+        .on('end', () => {
+          resolve(objArray)
+        })
+        .on('error', error => {
+          reject(error)
+        })
+      })
+
+    let workGroups = null
+
+    const workGroupOrders = {
+      Company: 0,
+      Division: 1,
+      DMA: 2,
+      Office: 3,
+      'Service Region': 4,
+      Team: 5,
+      Tech: 6,
+    }
+
+    const ensureWorkGroup = async ({ type, companyId, externalId, name }) => {
+      workGroups[type] = workGroups[type] || {}
+      if (workGroups[type][externalId]) return workGroups[type][externalId]
+      const queryProps = { type, companyId, externalId }
+      const order = workGroupOrders[type]
+      workGroups[type][externalId] =
+        (await WorkGroup.query()
+        .where(queryProps)
+        .first()) ||
+        (await WorkGroup.query()
+        .insert({ ...queryProps, order, name })
+        .returning('*'))
+      return workGroups[type][externalId]
+    }
+
+    const upsertTech = async ({ companyId, techData, dataSource }) => {
+      const query = { companyId, externalId: techData['Tech User ID'] }
+      const latitude = techData['Start Latitude'] / 1000000 || null
+      const longitude = techData['Start Longitude'] / 1000000 || null
+      const update = {
+        name: sanitizeName(techData['Tech Full Name']),
+        phoneNumber: techData['Tech Mobile Phone #'],
+        dataSourceId: dataSource.id,
+        terminatedAt: null,
+      }
+      const startLatLong = latitude && longitude && { latitude, longitude }
+      const employee = await upsertEmployee({ query, update, startLatLong })
+      return employee
+    }
+    const upsertSupervisor = async ({ companyId, techData, dataSource }) => {
+      const query = { companyId, externalId: techData['Tech Team Supervisor Login'] }
+      const update = {
+        role: 'Manager',
+        name: sanitizeName(techData['Team Name']),
+        phoneNumber: techData['Tech Team Supervisor Mobile #'],
+        dataSourceId: dataSource.id,
+        terminatedAt: null,
+      }
+      return await upsertEmployee({ query, update })
+    }
+    const allEmployeeExternalIds = []
+
+    const upsertEmployee = async ({ query, update, startLatLong }) => {
+      allEmployeeExternalIds.push(query.externalId)
+      let employee = await Employee.query()
+      .eager('startLocation')
+      .where(query)
+      .first()
+      let startLocation =
+        startLatLong &&
+        (await Geography.query().upsertGraph({
+          type: 'Start Location',
+          ...(employee && employee.startLocation),
+          ...startLatLong,
+        }))
+      if (!employee) {
+        employee = await Employee.query()
+        .insertGraph({
+          ...query,
+          ...update,
+          startLocationId: startLocation && startLocation.id,
+        })
+        .returning('*')
+      } else {
+        employee = await Employee.query()
+        .where(query)
+        .update({
+          ...update,
+          startLocationId: startLocation && startLocation.id,
+        })
+        .returning('*')
+        .first()
+      }
+      return employee
+    }
+
+    const companies = {}
+    const ensureCompany = async name => {
+      if (companies[name]) return companies[name]
+      companies[name] = await Company.query()
+      .where({ name })
+      .first()
+      if (companies[name]) return companies[name]
+      companies[name] = await Company.query()
+      .insert({ name })
+      .returning('*')
+      return companies[name]
+    }
+
     const w2CompanyName = serviceW2Company[dataSource.service]
     srData = _.keyBy(
       await WorkGroup.knex()

@@ -45,8 +45,9 @@ export function up(knex) {
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
     table.uuid('workGroupId')
-    table.string('timezone').notNullable()
+    table.uuid('startLocationId')
     table.string('externalId').notNullable()
+    table.string('timezone')
     table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')
     table.string('phoneNumber')
@@ -78,14 +79,16 @@ export function up(knex) {
     table.string('state')
     table.string('country')
     table.text('polygonKml')
-    table.specificType('polygon', 'geography(MULTIPOLYGON, 4326)').index()
+    table.specificType('polygon', 'geography(MULTIPOLYGON, 4326)')
     table.float('radius')
     table.decimal('latitude', 10, 7)
     table.decimal('longitude', 10, 7)
-    table.specificType('point', 'geography(POINT, 4326)').index()
+    table.specificType('point', 'geography(POINT, 4326)')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
     table.index(['type', 'externalId'])
+    table.index(['type', 'polygon'])
+    table.index(['type', 'point'])
   })
   .createTable('Invite', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
@@ -210,6 +213,7 @@ export function up(knex) {
   .alterTable('Employee', table => {
     table.foreign('companyId').references('Company.id')
     table.foreign('workGroupId').references('WorkGroup.id')
+    table.foreign('startLocationId').references('Geography.id')
   })
   .alterTable('FeatureSet', table => {
     table.foreign('companyId').references('Company.id')
