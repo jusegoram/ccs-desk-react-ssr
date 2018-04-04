@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer'
 import sesTransport from 'nodemailer-ses-transport'
 import AWS from 'aws-sdk'
 import Promise from 'bluebird'
+import config from 'server/config'
 
 AWS.config.accessKeyId = process.env.AWS_ACCESS_KEY_ID
 AWS.config.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
@@ -14,7 +15,7 @@ Promise.promisifyAll(NodeMailer)
 
 export default ({ recipient, subject, text, html }) => {
   return NodeMailer.sendMailAsync({
-    from: 'CCS Desk<info@ccsdesk.com>',
+    from: config.emailSender,
     to: recipient,
     subject,
     text,

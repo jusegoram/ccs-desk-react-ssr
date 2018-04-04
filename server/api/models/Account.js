@@ -3,9 +3,11 @@ import { QueryBuilder, Model, transaction } from 'objection'
 import jwt from 'jsonwebtoken'
 
 import { withDeletedAt, withPassword } from 'server/api/util/mixins'
-import { compose, sendEmail, APIModel } from 'server/api/util'
+import { compose, APIModel } from 'server/api/util'
 import passwordResetEmail from 'server/emails/passwordReset'
 import ExpectedError from 'server/errors/ExpectedError'
+import sendEmail from 'server/util/sendEmail'
+import config from 'server/config'
 
 export default class Account extends compose(withDeletedAt, withPassword({ allowEmptyPassword: true }))(APIModel) {
   static knexCreateTable = `
@@ -110,11 +112,11 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
           return transaction(Account, async Account => {
             const account = await Account.query().findOne({ email })
             if (!account) return null
-            const resetToken = jwt.sign({ email, isResetToken: true }, process.env.PASSWORD_RESET_JWT_SECRET, {
+            const resetToken = jwt.sign({ email, hash: account.password }, process.env.PASSWORD_RESET_JWT_SECRET, {
               expiresIn: 60 * 60 * 1000,
             })
             const html = passwordResetEmail({
-              resetUrl: `${process.env.HOST}/reset-password?token=${encodeURIComponent(resetToken)}`,
+              resetUrl: `${config.host}/reset-password?token=${encodeURIComponent(resetToken)}`,
             })
             await sendEmail({
               recipient: email,
@@ -140,14 +142,12 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
             } catch (e) {
               throw new ExpectedError('Invalid password reset token')
             }
-            const { email } = payload
+            const { email, hash } = payload
             const account = await Account.query().findOne({ email })
             if (!account) {
               throw new ExpectedError('Unable to find the account for this reset token')
             }
-            console.log('patch', { password })
-            console.log('account', account)
-            account.$set({ password })
+            if (account.password !== hash) throw new ExpectedError('This reset token has already been used')
             await account.$query().patch({ password })
             return null
           })
