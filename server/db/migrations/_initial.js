@@ -4,6 +4,7 @@ export function up(knex) {
   .createTable('Account', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
+    table.specificType('order', 'SERIAL')
     // <custom>
     table.string('name').notNullable()
     table.string('email').notNullable()

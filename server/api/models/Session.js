@@ -114,7 +114,6 @@ export default class Session extends withDeletedAt(APIModel) {
           const account = await Account.query()
           .where({ id: accountId })
           .first()
-          await session.$relatedQuery('rootAccount').relate(session.account)
           await session.$relatedQuery('account').relate(account)
           await session.$loadRelated(Session.defaultEagerRelations)
           return session
