@@ -8,6 +8,7 @@ export default class Employee extends APIModel {
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
     table.uuid('workGroupId')
+    table.uuid('startLocationId')
     table.string('timezone').notNullable()
     table.string('externalId').notNullable()
     table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
@@ -23,6 +24,7 @@ export default class Employee extends APIModel {
   static knexAlterTable = `
     table.foreign('companyId').references('Company.id')
     table.foreign('workGroupId').references('WorkGroup.id')
+    table.foreign('startLocationId').references('Geography.id')
   `
   static jsonSchema = {
     title: 'Employee',
@@ -174,6 +176,14 @@ export default class Employee extends APIModel {
         join: {
           from: 'Employee.id',
           to: 'WorkSchedule.employeeId',
+        },
+      },
+      startLocation: {
+        relation: Model.HasOneRelation,
+        modelClass: 'Geography',
+        join: {
+          from: 'Employee.startLocationId',
+          to: 'Geography.id',
         },
       },
     }
