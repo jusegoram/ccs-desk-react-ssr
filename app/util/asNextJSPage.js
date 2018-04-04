@@ -26,7 +26,6 @@ export default Component => {
 
     // https://github.com/zeit/next.js/#fetching-data-and-component-lifecycle
     static async getInitialProps(ctx) {
-      const initialProps = Component.getInitialProps ? await Component.getInitialProps(ctx) : {}
       const location = {
         asPath: ctx.asPath,
         pathname: ctx.pathname,
@@ -55,7 +54,6 @@ export default Component => {
       return {
         serverSideApolloState,
         location,
-        ...initialProps,
       }
     }
 
