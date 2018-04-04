@@ -5,10 +5,9 @@ import moment from 'moment-timezone'
 import { Card, CardHeader, CardBody, Button } from 'reactstrap'
 import alert from 'sweetalert'
 
-import withApolloProvider from 'app/apollo/withApolloProvider'
+import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
 
-import Page from 'app/ui/Page'
 import Layout from 'app/ui/Layout'
 
 class Employees extends React.Component {
@@ -21,16 +20,15 @@ class Employees extends React.Component {
       },
     ]
     return (
-      <Page title="Dashboard" location={this.props.url}>
-        <Layout>
-          <Query {...data.Employee.QUERY} fetchPolicy="cache-and-network">
-            {({ loading, data }) => {
-              return (
-                <Card>
-                  <CardHeader style={{ position: 'relative' }}>
-                    {/*relative because card-actions is absolute*/}
-                    <i className="icon-menu" /> Employees
-                    {/* <Button
+      <Layout>
+        <Query {...data.Employee.QUERY} fetchPolicy="cache-and-network">
+          {({ loading, data }) => {
+            return (
+              <Card>
+                <CardHeader style={{ position: 'relative' }}>
+                  {/*relative because card-actions is absolute*/}
+                  <i className="icon-menu" /> Employees
+                  {/* <Button
                       className="card-actions mt-0 h-100"
                       color="primary"
                       onClick={() => {
@@ -42,31 +40,30 @@ class Employees extends React.Component {
                     >
                       <i className="fa fa-download fa-lg" />
                     </Button> */}
-                  </CardHeader>
-                  <CardBody className="p-0">
-                    <ReactTable
-                      style={{ backgroundColor: 'white', height: 'calc(100vh - 146px)' }}
-                      filterable
-                      className="-striped -highlight"
-                      loading={!data.employees && loading}
-                      data={data && data.employees}
-                      defaultPageSize={20}
-                      columns={columns}
-                      defaultFilterMethod={(filter, row) =>
-                        String(row[filter.id])
-                        .toLowerCase()
-                        .indexOf(String(filter.value).toLowerCase()) !== -1
-                      }
-                    />
-                  </CardBody>
-                </Card>
-              )
-            }}
-          </Query>
-        </Layout>
-      </Page>
+                </CardHeader>
+                <CardBody className="p-0">
+                  <ReactTable
+                    style={{ backgroundColor: 'white', height: 'calc(100vh - 146px)' }}
+                    filterable
+                    className="-striped -highlight"
+                    loading={!data.employees && loading}
+                    data={data && data.employees}
+                    defaultPageSize={20}
+                    columns={columns}
+                    defaultFilterMethod={(filter, row) =>
+                      String(row[filter.id])
+                      .toLowerCase()
+                      .indexOf(String(filter.value).toLowerCase()) !== -1
+                    }
+                  />
+                </CardBody>
+              </Card>
+            )
+          }}
+        </Query>
+      </Layout>
     )
   }
 }
 
-export default withApolloProvider(Employees)
+export default asNextJSPage(Employees)

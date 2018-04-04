@@ -10,18 +10,16 @@ import data from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'
 
-class Timecards extends React.Component {
+class Accounts extends React.Component {
   render() {
     const columns = [
-      { Header: 'Employee', accessor: 'employee.name' },
+      { Header: 'Name', accessor: 'name' },
+      { Header: 'Company', accessor: 'company.name' },
+      { Header: 'Role', accessor: 'role' },
       {
-        Header: 'Shift Length',
-        id: 'shiftLength',
-        accessor: row => moment(row.clockedOutAt || undefined).diff(row.clockedInAt, 'hours', true),
-        Cell: ({ row }) =>
-          moment(row.clockedOutAt || undefined)
-          .diff(row.clockedInAt, 'hours', true)
-          .toFixed(1) + ' hours',
+        Header: 'Mimic',
+        id: 'mimic',
+        Cell: ({ row }) => <Button>Mimic</Button>,
       },
       {
         Header: 'Clocked In At',
@@ -38,33 +36,21 @@ class Timecards extends React.Component {
     ]
     return (
       <Layout>
-        <Query {...data.Timecard.QUERY} fetchPolicy="cache-and-network" pollInterval={5000}>
+        <Query {...data.Account.QUERY} fetchPolicy="cache-and-network" pollInterval={5000}>
           {({ loading, data }) => {
             return (
               <Card>
                 <CardHeader style={{ position: 'relative' }}>
                   {/*relative because card-actions is absolute*/}
-                  <i className="icon-menu" /> Timecards
-                  <Button
-                    className="card-actions mt-0 h-100"
-                    color="primary"
-                    onClick={() => {
-                      window.open('https://endeavorfleet.com/download/timecards')
-                      alert(
-                        "The download should be starting. If it hasn't, verify that your popup blocker isn't preventing it from opening."
-                      )
-                    }}
-                  >
-                    <i className="fa fa-download fa-lg" />
-                  </Button>
+                  <i className="icon-menu" /> Accounts
                 </CardHeader>
                 <CardBody className="p-0">
                   <ReactTable
                     style={{ backgroundColor: 'white', height: 'calc(100vh - 146px)' }}
                     filterable
                     className="-striped -highlight"
-                    loading={!data.timecards && loading}
-                    data={data && data.timecards}
+                    loading={!data.accounts && loading}
+                    data={data && data.accounts}
                     defaultPageSize={20}
                     columns={columns}
                     defaultFilterMethod={(filter, row) =>
@@ -83,4 +69,4 @@ class Timecards extends React.Component {
   }
 }
 
-export default asNextJSPage(Timecards)
+export default asNextJSPage(Accounts)
