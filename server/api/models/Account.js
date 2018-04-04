@@ -1,7 +1,10 @@
+import { GraphQLString } from 'graphql'
+import { QueryBuilder, Model, transaction } from 'objection'
+import jwt from 'jsonwebtoken'
+
 import { withDeletedAt, withPassword } from 'server/api/util/mixins'
-import { compose } from 'server/api/util'
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
+import { compose, sendEmail, APIModel } from 'server/api/util'
+import passwordResetEmail from 'server/emails/passwordReset'
 
 export default class Account extends compose(withDeletedAt, withPassword({ allowEmptyPassword: true }))(APIModel) {
   static knexCreateTable = `
@@ -89,6 +92,36 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
         join: {
           from: 'Account.companyId',
           to: 'Company.id',
+        },
+      },
+    }
+  }
+
+  static get mutations() {
+    return {
+      requestPasswordReset: {
+        description: 'create a session',
+        type: this.GraphqlTypes.Account,
+        args: {
+          email: { type: GraphQLString },
+        },
+        resolve: async (root, { email }) => {
+          return transaction(Account, async Account => {
+            const account = await Account.query().findOne({ email })
+            if (!account) return null
+            const resetToken = jwt.sign({ email, isResetToken: true }, process.env.PASSWORD_RESET_JWT_SECRET, {
+              expiresIn: 60 * 60 * 1000,
+            })
+            const html = passwordResetEmail({
+              resetUrl: `${process.env.HOST}/reset-password?token=${encodeURIComponent(resetToken)}`,
+            })
+            await sendEmail({
+              recipient: email,
+              subject: 'Reset Your CCS Desk Password',
+              html: html,
+            })
+            return null
+          })
         },
       },
     }

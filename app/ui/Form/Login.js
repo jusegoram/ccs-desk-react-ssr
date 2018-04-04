@@ -60,11 +60,11 @@ class LoginForm extends Component {
                   </Button>
                 </Col>
                 <Col xs="6" className="text-right">
-                  {/* <Link href="/forgot-password">
+                  <Link shallow href="/forgot-password">
                     <Button color="link" className="px-0">
                       Forgot password?
                     </Button>
-                  </Link> */}
+                  </Link>
                 </Col>
               </Row>
             </Form>
