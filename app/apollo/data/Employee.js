@@ -8,6 +8,9 @@ const props = `
   externalId
   phoneNumber
   email
+  skills
+  schedule
+  terminatedAt
   company {
     id
     name
@@ -18,10 +21,19 @@ const props = `
 `
 export default class Employee {
   static props = props
-  static QUERY = {
+  static QUERY_techs = {
     query: gql`
-      query employees {
-        employees {
+      query techs {
+        employees(role: "Tech") {
+          ${props}
+        }
+      }
+    `,
+  }
+  static QUERY_managers = {
+    query: gql`
+      query managers {
+        employees(role: "Manager") {
           ${props}
         }
       }
