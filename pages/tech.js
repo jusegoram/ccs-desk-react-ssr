@@ -35,9 +35,9 @@ export default asNextJSPage(
                       <h2>{employee.name}</h2>
                     </Col>
                     <Col style={{ textAlign: 'end' }}>
-                      <Button size="sm" color="primary">
+                      {/* <Button size="sm" color="primary">
                         Log Call
-                      </Button>
+                      </Button> */}
                     </Col>
                   </Row>
                   <Row>
@@ -88,10 +88,10 @@ export default asNextJSPage(
                       </Card>
                     </Col>
                     <Col xs="12" md="4">
-                      <Card>
+                      {/* <Card>
                         <CardHeader>Start Location</CardHeader>
                         <CardBody className="p-0">[map goes here]</CardBody>
-                      </Card>
+                      </Card> */}
                     </Col>
                   </Row>
                   <Row>
