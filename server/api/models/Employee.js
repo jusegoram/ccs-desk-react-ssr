@@ -111,10 +111,10 @@ export default class Employee extends APIModel {
           through: {
             from: 'workGroupEmployees.employeeId',
             to: 'workGroupEmployees.workGroupId',
-            modify: { role: 'Tech' },
             beforeInsert(model) {
               model.role = 'Tech'
             },
+            filter: { 'workGroupEmployees.role': 'Tech' },
           },
           to: 'WorkGroup.id',
         },
@@ -130,12 +130,15 @@ export default class Employee extends APIModel {
           through: {
             from: 'workGroupEmployees.employeeId',
             to: 'workGroupEmployees.workGroupId',
-            modify: { role: 'Manager' },
             beforeInsert(model) {
               model.role = 'Manager'
             },
+            filter: { 'workGroupEmployees.role': 'Manager' },
           },
           to: 'WorkGroup.id',
+        },
+        modify: qb => {
+          qb.orderBy('WorkGroup.order')
         },
       },
       account: {

@@ -86,12 +86,12 @@ export default class WorkGroup extends APIModel {
       managers: {
         relation: Model.ManyToManyRelation,
         modelClass: 'Employee',
+        modify: qb => qb.where({ 'workGroupEmployees.role': 'Manager' }),
         join: {
           from: 'WorkGroup.id',
           through: {
             from: 'workGroupEmployees.workGroupId',
             to: 'workGroupEmployees.employeeId',
-            modify: { role: 'Manager' },
             beforeInsert(model) {
               model.role = 'Manager'
             },
@@ -102,12 +102,12 @@ export default class WorkGroup extends APIModel {
       techs: {
         relation: Model.ManyToManyRelation,
         modelClass: 'Employee',
+        modify: qb => qb.where({ 'workGroupEmployees.role': 'Tech' }),
         join: {
           from: 'WorkGroup.id',
           through: {
             from: 'workGroupEmployees.workGroupId',
             to: 'workGroupEmployees.employeeId',
-            modify: { role: 'Tech' },
             beforeInsert(model) {
               model.role = 'Tech'
             },
