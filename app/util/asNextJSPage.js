@@ -84,7 +84,7 @@ export default Component => {
                     return null
                   }
                   if (Component.authed === false && data && data.session) {
-                    Router.replace('/employees')
+                    Router.replace('/techs')
                     return null
                   }
                   return (
