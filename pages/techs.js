@@ -39,7 +39,7 @@ export default asNextJSPage(
                 <Card>
                   <CardHeader style={{ position: 'relative' }}>
                     {/*relative because card-actions is absolute*/}
-                    <i className="icon-menu" /> Employees
+                    <i className="icon-menu" /> Techs
                     {/* <Button
                       className="card-actions mt-0 h-100"
                       color="primary"
