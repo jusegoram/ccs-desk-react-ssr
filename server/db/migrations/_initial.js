@@ -279,21 +279,14 @@ export function up(knex) {
       table.foreign('vehicleId').references('Vehicle.id')
       table.foreign('reportId').references('Report.id')
   })
-  .createTable('workGroupTechs', table => { 
+  .createTable('workGroupEmployees', table => { 
       table.uuid('workGroupId').notNullable()
-      table.uuid('techId').notNullable()
-      table.primary(['workGroupId', 'techId'])
-      table.unique(['techId', 'workGroupId'])
+      table.uuid('employeeId').notNullable()
+      table.string('role').notNullable()
+      table.primary(['role', 'workGroupId', 'employeeId'])
+      table.unique(['role', 'employeeId', 'workGroupId'])
       table.foreign('workGroupId').references('WorkGroup.id')
-      table.foreign('techId').references('Employee.id')
-  })
-  .createTable('workGroupManagers', table => { 
-      table.uuid('workGroupId').notNullable()
-      table.uuid('managerId').notNullable()
-      table.primary(['workGroupId', 'managerId'])
-      table.unique(['managerId', 'workGroupId'])
-      table.foreign('workGroupId').references('WorkGroup.id')
-      table.foreign('managerId').references('Employee.id')
+      table.foreign('employeeId').references('Employee.id')
   })
   .createTable('directv_sr_data', table => { 
       table.string('Service Region').index()
