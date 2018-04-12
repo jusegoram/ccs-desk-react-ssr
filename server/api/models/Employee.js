@@ -109,8 +109,12 @@ export default class Employee extends APIModel {
         join: {
           from: 'Employee.id',
           through: {
-            from: 'workGroupTechs.techId',
-            to: 'workGroupTechs.workGroupId',
+            from: 'workGroupEmployees.employeeId',
+            to: 'workGroupEmployees.workGroupId',
+            modify: { role: 'Tech' },
+            beforeInsert(model) {
+              model.role = 'Tech'
+            },
           },
           to: 'WorkGroup.id',
         },
@@ -124,8 +128,12 @@ export default class Employee extends APIModel {
         join: {
           from: 'Employee.id',
           through: {
-            from: 'workGroupManagers.managerId',
-            to: 'workGroupManagers.workGroupId',
+            from: 'workGroupEmployees.employeeId',
+            to: 'workGroupEmployees.workGroupId',
+            modify: { role: 'Manager' },
+            beforeInsert(model) {
+              model.role = 'Manager'
+            },
           },
           to: 'WorkGroup.id',
         },
