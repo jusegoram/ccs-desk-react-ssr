@@ -19,7 +19,7 @@ export default asNextJSPage(
           Header: 'Employee ID',
           accessor: 'externalId',
           Cell: ({ original }) => (
-            <Link shallow href={`/employee/${original.id}`}>
+            <Link shallow href={`/tech/${original.id}`}>
               <a href="#">{original.externalId}</a>
             </Link>
           ),

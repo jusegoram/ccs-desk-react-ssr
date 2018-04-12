@@ -1,8 +1,8 @@
 export default {
   items: [
     {
-      name: 'Employees',
-      url: '/employees',
+      name: 'Techs',
+      url: '/techs',
       icon: 'icon-people',
     },
     // {
