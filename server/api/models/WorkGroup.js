@@ -24,21 +24,14 @@ export default class WorkGroup extends APIModel {
     table.foreign('companyId').references('Company.id')
   `
   static knexCreateJoinTables = {
-    workGroupTechs: `
+    workGroupEmployees: `
       table.uuid('workGroupId').notNullable()
-      table.uuid('techId').notNullable()
-      table.primary(['workGroupId', 'techId'])
-      table.unique(['techId', 'workGroupId'])
+      table.uuid('employeeId').notNullable()
+      table.string('role').notNullable()
+      table.primary(['role', 'workGroupId', 'employeeId'])
+      table.unique(['role', 'employeeId', 'workGroupId'])
       table.foreign('workGroupId').references('WorkGroup.id')
-      table.foreign('techId').references('Employee.id')
-    `,
-    workGroupManagers: `
-      table.uuid('workGroupId').notNullable()
-      table.uuid('managerId').notNullable()
-      table.primary(['workGroupId', 'managerId'])
-      table.unique(['managerId', 'workGroupId'])
-      table.foreign('workGroupId').references('WorkGroup.id')
-      table.foreign('managerId').references('Employee.id')
+      table.foreign('employeeId').references('Employee.id')
     `,
     directv_sr_data: `
       table.string('Service Region').index()
@@ -96,8 +89,12 @@ export default class WorkGroup extends APIModel {
         join: {
           from: 'WorkGroup.id',
           through: {
-            from: 'workGroupManagers.workGroupId',
-            to: 'workGroupManagers.managerId',
+            from: 'workGroupEmployees.workGroupId',
+            to: 'workGroupEmployees.employeeId',
+            modify: { role: 'Manager' },
+            beforeInsert(model) {
+              model.role = 'Manager'
+            },
           },
           to: 'Employee.id',
         },
@@ -108,8 +105,24 @@ export default class WorkGroup extends APIModel {
         join: {
           from: 'WorkGroup.id',
           through: {
-            from: 'workGroupTechs.workGroupId',
-            to: 'workGroupTechs.techId',
+            from: 'workGroupEmployees.workGroupId',
+            to: 'workGroupEmployees.employeeId',
+            modify: { role: 'Tech' },
+            beforeInsert(model) {
+              model.role = 'Tech'
+            },
+          },
+          to: 'Employee.id',
+        },
+      },
+      employees: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'Employee',
+        join: {
+          from: 'WorkGroup.id',
+          through: {
+            from: 'workGroupEmployees.workGroupId',
+            to: 'workGroupEmployees.employeeId',
           },
           to: 'Employee.id',
         },
