@@ -88,12 +88,6 @@ export default async ({ csvObjStream, dataSource }) => {
     })
 
     await Promise.mapSeries(workOrderDatas, async data => {
-      // table.uuid('dataSourceId').index()
-      // table.string('externalId').index()
-      // table.date('date')
-      // table.string('type')
-      // table.string('status')
-      // table.jsonb('data')
       const workOrder = await WorkOrder.query().upsert({
         query: { externalId: data['Activity #'] },
         update: {
