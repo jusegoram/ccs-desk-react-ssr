@@ -1,8 +1,9 @@
 import Promise from 'bluebird'
+import { identity } from 'lodash'
 
 import ObjectStreamTransform from 'server/util/ObjectStreamTransform'
 
-export default async (stream, transformCallback) =>
+export default async (stream, transformCallback = identity) =>
   new Promise(async (resolve, reject) => {
     const objArray = []
     stream

@@ -78,83 +78,79 @@ export default async ({ csvObjStream, dataSource }) => {
       const companyId = company.id
 
       const companyTechDatas = techDatasByCompany[companyName]
-      await Promise.map(
-        companyTechDatas,
-        async techData => {
-          const employee = await Employee.query().upsertTech({ companyId, techData, dataSource })
-          const supervisor = await Employee.query().upsertSupervisor({ companyId, techData, dataSource })
+      await Promise.mapSeries(companyTechDatas, async techData => {
+        const employee = await Employee.query().upsertTech({ companyId, techData, dataSource })
+        const supervisor = await Employee.query().upsertSupervisor({ companyId, techData, dataSource })
 
-          const techSR = techData['Service Region']
-          const techSrData = srData[techSR]
+        const techSR = techData['Service Region']
+        const techSrData = srData[techSR]
 
-          const techWorkGroups = await Promise.props({
-            tech: WorkGroup.query().ensure({
+        const techWorkGroups = await Promise.props({
+          tech: WorkGroup.query().ensure({
+            w2Company,
+            type: 'Tech',
+            companyId: w2Company.id,
+            externalId: employee.externalId,
+            name: employee.name,
+          }),
+          team: WorkGroup.query().ensure({
+            w2Company,
+            type: 'Team',
+            companyId: w2Company.id,
+            externalId: techData['Team ID'],
+            name: techData['Team ID'],
+          }),
+          w2Company: WorkGroup.query().ensure({
+            w2Company,
+            type: 'Company',
+            companyId: w2Company.id,
+            externalId: w2Company.name,
+            name: w2Company.name,
+          }),
+          company: WorkGroup.query().ensure({
+            w2Company,
+            type: 'Company',
+            companyId,
+            externalId: company.name,
+            name: company.name,
+          }),
+          ...(!!techSrData && {
+            serviceRegion: WorkGroup.query().ensure({
               w2Company,
-              type: 'Tech',
+              type: 'Service Region',
               companyId: w2Company.id,
-              externalId: employee.externalId,
-              name: employee.name,
+              externalId: techSR,
+              name: techSR,
             }),
-            team: WorkGroup.query().ensure({
+            office: WorkGroup.query().ensure({
               w2Company,
-              type: 'Team',
+              type: 'Office',
               companyId: w2Company.id,
-              externalId: techData['Team ID'],
-              name: techData['Team ID'],
+              externalId: techSrData['Office'],
+              name: techSrData['Office'],
             }),
-            w2Company: WorkGroup.query().ensure({
+            dma: WorkGroup.query().ensure({
               w2Company,
-              type: 'Company',
+              type: 'DMA',
               companyId: w2Company.id,
-              externalId: w2Company.name,
-              name: w2Company.name,
+              externalId: techSrData['DMA'],
+              name: techSrData['DMA'],
             }),
-            company: WorkGroup.query().ensure({
+            division: WorkGroup.query().ensure({
               w2Company,
-              type: 'Company',
-              companyId,
-              externalId: company.name,
-              name: company.name,
+              type: 'Division',
+              companyId: w2Company.id,
+              externalId: techSrData['Division'],
+              name: techSrData['Division'],
             }),
-            ...(!!techSrData && {
-              serviceRegion: WorkGroup.query().ensure({
-                w2Company,
-                type: 'Service Region',
-                companyId: w2Company.id,
-                externalId: techSR,
-                name: techSR,
-              }),
-              office: WorkGroup.query().ensure({
-                w2Company,
-                type: 'Office',
-                companyId: w2Company.id,
-                externalId: techSrData['Office'],
-                name: techSrData['Office'],
-              }),
-              dma: WorkGroup.query().ensure({
-                w2Company,
-                type: 'DMA',
-                companyId: w2Company.id,
-                externalId: techSrData['DMA'],
-                name: techSrData['DMA'],
-              }),
-              division: WorkGroup.query().ensure({
-                w2Company,
-                type: 'Division',
-                companyId: w2Company.id,
-                externalId: techSrData['Division'],
-                name: techSrData['Division'],
-              }),
-            }),
-          })
+          }),
+        })
 
-          await employee.removeFromAllWorkGroups()
-          await employee.$query().patch({ workGroupId: techWorkGroups.tech.id })
-          await Promise.map(_.uniqBy(_.values(techWorkGroups), 'id'), workGroup => workGroup.addTech(employee))
-          await techWorkGroups.team.addManager(supervisor)
-        },
-        { concurrency: 1 }
-      )
+        await employee.removeFromAllWorkGroups()
+        await employee.$query().patch({ workGroupId: techWorkGroups.tech.id })
+        await Promise.map(_.uniqBy(_.values(techWorkGroups), 'id'), workGroup => workGroup.addTech(employee))
+        await techWorkGroups.team.addManager(supervisor)
+      })
       await Employee.query()
       .where({ dataSourceId: dataSource.id })
       .whereNotIn('externalId', allEmployeeExternalIds)
