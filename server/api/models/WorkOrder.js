@@ -48,6 +48,10 @@ export default class WorkOrder extends APIModel {
     return class extends BaseQueryBuilder {}
   }
 
+  async removeFromAllWorkGroups() {
+    await this.$relatedQuery('workGroups').unrelate()
+  }
+
   static get relationMappings() {
     return {
       dataSource: {
@@ -64,8 +68,8 @@ export default class WorkOrder extends APIModel {
         join: {
           from: 'WorkOrder.id',
           through: {
-            from: 'workGroupWorkOrder.workOrderId',
-            to: 'workGroupWorkOrder.workGroupId',
+            from: 'workGroupWorkOrders.workOrderId',
+            to: 'workGroupWorkOrders.workGroupId',
           },
           to: 'WorkGroup.id',
         },

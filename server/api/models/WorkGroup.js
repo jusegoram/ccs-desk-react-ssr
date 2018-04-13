@@ -53,7 +53,18 @@ export default class WorkGroup extends APIModel {
     },
   }
 
-  static visible = ['id', 'company', 'order', 'type', 'name', 'phoneNumber', 'email', 'employees', 'managers']
+  static visible = [
+    'id',
+    'company',
+    'order',
+    'type',
+    'name',
+    'phoneNumber',
+    'email',
+    'employees',
+    'managers',
+    'workOrders',
+  ]
 
   static orderMap = {
     Company: 0,
@@ -68,9 +79,9 @@ export default class WorkGroup extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        const { session } = this.context()
-        if (session === undefined) return
-        if (session === null) return this.whereRaw('FALSE')
+        // const { session } = this.context()
+        // if (session === undefined) return
+        // if (session === null) return this.whereRaw('FALSE')
         this.orderBy('WorkGroup.order')
       }
 
@@ -128,6 +139,11 @@ export default class WorkGroup extends APIModel {
     if (!employee.managedWorkGroups) await employee.$loadRelated('managedWorkGroups')
     const alreadyInWorkGroup = !!_.find(employee.managedWorkGroups, { id: this.id })
     if (!alreadyInWorkGroup) await employee.$relatedQuery('managedWorkGroups').relate(this)
+  }
+  async addWorkOrder(workOrder) {
+    if (!workOrder.workGroups) await workOrder.$loadRelated('workGroups')
+    const alreadyInWorkGroup = !!_.find(workOrder.workGroups, { id: this.id })
+    if (!alreadyInWorkGroup) await workOrder.$relatedQuery('workGroups').relate(this)
   }
 
   static get relationMappings() {
