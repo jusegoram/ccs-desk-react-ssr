@@ -189,7 +189,7 @@ export default async ({ csvObjStream, dataSource }) => {
         await techWorkGroups.team.addManager(supervisor)
       })
       await Employee.query()
-      .where({ dataSourceId: dataSource.id })
+      .where({ dataSourceId: dataSource.id, role: 'Tech' })
       .whereNotIn('externalId', allEmployeeExternalIds)
       .patch({ terminatedAt: moment.utc().format() })
     })
