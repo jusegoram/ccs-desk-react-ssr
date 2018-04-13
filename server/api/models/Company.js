@@ -1,6 +1,8 @@
 import APIModel from 'server/api/util/APIModel'
 import { QueryBuilder, Model } from 'objection'
 
+const companies = {}
+
 export default class Company extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
@@ -25,6 +27,15 @@ export default class Company extends APIModel {
     return class extends QueryBuilder {
       _contextFilter() {
         this.whereRaw('FALSE')
+      }
+      async ensure(name) {
+        if (companies[name]) return companies[name]
+        companies[name] = await this.clone()
+        .where({ name })
+        .first()
+        if (companies[name]) return companies[name]
+        companies[name] = await this.insert({ name }).returning('*')
+        return companies[name]
       }
     }
   }
