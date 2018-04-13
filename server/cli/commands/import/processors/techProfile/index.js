@@ -1,10 +1,10 @@
 import _ from 'lodash'
 import Promise from 'bluebird'
-import ObjectStreamTransform from 'server/cli/commands/import/util/ObjectStreamTransform'
+
 import { transaction } from 'objection'
-import { WorkGroup, Company, Employee, Geography } from 'server/api/models'
-import sanitizeName from 'server/util/sanitizeName'
+import { WorkGroup, Company, Employee } from 'server/api/models'
 import moment from 'moment-timezone'
+import { streamToArray } from 'server/util'
 
 const serviceW2Company = {
   'Goodman Analytics': 'Goodman',
@@ -45,171 +45,11 @@ const serviceW2Company = {
 */
 
 export default async ({ csvObjStream, dataSource }) => {
-  const models = [WorkGroup, Company, Employee, Geography]
-  await transaction(...models, async (WorkGroup, Company, Employee, Geography) => {
+  const models = [WorkGroup, Company, Employee]
+  await transaction(...models, async (WorkGroup, Company, Employee) => {
     let srData = null
 
-    const getDtvWorkGroups = async w2Company => {
-      const ensureDtvWorkGroups = async type => {
-        const workGroups = await WorkGroup.query().where({ companyId: w2Company.id, type })
-        if (workGroups.length !== 0) return workGroups
-        return await createAllWorkGroupsOfType(type)
-      }
-      const createAllWorkGroupsOfType = async type => {
-        const knex = WorkGroup.knex()
-        const namesForType = _.map(
-          await knex
-          .distinct(type)
-          .from('directv_sr_data')
-          .where({ HSP: w2Company.name }),
-          type
-        )
-        const order = workGroupOrders[type]
-        return await Promise.mapSeries(namesForType, async name => {
-          return await WorkGroup.query().insert({
-            companyId: w2Company.id,
-            externalId: name,
-            order,
-            name,
-            type,
-          })
-        })
-      }
-      return await Promise.props({
-        'Service Region': ensureDtvWorkGroups('Service Region'),
-        Office: ensureDtvWorkGroups('Office'),
-        DMA: ensureDtvWorkGroups('DMA'),
-        Division: ensureDtvWorkGroups('Division'),
-      })
-    }
-
-    const streamToArray = async (stream, transformCallback) =>
-      new Promise(async (resolve, reject) => {
-        const objArray = []
-        stream
-        .pipe(new ObjectStreamTransform(transformCallback))
-        .on('data', obj => objArray.push(obj))
-        .on('end', () => {
-          resolve(objArray)
-        })
-        .on('error', error => {
-          reject(error)
-        })
-      })
-
-    let workGroups = null
-
-    const workGroupOrders = {
-      Company: 0,
-      Division: 1,
-      DMA: 2,
-      Office: 3,
-      'Service Region': 4,
-      Team: 5,
-      Tech: 6,
-    }
-
-    const ensureWorkGroup = async ({ type, companyId, externalId, name }) => {
-      workGroups[type] = workGroups[type] || {}
-      if (workGroups[type][externalId]) return workGroups[type][externalId]
-      const queryProps = { type, companyId, externalId }
-      const order = workGroupOrders[type]
-      workGroups[type][externalId] =
-        (await WorkGroup.query()
-        .where(queryProps)
-        .first()) ||
-        (await WorkGroup.query()
-        .insert({ ...queryProps, order, name })
-        .returning('*'))
-      return workGroups[type][externalId]
-    }
-
-    const upsertTech = async ({ companyId, techData, dataSource }) => {
-      const query = { companyId, externalId: techData['Tech User ID'] }
-      const latitude = techData['Start Latitude'] / 1000000 || null
-      const longitude = techData['Start Longitude'] / 1000000 || null
-      const update = {
-        dataSourceId: dataSource.id,
-        terminatedAt: null,
-        name: sanitizeName(techData['Tech Full Name']),
-        phoneNumber: techData['Tech Mobile Phone #'],
-        skills: techData['Skill Package'],
-        schedule: techData['Tech Schedule'],
-      }
-      const startLatLong = latitude && longitude && { latitude, longitude }
-      const employee = await upsertEmployee({ query, update, startLatLong })
-      return employee
-    }
-    const upsertSupervisor = async ({ companyId, techData, dataSource }) => {
-      const query = { companyId, externalId: techData['Tech Team Supervisor Login'] }
-      const update = {
-        role: 'Manager',
-        name: sanitizeName(techData['Team Name']),
-        phoneNumber: techData['Tech Team Supervisor Mobile #'],
-        dataSourceId: dataSource.id,
-        terminatedAt: null,
-      }
-      return await upsertEmployee({ query, update })
-    }
     const allEmployeeExternalIds = []
-
-    const upsertEmployee = async ({ query, update, startLatLong }) => {
-      allEmployeeExternalIds.push(query.externalId)
-
-      // find employee (eager startLocation for the upsert)
-      let employee = await Employee.query()
-      .eager('startLocation')
-      .where(query)
-      .first()
-
-      // upsert start location
-      const startLocation =
-        startLatLong &&
-        (await Geography.query().upsertGraph({
-          type: 'Start Location',
-          ...(employee && employee.startLocation),
-          ...startLatLong,
-        }))
-      // find timezone based on start location
-      const timezone = startLocation && (await startLocation.getTimezone())
-
-      // upsert
-      if (!employee) {
-        employee = await Employee.query()
-        .insertGraph({
-          ...query,
-          ...update,
-          timezone,
-          startLocationId: startLocation && startLocation.id,
-        })
-        .returning('*')
-      } else {
-        employee = await Employee.query()
-        .where(query)
-        .update({
-          ...update,
-          timezone,
-          startLocationId: startLocation && startLocation.id,
-        })
-        .returning('*')
-        .first()
-      }
-
-      return employee
-    }
-
-    const companies = {}
-    const ensureCompany = async name => {
-      if (companies[name]) return companies[name]
-      companies[name] = await Company.query()
-      .where({ name })
-      .first()
-      if (companies[name]) return companies[name]
-      companies[name] = await Company.query()
-      .insert({ name })
-      .returning('*')
-      return companies[name]
-    }
 
     const w2CompanyName = serviceW2Company[dataSource.service]
     srData = _.keyBy(
@@ -220,9 +60,7 @@ export default async ({ csvObjStream, dataSource }) => {
       'Service Region'
     )
 
-    const w2Company = await ensureCompany(w2CompanyName)
-
-    workGroups = await getDtvWorkGroups(w2Company)
+    const w2Company = await Company.query().ensure(w2CompanyName)
 
     const techDatas = await streamToArray(csvObjStream, data => {
       if (data['Tech Type'] === 'W2' || !data['Tech Type']) data['Tech Type'] = w2CompanyName
@@ -235,7 +73,7 @@ export default async ({ csvObjStream, dataSource }) => {
 
     const techDatasByCompany = _.groupBy(techDatas, 'Tech Type')
     await Promise.mapSeries(Object.keys(techDatasByCompany), async companyName => {
-      const company = await ensureCompany(companyName)
+      const company = await Company.query().ensure(companyName)
 
       const companyId = company.id
 
@@ -243,7 +81,7 @@ export default async ({ csvObjStream, dataSource }) => {
       await Promise.map(
         companyTechDatas,
         async techData => {
-          const employee = await upsertTech({ companyId, techData, dataSource })
+          const employee = await Employee.query().upsertTech({ companyId, techData, dataSource })
 
           await employee.$loadRelated('workGroups')
 
@@ -257,7 +95,8 @@ export default async ({ csvObjStream, dataSource }) => {
             }
           }
 
-          const techWorkGroup = await ensureWorkGroup({
+          const techWorkGroup = await WorkGroup.query().ensure({
+            w2Company,
             type: 'Tech',
             companyId: w2Company.id,
             externalId: employee.externalId,
@@ -266,13 +105,14 @@ export default async ({ csvObjStream, dataSource }) => {
           await employee.$query().patch({ workGroupId: techWorkGroup.id })
           await ensureRelated(techWorkGroup)
 
-          const teamWorkGroup = await ensureWorkGroup({
+          const teamWorkGroup = await WorkGroup.query().ensure({
+            w2Company,
             type: 'Team',
             companyId: w2Company.id,
             externalId: techData['Team ID'],
             name: techData['Team ID'],
           })
-          const supervisor = await upsertSupervisor({ companyId, techData, dataSource })
+          const supervisor = await Employee.query().upsertSupervisor({ companyId, techData, dataSource })
           await supervisor.$loadRelated('managedWorkGroups')
           if (!_.find(supervisor.managedWorkGroups, { id: teamWorkGroup.id })) {
             await supervisor.$relatedQuery('managedWorkGroups').relate(teamWorkGroup)
@@ -280,7 +120,8 @@ export default async ({ csvObjStream, dataSource }) => {
           await ensureRelated(teamWorkGroup)
 
           await ensureRelated(
-            await ensureWorkGroup({
+            await WorkGroup.query().ensure({
+              w2Company,
               type: 'Company',
               companyId: w2Company.id,
               externalId: w2Company.name,
@@ -288,7 +129,8 @@ export default async ({ csvObjStream, dataSource }) => {
             })
           )
           await ensureRelated(
-            await ensureWorkGroup({
+            await WorkGroup.query().ensure({
+              w2Company,
               type: 'Company',
               companyId,
               externalId: company.name,
@@ -297,7 +139,8 @@ export default async ({ csvObjStream, dataSource }) => {
           )
           const techSrData = srData[techSR]
           await ensureRelated(
-            await ensureWorkGroup({
+            await WorkGroup.query().ensure({
+              w2Company,
               type: 'Service Region',
               companyId: w2Company.id,
               externalId: techSR,
@@ -306,7 +149,8 @@ export default async ({ csvObjStream, dataSource }) => {
           )
           if (techSrData) {
             await ensureRelated(
-              await ensureWorkGroup({
+              await WorkGroup.query().ensure({
+                w2Company,
                 type: 'Office',
                 companyId: w2Company.id,
                 externalId: techSrData['Office'],
@@ -314,7 +158,8 @@ export default async ({ csvObjStream, dataSource }) => {
               })
             )
             await ensureRelated(
-              await ensureWorkGroup({
+              await WorkGroup.query().ensure({
+                w2Company,
                 type: 'DMA',
                 companyId: w2Company.id,
                 externalId: techSrData['DMA'],
@@ -322,7 +167,8 @@ export default async ({ csvObjStream, dataSource }) => {
               })
             )
             await ensureRelated(
-              await ensureWorkGroup({
+              await WorkGroup.query().ensure({
+                w2Company,
                 type: 'Division',
                 companyId: w2Company.id,
                 externalId: techSrData['Division'],
