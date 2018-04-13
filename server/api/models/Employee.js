@@ -1,4 +1,5 @@
 import APIModel from 'server/api/util/APIModel'
+import sanitizeName from 'server/util/sanitizeName'
 import { QueryBuilder, Model } from 'objection'
 import _ from 'lodash'
 
@@ -81,6 +82,79 @@ export default class Employee extends APIModel {
           })
         })
         return this
+      }
+
+      async upsertTech({ companyId, techData, dataSource }) {
+        const query = { companyId, externalId: techData['Tech User ID'] }
+        const latitude = techData['Start Latitude'] / 1000000 || null
+        const longitude = techData['Start Longitude'] / 1000000 || null
+        const update = {
+          dataSourceId: dataSource.id,
+          terminatedAt: null,
+          name: sanitizeName(techData['Tech Full Name']),
+          phoneNumber: techData['Tech Mobile Phone #'],
+          skills: techData['Skill Package'],
+          schedule: techData['Tech Schedule'],
+        }
+        const startLatLong = latitude && longitude && { latitude, longitude }
+        const employee = await this.clone().upsert({ query, update, startLatLong })
+        return employee
+      }
+
+      async upsertSupervisor({ companyId, techData, dataSource }) {
+        const query = { companyId, externalId: techData['Tech Team Supervisor Login'] }
+        const update = {
+          role: 'Manager',
+          name: sanitizeName(techData['Team Name']),
+          phoneNumber: techData['Tech Team Supervisor Mobile #'],
+          dataSourceId: dataSource.id,
+          terminatedAt: null,
+        }
+        return await this.clone().upsert({ query, update })
+      }
+
+      async upsert({ query, update, startLatLong }) {
+        const Geography = require('./Geography').default
+        // find employee (eager startLocation for the upsert)
+        let employee = await this.clone()
+        .eager('startLocation')
+        .where(query)
+        .first()
+
+        // upsert start location
+        const startLocation =
+          startLatLong &&
+          (await Geography.query().upsertGraph({
+            type: 'Start Location',
+            ...(employee && employee.startLocation),
+            ...startLatLong,
+          }))
+        // find timezone based on start location
+        const timezone = startLocation && (await startLocation.getTimezone())
+
+        // upsert
+        if (!employee) {
+          employee = await Employee.query()
+          .insertGraph({
+            ...query,
+            ...update,
+            timezone,
+            startLocationId: startLocation && startLocation.id,
+          })
+          .returning('*')
+        } else {
+          employee = await Employee.query()
+          .where(query)
+          .update({
+            ...update,
+            timezone,
+            startLocationId: startLocation && startLocation.id,
+          })
+          .returning('*')
+          .first()
+        }
+
+        return employee
       }
     }
   }
