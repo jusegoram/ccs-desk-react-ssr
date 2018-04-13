@@ -1,4 +1,7 @@
 export APIModel from './APIModel.js'
 export BaseModel from './BaseModel.js'
+export BaseQueryBuilder from './BaseQueryBuilder.js'
 export compose from './compose.js'
+export createClientMoment from './createClientMoment.js'
+export createToken from './createToken.js'
 export mixins from './mixins'

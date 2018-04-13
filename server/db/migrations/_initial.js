@@ -196,6 +196,17 @@ export function up(knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
+  .createTable('WorkOrder', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    // <custom>
+    table.uuid('dataSourceId').index()
+    table.string('externalId').index()
+    table.date('date')
+    table.string('type')
+    table.string('status')
+    // </custom>
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+  })
   .createTable('WorkSchedule', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.uuid('employeeId').notNullable()
@@ -252,8 +263,20 @@ export function up(knex) {
     table.foreign('geographyId').references('Geography.id')
     table.foreign('companyId').references('Company.id')
   })
+  .alterTable('WorkOrder', table => {
+    table.foreign('dataSourceId').references('DataSource.id')
+  })
   .alterTable('WorkSchedule', table => {
     table.foreign('employeeId').references('Employee.id')
+  })
+  .createTable('workGroupEmployees', table => { 
+      table.uuid('workGroupId').notNullable()
+      table.uuid('employeeId').notNullable()
+      table.string('role').notNullable()
+      table.primary(['role', 'workGroupId', 'employeeId'])
+      table.unique(['role', 'employeeId', 'workGroupId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('employeeId').references('Employee.id')
   })
   .createTable('permissionWorkGroups', table => { 
       table.uuid('permissionId').notNullable()
@@ -279,21 +302,20 @@ export function up(knex) {
       table.foreign('vehicleId').references('Vehicle.id')
       table.foreign('reportId').references('Report.id')
   })
-  .createTable('workGroupEmployees', table => { 
-      table.uuid('workGroupId').notNullable()
-      table.uuid('employeeId').notNullable()
-      table.string('role').notNullable()
-      table.primary(['role', 'workGroupId', 'employeeId'])
-      table.unique(['role', 'employeeId', 'workGroupId'])
-      table.foreign('workGroupId').references('WorkGroup.id')
-      table.foreign('employeeId').references('Employee.id')
-  })
   .createTable('directv_sr_data', table => { 
       table.string('Service Region').index()
       table.string('Office')
       table.string('DMA')
       table.string('Division')
       table.string('HSP')
+  })
+  .createTable('workGroupWorkOrders', table => { 
+      table.uuid('workGroupId').notNullable()
+      table.uuid('workOrderId').notNullable()
+      table.primary(['workGroupId', 'workOrderId'])
+      table.unique(['workOrderId', 'workGroupId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('workOrderId').references('WorkOrder.id')
   })
 }
 

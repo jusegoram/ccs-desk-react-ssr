@@ -26,15 +26,6 @@ export default class WorkGroup extends APIModel {
     table.foreign('companyId').references('Company.id')
   `
   static knexCreateJoinTables = {
-    workGroupEmployees: `
-      table.uuid('workGroupId').notNullable()
-      table.uuid('employeeId').notNullable()
-      table.string('role').notNullable()
-      table.primary(['role', 'workGroupId', 'employeeId'])
-      table.unique(['role', 'employeeId', 'workGroupId'])
-      table.foreign('workGroupId').references('WorkGroup.id')
-      table.foreign('employeeId').references('Employee.id')
-    `,
     directv_sr_data: `
       table.string('Service Region').index()
       table.string('Office')
@@ -199,6 +190,18 @@ export default class WorkGroup extends APIModel {
             to: 'workGroupEmployees.employeeId',
           },
           to: 'Employee.id',
+        },
+      },
+      workOrders: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'WorkOrder',
+        join: {
+          from: 'WorkGroup.id',
+          through: {
+            from: 'workGroupWorkOrders.workGroupId',
+            to: 'workGroupWorkOrders.workOrderId',
+          },
+          to: 'WorkOrder.id',
         },
       },
     }

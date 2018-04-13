@@ -1,5 +1,5 @@
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model, raw } from 'objection'
+import { Model } from 'objection'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
 
 export default class WorkOrder extends APIModel {
   static knexCreateTable = `
@@ -10,12 +10,23 @@ export default class WorkOrder extends APIModel {
     table.date('date')
     table.string('type')
     table.string('status')
+    table.jsonb('data')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   `
   static knexAlterTable = `
     table.foreign('dataSourceId').references('DataSource.id')
   `
+  static knexCreateJoinTables = {
+    workGroupWorkOrders: `
+      table.uuid('workGroupId').notNullable()
+      table.uuid('workOrderId').notNullable()
+      table.primary(['workGroupId', 'workOrderId'])
+      table.unique(['workOrderId', 'workGroupId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('workOrderId').references('WorkOrder.id')
+    `,
+  }
   static jsonSchema = {
     title: 'WorkOrder',
     description: 'A request from a customer for work',
@@ -25,7 +36,7 @@ export default class WorkOrder extends APIModel {
       id: { type: 'string' },
       // <custom>
       externalId: { type: ['string', 'null'] },
-      date: { type: 'string', format: 'date-time' },
+      date: { type: 'string', format: 'date' },
       status: { type: ['string', 'null'] },
       // </custom>
     },
@@ -34,18 +45,7 @@ export default class WorkOrder extends APIModel {
   static visible = ['id', 'externalId', 'type', 'status', 'date']
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
-      _contextFilter() {
-        const { session } = this.context()
-        if (session === undefined) return
-        if (session === null) return this.whereRaw('FALSE')
-      }
-      near({ lat, lng, radius }) {
-        this.whereRaw('ST_Distance(ST_Point(?, ?)::geography, location::geography) < ?', [lng, lat, radius]).orderBy(
-          raw('ST_Distance(ST_Point(?, ?)::geography, location::geography)', [lng, lat])
-        )
-      }
-    }
+    return class extends BaseQueryBuilder {}
   }
 
   static get relationMappings() {
@@ -56,6 +56,18 @@ export default class WorkOrder extends APIModel {
         join: {
           from: 'WorkOrder.dataSourceId',
           to: 'DataSource.id',
+        },
+      },
+      workGroups: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'WorkGroup',
+        join: {
+          from: 'WorkOrder.id',
+          through: {
+            from: 'workGroupWorkOrder.workOrderId',
+            to: 'workGroupWorkOrder.workGroupId',
+          },
+          to: 'WorkGroup.id',
         },
       },
     }

@@ -3,6 +3,7 @@ import path from 'path'
 import csv from 'csv'
 import { DataImport, DataSource, WorkForce } from 'server/api/models'
 import techProfileProcessor from 'server/cli/commands/import/processors/techProfile'
+import siebelRoutelogProcessor from 'server/cli/commands/import/processors/routelog/siebel'
 
 const SiebelReportFetcher = require('./download/siebel/SiebelReportFetcher')
 const convertStringToStream = require('./download/siebel/convertStringToStream')
@@ -21,6 +22,7 @@ const analyticsCredentials = {
 
 const processors = {
   'Tech Profile': techProfileProcessor,
+  'Siebel Routelog': siebelRoutelogProcessor,
 }
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
@@ -43,7 +45,7 @@ module.exports = async ({ service, name }) => {
     //     cookiesFile: path.join(__dirname, `${dataSource.service}_cookies.txt`),
     //   },
     // })
-    const csvString = fs.readFileSync(path.resolve(__dirname, 'techProfile.csv')) + ''
+    const csvString = fs.readFileSync(path.resolve(__dirname, 'routelog.csv')) + ''
     const csvObjStream = convertStringToStream(csvString)
     .pipe(new SanitizeStringStream())
     .pipe(
