@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import csv from 'csv'
-import { DataImport, DataSource, WorkForce } from 'server/api/models'
+import { DataImport, DataSource } from 'server/api/models'
 import techProfileProcessor from 'server/cli/commands/import/processors/techProfile'
 import siebelRoutelogProcessor from 'server/cli/commands/import/processors/routelog/siebel'
 
@@ -24,6 +24,10 @@ const processors = {
   'Tech Profile': techProfileProcessor,
   'Siebel Routelog': siebelRoutelogProcessor,
 }
+const mockFiles = {
+  'Tech Profile': 'techProfile.csv',
+  'Siebel Routelog': 'routelog.csv',
+}
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
 module.exports = async ({ service, name }) => {
@@ -45,7 +49,7 @@ module.exports = async ({ service, name }) => {
     //     cookiesFile: path.join(__dirname, `${dataSource.service}_cookies.txt`),
     //   },
     // })
-    const csvString = fs.readFileSync(path.resolve(__dirname, 'routelog.csv')) + ''
+    const csvString = fs.readFileSync(path.resolve(__dirname, mockFiles[name])) + ''
     const csvObjStream = convertStringToStream(csvString)
     .pipe(new SanitizeStringStream())
     .pipe(
