@@ -83,13 +83,7 @@ export default async ({ csvObjStream, dataSource }) => {
       await Promise.mapSeries(companyTechDatas, async techData => {
         const latitude = techData['Start Latitude'] / 1000000 || null
         const longitude = techData['Start Longitude'] / 1000000 || null
-        const startLocation =
-          latitude &&
-          longitude &&
-          (await Geography.query().upsert({
-            query: { type: 'Start Location', latitude, longitude },
-            update: { latitude }, //update can't be empty
-          }))
+        const startLocation = latitude && longitude && (await Geography.query().ensure({ latitude, longitude }))
         // find timezone based on start location
         const timezone = startLocation && (await startLocation.getTimezone())
 

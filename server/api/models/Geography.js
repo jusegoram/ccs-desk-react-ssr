@@ -7,25 +7,19 @@ import ExpectedError from 'server/errors/ExpectedError'
 export default class Geography extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.string('type').notNullable()
-    table.string('externalId')
-    table.string('name')
     table.string('streetAddress')
     table.string('zipcode')
     table.string('city')
     table.string('state')
     table.string('country')
     table.text('polygonKml')
-    table.specificType('polygon', 'geography(MULTIPOLYGON, 4326)')
     table.float('radius')
     table.decimal('latitude', 10, 7)
     table.decimal('longitude', 10, 7)
-    table.specificType('point', 'geography(POINT, 4326)')
+    table.specificType('polygon', 'geography(MULTIPOLYGON, 4326)').index()
+    table.specificType('point', 'geography(POINT, 4326)').index()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
-    table.index(['type', 'externalId'])
-    table.index(['type', 'polygon'])
-    table.index(['type', 'point'])
   `
 
   static jsonSchema = {
@@ -35,7 +29,6 @@ export default class Geography extends APIModel {
 
     properties: {
       id: { type: 'string' },
-      type: { type: 'string' },
       externalId: { type: ['string', 'null'] },
       name: { type: ['string', 'null'] },
       streetAddress: { type: ['string', 'null'] },

@@ -11,6 +11,9 @@ export default class extends QueryBuilder {
       raw('ST_Distance(ST_Point(?, ?)::geography, ??::geography)', [lng, lat, field])
     )
   }
+  async ensure(query) {
+    return await this.upsert({ query })
+  }
   async upsert({ query, update }) {
     const instance = await this.clone()
     .where(query)
@@ -23,11 +26,9 @@ export default class extends QueryBuilder {
       })
       .returning('*')
     } else {
-      return await this.clone()
-      .where(query)
-      .patch(update)
-      .returning('*')
-      .first()
+      let qb = this.clone().where(query)
+      if (update) qb = qb.patch(update)
+      return await qb.returning('*').first()
     }
   }
 }
