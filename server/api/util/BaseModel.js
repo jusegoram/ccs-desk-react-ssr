@@ -1,4 +1,4 @@
-import { Model, snakeCaseMappers } from 'objection'
+import { Model } from 'objection'
 import compose from 'server/api/util/compose'
 import { DbErrors as withDbErrors } from 'objection-db-errors'
 import path from 'path'
