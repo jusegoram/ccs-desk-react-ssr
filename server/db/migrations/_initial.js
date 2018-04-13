@@ -47,6 +47,7 @@ export function up(knex) {
     table.uuid('workGroupId')
     table.uuid('startLocationId')
     table.string('externalId').notNullable()
+    table.string('alternateExternalId').index()
     table.string('timezone')
     table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')

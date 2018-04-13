@@ -11,6 +11,7 @@ export default class Employee extends APIModel {
     table.uuid('workGroupId')
     table.uuid('startLocationId')
     table.string('externalId').notNullable()
+    table.string('alternateExternalId').index()
     table.string('timezone')
     table.string('role').defaultTo('Tech').notNullable() // 'Tech', 'Manager'
     table.string('name')
@@ -50,6 +51,7 @@ export default class Employee extends APIModel {
       name: { type: 'string' },
       role: { type: 'string' },
       externalId: { type: 'string' },
+      alternateExternalId: { type: ['string', 'null'] },
       timezone: { type: ['string', 'null'] },
       phoneNumber: { type: ['string', 'null'] },
       email: { type: ['string', 'null'] },
