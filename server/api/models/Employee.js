@@ -1,6 +1,6 @@
-import APIModel from 'server/api/util/APIModel'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
 import sanitizeName from 'server/util/sanitizeName'
-import { QueryBuilder, Model } from 'objection'
+import { Model } from 'objection'
 import _ from 'lodash'
 
 export default class Employee extends APIModel {
@@ -29,6 +29,17 @@ export default class Employee extends APIModel {
     table.foreign('workGroupId').references('WorkGroup.id')
     table.foreign('startLocationId').references('Geography.id')
   `
+  static knexCreateJoinTables = {
+    workGroupEmployees: `
+      table.uuid('workGroupId').notNullable()
+      table.uuid('employeeId').notNullable()
+      table.string('role').notNullable()
+      table.primary(['role', 'workGroupId', 'employeeId'])
+      table.unique(['role', 'employeeId', 'workGroupId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('employeeId').references('Employee.id')
+    `,
+  }
   static jsonSchema = {
     title: 'Employee',
     description: 'An employee',
@@ -69,7 +80,7 @@ export default class Employee extends APIModel {
   ]
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
+    return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = this.context()
         if (!session) return this.whereRaw('FALSE')
@@ -134,7 +145,7 @@ export default class Employee extends APIModel {
 
         // upsert
         if (!employee) {
-          employee = await Employee.query()
+          employee = await this.clone()
           .insertGraph({
             ...query,
             ...update,
@@ -143,7 +154,7 @@ export default class Employee extends APIModel {
           })
           .returning('*')
         } else {
-          employee = await Employee.query()
+          employee = await this.clone()
           .where(query)
           .update({
             ...update,

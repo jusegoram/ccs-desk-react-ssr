@@ -8,7 +8,7 @@ exports.seed = async function() {
     },
     {
       service: 'Goodman Analytics',
-      name: 'Routelog',
+      name: 'Siebel Routelog',
     },
     {
       service: 'Goodman Analytics',
