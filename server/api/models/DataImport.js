@@ -1,5 +1,5 @@
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { Model } from 'objection'
 
 export default class DataImport extends APIModel {
   static knexCreateTable = `
@@ -31,7 +31,7 @@ export default class DataImport extends APIModel {
   static visible = ['id', 'status', 'dataSource', 'createdAt', 'downloadedAt', 'completedAt']
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
+    return class extends BaseQueryBuilder {
       _contextFilter() {
         this.whereRaw('FALSE')
       }
