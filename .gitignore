@@ -1,4 +1,5 @@
 .next
+server/db/seedData/timezones.csv
 
 .template
 
