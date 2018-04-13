@@ -1,6 +1,6 @@
 import { withDeletedAt } from 'server/api/util/mixins'
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model, transaction } from 'objection'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { Model, transaction } from 'objection'
 import { GraphQLString, GraphQLFloat } from 'graphql'
 import ExpectedError from 'server/errors/ExpectedError'
 
@@ -47,7 +47,7 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
   static visible = ['id', 'date', 'claimedAt', 'returnedAt', 'employee', 'vehicle', 'claimReport', 'returnReport']
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
+    return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = this.context()
         if (!session) return this.whereRaw('FALSE')

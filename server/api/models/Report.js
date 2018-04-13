@@ -1,6 +1,6 @@
 import { withDeletedAt } from 'server/api/util/mixins'
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { Model } from 'objection'
 import { GraphQLString } from 'graphql'
 import ExpectedError from 'server/errors/ExpectedError'
 
@@ -49,11 +49,7 @@ export default class Report extends withDeletedAt(APIModel) {
   static visible = ['id', 'name', 'createdAt', 'completedAt', 'questions', 'creator', 'template']
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
-      _contextFilter() {
-        // this.whereRaw('FALSE')
-      }
-    }
+    return class extends BaseQueryBuilder {}
   }
 
   static get relationMappings() {
