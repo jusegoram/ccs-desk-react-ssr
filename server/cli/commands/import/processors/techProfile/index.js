@@ -1,8 +1,9 @@
 import _ from 'lodash'
 import Promise from 'bluebird'
+import sanitizeName from 'server/util/sanitizeName'
 
 import { transaction } from 'objection'
-import { WorkGroup, Company, Employee } from 'server/api/models'
+import * as rawModels from 'server/api/models'
 import moment from 'moment-timezone'
 import { streamToArray } from 'server/util'
 
@@ -45,8 +46,9 @@ const serviceW2Company = {
 */
 
 export default async ({ csvObjStream, dataSource }) => {
-  const models = [WorkGroup, Company, Employee]
-  await transaction(...models, async (WorkGroup, Company, Employee) => {
+  await transaction(..._.values(rawModels), async (...modelsArray) => {
+    const models = _.keyBy(modelsArray, 'name')
+    const { WorkGroup, Company, Employee, Geography } = models
     let srData = null
 
     const allEmployeeExternalIds = []
@@ -79,9 +81,44 @@ export default async ({ csvObjStream, dataSource }) => {
 
       const companyTechDatas = techDatasByCompany[companyName]
       await Promise.mapSeries(companyTechDatas, async techData => {
-        const employee = await Employee.query().upsertTech({ companyId, techData, dataSource })
-        const supervisor = await Employee.query().upsertSupervisor({ companyId, techData, dataSource })
+        const latitude = techData['Start Latitude'] / 1000000 || null
+        const longitude = techData['Start Longitude'] / 1000000 || null
+        const startLocation =
+          latitude &&
+          longitude &&
+          (await Geography.query().upsert({
+            query: { type: 'Start Location', latitude, longitude },
+            update: { latitude }, //update can't be empty
+          }))
+        // find timezone based on start location
+        const timezone = startLocation && (await startLocation.getTimezone())
 
+        const employee = await Employee.query().upsert({
+          query: { companyId, externalId: techData['Tech User ID'] },
+          update: {
+            dataSourceId: dataSource.id,
+            terminatedAt: null,
+            name: sanitizeName(techData['Tech Full Name']),
+            phoneNumber: techData['Tech Mobile Phone #'],
+            skills: techData['Skill Package'],
+            schedule: techData['Tech Schedule'],
+            timezone,
+            startLocationId: startLocation && startLocation.id,
+          },
+        })
+        const supervisor = await Employee.query().upsert({
+          query: { companyId, externalId: techData['Tech Team Supervisor Login'] },
+          update: {
+            role: 'Manager',
+            name: sanitizeName(techData['Team Name']),
+            phoneNumber: techData['Tech Team Supervisor Mobile #'],
+            dataSourceId: dataSource.id,
+            terminatedAt: null,
+            timezone,
+          },
+        })
+
+        allEmployeeExternalIds.push(employee.externalId)
         const techSR = techData['Service Region']
         const techSrData = srData[techSR]
 
