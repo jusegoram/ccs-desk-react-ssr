@@ -1,5 +1,5 @@
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { Model } from 'objection'
 
 export default class Vehicle extends APIModel {
   static knexCreateTable = `
@@ -39,12 +39,7 @@ export default class Vehicle extends APIModel {
   static visible = ['id', 'externalId']
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
-      _contextFilter() {
-        const { session } = this.context()
-        if (!session) return this.whereRaw('FALSE')
-      }
-    }
+    return class extends BaseQueryBuilder {}
   }
 
   static get relationMappings() {

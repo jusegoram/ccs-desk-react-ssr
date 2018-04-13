@@ -1,6 +1,5 @@
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
-import moment from 'moment'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { Model } from 'objection'
 
 export default class FeatureSet extends APIModel {
   static knexCreateTable = `
@@ -32,7 +31,7 @@ export default class FeatureSet extends APIModel {
   static visible = ['id', 'hasTimecards', 'hasAddressBook', 'hasVehicleClaims']
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
+    return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = this.context()
         if (!session) return this.whereRaw('FALSE')

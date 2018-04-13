@@ -1,5 +1,5 @@
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, raw } from 'objection'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { raw } from 'objection'
 import { GraphQLString } from 'graphql'
 import axios from 'axios'
 import ExpectedError from 'server/errors/ExpectedError'
@@ -69,7 +69,7 @@ export default class Geography extends APIModel {
   ]
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
+    return class extends BaseQueryBuilder {
       _contextFilter() {
         this.whereRaw('FALSE')
       }

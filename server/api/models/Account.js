@@ -1,9 +1,9 @@
 import { GraphQLString } from 'graphql'
-import { QueryBuilder, Model, transaction } from 'objection'
+import { Model, transaction } from 'objection'
 import jwt from 'jsonwebtoken'
 
 import { withDeletedAt, withPassword } from 'server/api/util/mixins'
-import { compose, APIModel } from 'server/api/util'
+import { compose, APIModel, BaseQueryBuilder } from 'server/api/util'
 import passwordResetEmail from 'server/emails/passwordReset'
 import ExpectedError from 'server/errors/ExpectedError'
 import sendEmail from 'server/util/sendEmail'
@@ -50,7 +50,7 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
   static visible = ['id', 'name', 'email', 'token', 'root', 'employee', 'company']
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
+    return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = this.context()
         if (session === undefined) return

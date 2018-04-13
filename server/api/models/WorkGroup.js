@@ -1,5 +1,5 @@
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { Model } from 'objection'
 import Promise from 'bluebird'
 import _ from 'lodash'
 
@@ -66,7 +66,7 @@ export default class WorkGroup extends APIModel {
   }
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
+    return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = this.context()
         if (session === undefined) return

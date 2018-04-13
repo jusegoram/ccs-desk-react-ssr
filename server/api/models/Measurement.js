@@ -1,5 +1,5 @@
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model, raw } from 'objection'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { Model } from 'objection'
 
 export default class Measurement extends APIModel {
   static knexCreateTable = `
@@ -37,18 +37,7 @@ export default class Measurement extends APIModel {
   static visible = ['id', 'date', 'name', 'value', 'workGroup']
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
-      _contextFilter() {
-        const { session } = this.context()
-        if (session === undefined) return
-        if (session === null) return this.whereRaw('FALSE')
-      }
-      near({ lat, lng, radius }) {
-        this.whereRaw('ST_Distance(ST_Point(?, ?)::geography, location::geography) < ?', [lng, lat, radius]).orderBy(
-          raw('ST_Distance(ST_Point(?, ?)::geography, location::geography)', [lng, lat])
-        )
-      }
-    }
+    return class extends BaseQueryBuilder {}
   }
 
   static get relationMappings() {

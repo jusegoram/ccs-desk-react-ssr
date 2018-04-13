@@ -1,6 +1,6 @@
 import { withDeletedAt } from 'server/api/util/mixins'
-import APIModel from 'server/api/util/APIModel'
-import { QueryBuilder, Model } from 'objection'
+import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { Model } from 'objection'
 import { GraphQLString } from 'graphql'
 import ExpectedError from 'server/errors/ExpectedError'
 import createToken from 'server/api/util/createToken'
@@ -39,7 +39,7 @@ export default class Session extends withDeletedAt(APIModel) {
   static visible = ['id', 'expiresAt', 'account', 'rootAccount']
 
   static get QueryBuilder() {
-    return class extends QueryBuilder {
+    return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = this.context()
         if (session === undefined) return
