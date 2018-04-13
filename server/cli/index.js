@@ -6,7 +6,7 @@ import Promise from 'bluebird'
 if (process.env.NODE_ENV === 'development') Promise.longStackTraces()
 
 const knex = Knex({
-  debug: process.env.NODE_ENV === 'development',
+  debug: process.env.DEBUG,
   ...knexfile[process.env.NODE_ENV],
 })
 
