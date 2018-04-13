@@ -18,6 +18,7 @@ export default class Geography extends APIModel {
     table.decimal('longitude', 10, 7)
     table.specificType('polygon', 'geography(MULTIPOLYGON, 4326)').index()
     table.specificType('point', 'geography(POINT, 4326)').index()
+    table.index(['latitude', 'longitude'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
@@ -29,8 +30,6 @@ export default class Geography extends APIModel {
 
     properties: {
       id: { type: 'string' },
-      externalId: { type: ['string', 'null'] },
-      name: { type: ['string', 'null'] },
       streetAddress: { type: ['string', 'null'] },
       zipcode: { type: ['string', 'null'] },
       city: { type: ['string', 'null'] },
@@ -47,9 +46,6 @@ export default class Geography extends APIModel {
 
   static visible = [
     'id',
-    'type',
-    'externalId',
-    'name',
     'polygonKml',
     'radius',
     'streetAddress',
