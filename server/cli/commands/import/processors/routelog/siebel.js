@@ -5,6 +5,7 @@ import { transaction } from 'objection'
 import * as rawModels from 'server/api/models'
 import moment from 'moment-timezone'
 import { streamToArray } from 'server/util'
+import sanitizeName from 'server/util/sanitizeName'
 
 const serviceW2Company = {
   'Goodman Analytics': 'Goodman',
@@ -82,6 +83,7 @@ export default async ({ csvObjStream, dataSource }) => {
         data.Office = groups.Office
         data.Division = groups.Division
       }
+      data.companyName = !data['Tech Type'] || data['Tech Type'] === 'W2' ? w2Company.name : data['Tech Type']
       if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
       data.assignedTechId = data['Tech User ID']
       return data
@@ -89,77 +91,79 @@ export default async ({ csvObjStream, dataSource }) => {
 
     await Promise.mapSeries(workOrderDatas, async data => {
       const workOrder = await WorkOrder.query().upsert({
-        query: { externalId: data['Activity #'] },
+        query: { dataSourceId: dataSource.id, externalId: data['Activity #'] },
         update: {
-          dataSourceId: dataSource.id,
           date: getDateString(data['Activity Due Date']),
           type: data['Order Type'],
           status: data['Status'],
-          // data: data,
+          data,
         },
       })
-      // const assignedTech = data.assignedTechId && await Employee.query().eager('workGroups').where({ externalId: data.assignedTechId })
 
-      // const workGroups = await Promise.props({
-      //   ...(!!tech: WorkGroup.query().ensure({
-      //     w2Company,
-      //     type: 'Tech',
-      //     companyId: w2Company.id,
-      //     externalId: employee.externalId,
-      //     name: employee.name,
-      //   }),
-      //   team: WorkGroup.query().ensure({
-      //     w2Company,
-      //     type: 'Team',
-      //     companyId: w2Company.id,
-      //     externalId: techData['Team ID'],
-      //     name: techData['Team ID'],
-      //   }),
-      //   w2Company: WorkGroup.query().ensure({
-      //     w2Company,
-      //     type: 'Company',
-      //     companyId: w2Company.id,
-      //     externalId: w2Company.name,
-      //     name: w2Company.name,
-      //   }),
-      //   company: WorkGroup.query().ensure({
-      //     w2Company,
-      //     type: 'Company',
-      //     companyId,
-      //     externalId: company.name,
-      //     name: company.name,
-      //   }),
-      //   ...(!!techSrData && {
-      //     serviceRegion: WorkGroup.query().ensure({
-      //       w2Company,
-      //       type: 'Service Region',
-      //       companyId: w2Company.id,
-      //       externalId: techSR,
-      //       name: techSR,
-      //     }),
-      //     office: WorkGroup.query().ensure({
-      //       w2Company,
-      //       type: 'Office',
-      //       companyId: w2Company.id,
-      //       externalId: techSrData['Office'],
-      //       name: techSrData['Office'],
-      //     }),
-      //     dma: WorkGroup.query().ensure({
-      //       w2Company,
-      //       type: 'DMA',
-      //       companyId: w2Company.id,
-      //       externalId: techSrData['DMA'],
-      //       name: techSrData['DMA'],
-      //     }),
-      //     division: WorkGroup.query().ensure({
-      //       w2Company,
-      //       type: 'Division',
-      //       companyId: w2Company.id,
-      //       externalId: techSrData['Division'],
-      //       name: techSrData['Division'],
-      //     }),
-      //   }),
-      // })
+      const company = await Company.query().ensure(data.companyName)
+
+      const employeeId = data.assignedTechId
+      const techTeamId = data['Tech Team']
+      const workGroups = await Promise.props({
+        ...(employeeId && {
+          tech: WorkGroup.query().ensure({
+            type: 'Tech',
+            companyId: w2Company.id,
+            externalId: employeeId,
+            name: sanitizeName(data['Tech Full Name']),
+          }),
+        }),
+        ...(techTeamId && {
+          team: WorkGroup.query().ensure({
+            type: 'Team',
+            companyId: w2Company.id,
+            externalId: techTeamId,
+            name: sanitizeName(data['Team Name']),
+          }),
+        }),
+        w2Company: WorkGroup.query().ensure({
+          type: 'Company',
+          companyId: w2Company.id,
+          externalId: w2Company.name,
+          name: w2Company.name,
+        }),
+        company: WorkGroup.query().ensure({
+          type: 'Company',
+          companyId: company.id,
+          externalId: company.name,
+          name: company.name,
+        }),
+        ...(!!data.SR && {
+          serviceRegion: WorkGroup.query().ensure({
+            type: 'Service Region',
+            companyId: w2Company.id,
+            externalId: data.SR,
+            name: data.SR,
+          }),
+          office: WorkGroup.query().ensure({
+            type: 'Office',
+            companyId: w2Company.id,
+            externalId: data.Office,
+            name: data.Office,
+          }),
+          dma: WorkGroup.query().ensure({
+            type: 'DMA',
+            companyId: w2Company.id,
+            externalId: data.DMA,
+            name: data.DMA,
+          }),
+          division: WorkGroup.query().ensure({
+            type: 'Division',
+            companyId: w2Company.id,
+            externalId: data.Division,
+            name: data.Division,
+          }),
+        }),
+      })
+
+      await workOrder.removeFromAllWorkGroups()
+      // await workOrder.$query().patch({ workGroupId: techWorkGroups.tech.id })
+      await Promise.map(_.uniqBy(_.values(workGroups), 'id'), workGroup => workGroup.addWorkOrder(workOrder))
     })
   })
 }
