@@ -74,20 +74,12 @@ export default class WorkGroup extends APIModel {
         this.orderBy('WorkGroup.order')
       }
 
-      async ensure({ w2Company, type, companyId, externalId, name }) {
-        const workGroups = await this.clone().getDtvWorkGroups(w2Company)
-        workGroups[type] = workGroups[type] || {}
-        if (workGroups[type][externalId]) return workGroups[type][externalId]
-        const queryProps = { type, companyId, externalId }
+      async ensure({ type, companyId, externalId, name }) {
         const order = WorkGroup.orderMap[type]
-        workGroups[type][externalId] =
-          (await this.clone()
-          .where(queryProps)
-          .first()) ||
-          (await this.clone()
-          .insert({ ...queryProps, order, name })
-          .returning('*'))
-        return workGroups[type][externalId]
+        return this.upsert({
+          query: { companyId, type, externalId },
+          update: { name, order },
+        })
       }
 
       async getDtvWorkGroups(w2Company) {

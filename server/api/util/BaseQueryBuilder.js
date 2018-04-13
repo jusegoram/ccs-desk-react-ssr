@@ -25,7 +25,7 @@ export default class extends QueryBuilder {
     } else {
       return await this.clone()
       .where(query)
-      .update(update)
+      .patch(update)
       .returning('*')
       .first()
     }

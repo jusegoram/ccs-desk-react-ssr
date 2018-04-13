@@ -1,6 +1,9 @@
 import Knex from 'knex'
 import knexfile from 'server/../knexfile'
 import { Model } from 'objection'
+import Promise from 'bluebird'
+
+if (process.env.NODE_ENV === 'development') Promise.longStackTraces()
 
 const knex = Knex({
   debug: process.env.NODE_ENV === 'development',
