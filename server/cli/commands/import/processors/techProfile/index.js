@@ -97,6 +97,7 @@ export default async ({ csvObjStream, dataSource }) => {
           query: { companyId, externalId: techData['Tech User ID'] },
           update: {
             dataSourceId: dataSource.id,
+            alternateExternalId: techData['Tech ATT UID'],
             terminatedAt: null,
             name: sanitizeName(techData['Tech Full Name']),
             phoneNumber: techData['Tech Mobile Phone #'],
