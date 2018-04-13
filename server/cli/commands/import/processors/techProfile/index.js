@@ -82,100 +82,76 @@ export default async ({ csvObjStream, dataSource }) => {
         companyTechDatas,
         async techData => {
           const employee = await Employee.query().upsertTech({ companyId, techData, dataSource })
-
-          await employee.$loadRelated('workGroups')
+          const supervisor = await Employee.query().upsertSupervisor({ companyId, techData, dataSource })
 
           const techSR = techData['Service Region']
+          const techSrData = srData[techSR]
 
-          const relatedWorkGroupsById = _.keyBy(employee.workGroups, 'id')
-          const ensureRelated = async workGroup => {
-            if (workGroup && !relatedWorkGroupsById[workGroup.id]) {
-              await employee.$relatedQuery('workGroups').relate(workGroup)
-              relatedWorkGroupsById[workGroup.id] = workGroup
-            }
-          }
-
-          const techWorkGroup = await WorkGroup.query().ensure({
-            w2Company,
-            type: 'Tech',
-            companyId: w2Company.id,
-            externalId: employee.externalId,
-            name: employee.name,
-          })
-          await employee.$query().patch({ workGroupId: techWorkGroup.id })
-          await ensureRelated(techWorkGroup)
-
-          const teamWorkGroup = await WorkGroup.query().ensure({
-            w2Company,
-            type: 'Team',
-            companyId: w2Company.id,
-            externalId: techData['Team ID'],
-            name: techData['Team ID'],
-          })
-          const supervisor = await Employee.query().upsertSupervisor({ companyId, techData, dataSource })
-          await supervisor.$loadRelated('managedWorkGroups')
-          if (!_.find(supervisor.managedWorkGroups, { id: teamWorkGroup.id })) {
-            await supervisor.$relatedQuery('managedWorkGroups').relate(teamWorkGroup)
-          }
-          await ensureRelated(teamWorkGroup)
-
-          await ensureRelated(
-            await WorkGroup.query().ensure({
+          const techWorkGroups = await Promise.props({
+            tech: WorkGroup.query().ensure({
+              w2Company,
+              type: 'Tech',
+              companyId: w2Company.id,
+              externalId: employee.externalId,
+              name: employee.name,
+            }),
+            team: WorkGroup.query().ensure({
+              w2Company,
+              type: 'Team',
+              companyId: w2Company.id,
+              externalId: techData['Team ID'],
+              name: techData['Team ID'],
+            }),
+            w2Company: WorkGroup.query().ensure({
               w2Company,
               type: 'Company',
               companyId: w2Company.id,
               externalId: w2Company.name,
               name: w2Company.name,
-            })
-          )
-          await ensureRelated(
-            await WorkGroup.query().ensure({
+            }),
+            company: WorkGroup.query().ensure({
               w2Company,
               type: 'Company',
               companyId,
               externalId: company.name,
               name: company.name,
-            })
-          )
-          const techSrData = srData[techSR]
-          await ensureRelated(
-            await WorkGroup.query().ensure({
-              w2Company,
-              type: 'Service Region',
-              companyId: w2Company.id,
-              externalId: techSR,
-              name: techSR,
-            })
-          )
-          if (techSrData) {
-            await ensureRelated(
-              await WorkGroup.query().ensure({
+            }),
+            ...(!!techSrData && {
+              serviceRegion: WorkGroup.query().ensure({
+                w2Company,
+                type: 'Service Region',
+                companyId: w2Company.id,
+                externalId: techSR,
+                name: techSR,
+              }),
+              office: WorkGroup.query().ensure({
                 w2Company,
                 type: 'Office',
                 companyId: w2Company.id,
                 externalId: techSrData['Office'],
                 name: techSrData['Office'],
-              })
-            )
-            await ensureRelated(
-              await WorkGroup.query().ensure({
+              }),
+              dma: WorkGroup.query().ensure({
                 w2Company,
                 type: 'DMA',
                 companyId: w2Company.id,
                 externalId: techSrData['DMA'],
                 name: techSrData['DMA'],
-              })
-            )
-            await ensureRelated(
-              await WorkGroup.query().ensure({
+              }),
+              division: WorkGroup.query().ensure({
                 w2Company,
                 type: 'Division',
                 companyId: w2Company.id,
                 externalId: techSrData['Division'],
                 name: techSrData['Division'],
-              })
-            )
-          }
+              }),
+            }),
+          })
+
+          await employee.removeFromAllWorkGroups()
+          await employee.$query().patch({ workGroupId: techWorkGroups.tech.id })
+          await Promise.map(_.uniqBy(_.values(techWorkGroups), 'id'), workGroup => workGroup.addTech(employee))
+          await techWorkGroups.team.addManager(supervisor)
         },
         { concurrency: 1 }
       )

@@ -136,6 +136,17 @@ export default class WorkGroup extends APIModel {
     }
   }
 
+  async addTech(employee) {
+    if (!employee.workGroups) await employee.$loadRelated('workGroups')
+    const alreadyInWorkGroup = !!_.find(employee.workGroups, { id: this.id })
+    if (!alreadyInWorkGroup) await employee.$relatedQuery('workGroups').relate(this)
+  }
+  async addManager(employee) {
+    if (!employee.managedWorkGroups) await employee.$loadRelated('managedWorkGroups')
+    const alreadyInWorkGroup = !!_.find(employee.managedWorkGroups, { id: this.id })
+    if (!alreadyInWorkGroup) await employee.$relatedQuery('managedWorkGroups').relate(this)
+  }
+
   static get relationMappings() {
     return {
       company: {

@@ -159,6 +159,10 @@ export default class Employee extends APIModel {
     }
   }
 
+  async removeFromAllWorkGroups() {
+    await this.$relatedQuery('workGroups').unrelate()
+  }
+
   static get relationMappings() {
     return {
       company: {
