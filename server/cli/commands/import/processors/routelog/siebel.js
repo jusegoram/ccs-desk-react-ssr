@@ -72,6 +72,7 @@ export default async ({ csvObjStream, dataSource }) => {
     const { WorkOrder, WorkGroup, Company } = models
     const knex = WorkOrder.knex()
     const dataSourceId = dataSource.id
+    const workGroupCache = {}
 
     const w2CompanyName = serviceW2Company[dataSource.service]
     const srData = _.keyBy(
@@ -218,7 +219,7 @@ export default async ({ csvObjStream, dataSource }) => {
       times.diff += getTimeDiff(start)
       start = process.hrtime()
       const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData =>
-        WorkGroup.query().ensure(workGroupData)
+        WorkGroup.query().ensure(workGroupData, workGroupCache)
       )
       times.ensureWG += getTimeDiff(start)
       start = process.hrtime()
