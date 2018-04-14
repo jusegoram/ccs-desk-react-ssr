@@ -1,12 +1,15 @@
-import { APIModel, BaseQueryBuilder } from 'server/api/util'
+import { APIModel } from 'server/api/util'
+import BaseQueryBuilder from 'server/api/util/BaseQueryBuilder'
 import { raw } from 'objection'
 import { GraphQLString } from 'graphql'
 import axios from 'axios'
 import ExpectedError from 'server/errors/ExpectedError'
+import _ from 'lodash'
 
 export default class Geography extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.string('timezone')
     table.string('streetAddress')
     table.string('zipcode')
     table.string('city')
@@ -62,31 +65,34 @@ export default class Geography extends APIModel {
       _contextFilter() {
         this.whereRaw('FALSE')
       }
+      patch() {
+        throw new Error('Calling patch on immutable model Geography')
+      }
+      update() {
+        throw new Error('Calling patch on immutable model Geography')
+      }
+      insert(props) {
+        const { latitude, longitude } = props
+        return super.insert({
+          ...props,
+          point: latitude && longitude && raw('ST_SetSRID(ST_Point(?, ?),4326)', longitude, latitude),
+        })
+      }
     }
   }
 
-  $afterUpdate(queryContext) {
-    return Promise.resolve(super.$afterUpdate(queryContext)).then(async () => this.ensurePoint())
-  }
-  $afterInsert(queryContext) {
-    return Promise.resolve(super.$afterInsert(queryContext)).then(async () => this.ensurePoint())
-  }
-  async ensurePoint() {
-    if (this.latitude && this.longitude && !this.point) {
-      await this.$query().patch({ point: raw('ST_SetSRID(ST_Point(?, ?),4326)', this.longitude, this.latitude) })
-    }
-  }
-
-  getTimezone() {
-    return this.$knex()
-    .from('timezones')
-    .select('name')
-    .whereRaw('ST_Contains(timezones.polygon::geometry, ST_SetSRID(ST_Point(?, ?),4326))', [
-      this.longitude,
-      this.latitude,
-    ])
-    .first()
-    .get('name')
+  $beforeInsert(queryContext) {
+    return Promise.resolve(super.$beforeInsert(queryContext)).then(async () => {
+      if (this.latitude && this.longitude) {
+        const { latitude, longitude } = this
+        this.timezone = await this.$knex()
+        .from('timezones')
+        .select('name')
+        .whereRaw('ST_Contains(timezones.polygon::geometry, ST_SetSRID(ST_Point(?, ?),4326))', [longitude, latitude])
+        .first()
+        .get('name')
+      }
+    })
   }
 
   static get mutations() {
