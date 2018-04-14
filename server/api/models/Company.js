@@ -1,5 +1,6 @@
 import { APIModel, BaseQueryBuilder } from 'server/api/util'
 import { Model } from 'objection'
+import { identity } from 'lodash'
 
 const companies = {}
 
@@ -28,13 +29,14 @@ export default class Company extends APIModel {
       _contextFilter() {
         this.whereRaw('FALSE')
       }
-      async ensure(name) {
+      async ensure(name, { onInsert = identity }) {
         if (companies[name]) return companies[name]
         companies[name] = await this.clone()
         .where({ name })
         .first()
         if (companies[name]) return companies[name]
         companies[name] = await this.insert({ name }).returning('*')
+        await onInsert(companies[name])
         return companies[name]
       }
     }
@@ -86,14 +88,6 @@ export default class Company extends APIModel {
         },
       },
       dataSources: {
-        relation: Model.HasManyRelation,
-        modelClass: 'DataSource',
-        join: {
-          from: 'Company.id',
-          to: 'DataSource.companyId',
-        },
-      },
-      visibleDataSources: {
         relation: Model.ManyToManyRelation,
         modelClass: 'DataSource',
         join: {

@@ -14,14 +14,13 @@ Model.knex(knex)
 
 const prog = require('caporal')
 const importFromSiebel = require('./commands/import')
-const resaturateReport = require('./commands/import/resaturate')
 const crontab = require('./commands/crontab')
 
 const runFunction = fn => async (args = {}, options = {}) => {
   try {
     await fn({ knex, ...args, ...options })
   } catch (e) {
-    console.error(e)
+    console.error(e) //eslint-disable-line no-console
   } finally {
     knex.destroy()
   }
