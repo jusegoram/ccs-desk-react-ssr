@@ -7,6 +7,7 @@ exports.seed = async function(knex) {
   await Company.query()
   .insertGraph([
     {
+      '#id': 'directsatCompany',
       name: 'DirectSat',
       workGroups: [
         {
@@ -19,16 +20,19 @@ exports.seed = async function(knex) {
       ],
       dataSources: [
         {
+          company: { '#ref': 'directsatCompany' },
           name: 'Siebel',
           reports: JSON.stringify(['Tech Profile', 'Routelog']),
         },
         {
+          company: { '#ref': 'directsatCompany' },
           name: 'Edge',
           reports: JSON.stringify(['MW Routelog']),
         },
       ],
     },
     {
+      '#id': 'goodmanCompany',
       name: 'Goodman',
       workGroups: [
         {
@@ -41,10 +45,12 @@ exports.seed = async function(knex) {
       ],
       dataSources: [
         {
+          company: { '#ref': 'goodmanCompany' },
           name: 'Siebel',
           reports: JSON.stringify(['Tech Profile', 'Routelog']),
         },
         {
+          company: { '#ref': 'goodmanCompany' },
           name: 'Edge',
           reports: JSON.stringify(['MW Routelog']),
         },

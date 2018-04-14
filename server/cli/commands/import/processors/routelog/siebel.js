@@ -177,10 +177,11 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
         const employee = await Employee.query()
         .first()
         .where({ dataSourceId, externalId: data.assignedTechId })
+
         currentAppointment = await Appointment.query().upsert({
           query: {
             workOrderId: workOrder.id,
-            employeeId: employee.id,
+            employeeId: employee && employee.id,
             date: workOrder.date,
           },
           update: {
@@ -189,7 +190,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
           },
         })
         await workOrder.$relatedQuery('appointments').relate(currentAppointment)
-        await employee.$relatedQuery('appointments').relate(currentAppointment)
+        employee && (await employee.$relatedQuery('appointments').relate(currentAppointment))
       }
 
       timer.split('Ensure Company')
