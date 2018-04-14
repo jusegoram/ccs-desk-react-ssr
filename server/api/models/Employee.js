@@ -18,7 +18,7 @@ export default class Employee extends APIModel {
     table.string('email')
     table.string('skills')
     table.string('schedule')
-    table.jsonb('data')
+    table.json('row')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])

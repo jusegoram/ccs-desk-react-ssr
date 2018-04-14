@@ -55,7 +55,7 @@ export function up(knex) {
     table.string('email')
     table.string('skills')
     table.string('schedule')
-    table.jsonb('data')
+    table.json('row')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])
@@ -202,7 +202,7 @@ export function up(knex) {
     table.date('date')
     table.string('type')
     table.string('status')
-    table.jsonb('data')
+    table.json('row')
     table.unique(['dataSourceId', 'externalId'])
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()

@@ -18,30 +18,76 @@ const getDateString = timeString => {
   if (!date.isValid()) return null
   return date.format('YYYY-MM-DD')
 }
+
+const convertRowToStandardForm = ({ row, w2Company, employee }) => {
+  const getWorkGroup = type => (employee && _.find(employee.workGroups, { type })) || {}
+  const standardRow = {
+    Source: 'Edge',
+    'Partner Name': w2Company.name,
+    Subcontractor: (employee && employee.company) || '',
+    'Activity ID': row['Activity ID'],
+    'Tech ID': (employee && employee.alternateExternalId) || '',
+    'Tech Name': (employee && employee.name) || '',
+    'Tech Team': getWorkGroup('Team').externalId || '',
+    'Tech Supervisor': getWorkGroup('Team').name || '',
+    'Order Type': row['Order Sub Type'],
+    Status: row['Status'],
+    'Reason Code': row['Hold Reason Code'],
+    'Service Region': row['Service Region'],
+    DMA: row['DMA'],
+    Office: row['Office'],
+    Division: row['Division'],
+    'Time Zone': row['Timezone'],
+    'Created Date': '',
+    'Due Date': row['Due Date'],
+    'Planned Start Date': row['Planned Start Date'],
+    'Actual Start Date': row['Actual Start Date'],
+    'Actual End Date': row['Actual End Date'],
+    'Cancelled Date': '',
+    'Negative Reschedules': row['Negative Reschedule Count'],
+    'Planned Duration': '',
+    'Actual Duration': '',
+    'Service in 7 Days': row['Service Within 7 Days Flag'] === 'Y',
+    'Repeat Service': row['Repeat Service Flag'] === 'Y',
+    'Internet Connectivity': '',
+    'Customer ID': '',
+    'Customer Name': '',
+    'Customer Phone': '',
+    'Dwelling Type': '',
+    Address: row['Address'],
+    Zipcode: row['Zipcode'] && row['Zipcode'].slice(0, 5),
+    City: row['City'],
+    State: row['State'],
+    Latitude: '',
+    Longitude: '',
+  }
+  return standardRow
+}
+
 /* Sample Row Data:
-  { Timezone: 'CENTRAL',
-  'Partner Name': 'MULTIBAND',
-  DMA: 'CHAMPAIGN IL',
-  'Service Region': 'IL20',
-  'Sub Area': 'New Install',
-  Status: 'Closed',
-  'Hold Reason Code': '',
-  'Tech ID': 'CG185B',
-  'Activity ID': 'M8093014025',
-  'Order Sub Type': 'New Install',
-  'Actual Start Date': '4/9/18 10:04',
-  'Actual End Date': '4/9/18',
-  Month: 'Apr',
-  'Due Date': '4/9/18 23:59',
-  'Planned Start Date': '4/9/18 10:04',
-  'Service Within 7 Days Flag': 'N',
-  'Repeat Service Flag': 'N',
-  'Negative Reschedule Count': '0',
-  Address: '703 ARLINGTON CT',
-  City: 'CHMP',
-  Zipcode: '618205001',
-  State: 'IL',
-  '# of Activities': '1' }
+  // { Timezone: 'CENTRAL',
+  // 'Partner Name': 'MULTIBAND',
+  // DMA: 'CHAMPAIGN IL',
+  // 'Service Region': 'IL20',
+  // 'Sub Area': 'New Install',
+  // Status: 'Closed',
+  // 'Hold Reason Code': '',
+  // 'Tech ID': 'CG185B',
+  // 'Activity ID': 'M8093014025',
+  // 'Order Sub Type': 'New Install',
+  // 'Actual Start Date': '4/9/18 10:04',
+  // 'Actual End Date': '4/9/18',
+  // Month: 'Apr',
+  // 'Due Date': '4/9/18 23:59',
+  // 'Planned Start Date': '4/9/18 10:04',
+  // 'Service Within 7 Days Flag': 'N',
+  // 'Repeat Service Flag': 'N',
+  // 'Negative Reschedule Count': '0',
+  // Address: '703 ARLINGTON CT',
+  // City: 'CHMP',
+  // Zipcode: '618205001',
+  // State: 'IL',
+  // '# of Activities': '1' }
 */
 
 export default async ({ csvObjStream, dataSource }) => {
@@ -100,6 +146,16 @@ export default async ({ csvObjStream, dataSource }) => {
     )
 
     await Promise.mapSeries(workOrderDatas, async data => {
+      timer.split('Fetch Employee')
+      const employee =
+        data.assignedTechId &&
+        (await Employee.query()
+        .eager('[company, workGroups]')
+        .first()
+        .where({ alternateExternalId: data.assignedTechId }))
+
+      data.row = convertRowToStandardForm({ row: data, w2Company, employee })
+
       timer.split('Work Order Upsert')
       const dbWorkOrder = dbWorkOrders[data['Activity ID']]
       let workOrder = dbWorkOrder
@@ -112,18 +168,10 @@ export default async ({ csvObjStream, dataSource }) => {
             date: getDateString(data['Due Date']),
             type: data['Order Sub Type'],
             status: data['Status'],
-            data,
+            row: data.row,
           },
         })
       }
-
-      timer.split('Fetch Employee')
-      const employee =
-        data.assignedTechId &&
-        (await Employee.query()
-        .eager('[company, workGroups]')
-        .first()
-        .where({ alternateExternalId: data.assignedTechId }))
 
       timer.split('Work Group Datas')
       const workGroupDatas = [
