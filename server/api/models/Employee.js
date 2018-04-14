@@ -21,7 +21,6 @@ export default class Employee extends APIModel {
     table.json('row')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
-    table.unique(['externalId', 'companyId'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
@@ -215,6 +214,14 @@ export default class Employee extends APIModel {
         join: {
           from: 'Employee.startLocationId',
           to: 'Geography.id',
+        },
+      },
+      appointments: {
+        relation: Model.HasManyRelation,
+        modelClass: 'Appointment',
+        join: {
+          from: 'Employee.id',
+          to: 'Appointment.employeeId',
         },
       },
     }

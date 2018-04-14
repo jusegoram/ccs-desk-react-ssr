@@ -85,6 +85,26 @@ export default class Company extends APIModel {
           qb.where({ isTemplate: true })
         },
       },
+      dataSources: {
+        relation: Model.HasManyRelation,
+        modelClass: 'DataSource',
+        join: {
+          from: 'Company.id',
+          to: 'DataSource.companyId',
+        },
+      },
+      visibleDataSources: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'DataSource',
+        join: {
+          from: 'Company.id',
+          through: {
+            from: 'companyDataSources.companyId',
+            to: 'companyDataSources.dataSourceId',
+          },
+          to: 'DataSource.id',
+        },
+      },
     }
   }
 }

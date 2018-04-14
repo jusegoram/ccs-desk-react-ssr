@@ -23,41 +23,41 @@ const getDateString = timeString => {
 const convertRowToStandardForm = ({ row, w2Company }) => {
   const standardRow = {
     Source: 'Siebel',
-    'Partner Name': w2Company.name,
-    Subcontractor: row['Tech Type'],
-    'Activity ID': row['Activity #'],
-    'Tech ID': row['Tech User ID'],
-    'Tech Name': sanitizeName(row['Tech Full Name']),
-    'Tech Team': row['Tech Team'],
-    'Tech Supervisor': sanitizeName(row['Team Name']),
-    'Order Type': row['Order Type'],
-    Status: row['Status'],
-    'Reason Code': row['Reason Code'],
-    'Service Region': row['SR'],
-    DMA: row['DMA'],
-    Office: row['Office'],
-    Division: row['Division'],
-    'Time Zone': row['Time Zone'],
-    'Created Date': row['Created Date (with timestamp)'],
-    'Due Date': row['Activity Due Date RT'],
-    'Planned Start Date': row['Planned Start Date RT'],
-    'Actual Start Date': row['Actual Start Date RT'],
-    'Actual End Date': row['Actual End Date RT'],
-    'Cancelled Date': row['Activity Cancelled Date'],
-    'Negative Reschedules': row['# of Negative Reschedules'],
-    'Planned Duration': row['Planned Duration (FS Scheduler)'],
-    'Actual Duration': row['Total Duration Minutes'],
+    'Partner Name': w2Company.name || '',
+    Subcontractor: row['Tech Type'] || '',
+    'Activity ID': row['Activity #'] || '',
+    'Tech ID': row['Tech User ID'] || '',
+    'Tech Name': sanitizeName(row['Tech Full Name']) || '',
+    'Tech Team': row['Tech Team'] || '',
+    'Tech Supervisor': sanitizeName(row['Team Name']) || '',
+    'Order Type': row['Order Type'] || '',
+    Status: row['Status'] || '',
+    'Reason Code': row['Reason Code'] || '',
+    'Service Region': row['SR'] || '',
+    DMA: row['DMA'] || '',
+    Office: row['Office'] || '',
+    Division: row['Division'] || '',
+    'Time Zone': row['Time Zone'] || '',
+    'Created Date': row['Created Date (with timestamp)'] || '',
+    'Due Date': row['Activity Due Date RT'] || '',
+    'Planned Start Date': row['Planned Start Date RT'] || '',
+    'Actual Start Date': row['Actual Start Date RT'] || '',
+    'Actual End Date': row['Actual End Date RT'] || '',
+    'Cancelled Date': row['Activity Cancelled Date'] || '',
+    'Negative Reschedules': row['# of Negative Reschedules'] || '',
+    'Planned Duration': row['Planned Duration (FS Scheduler)'] || '',
+    'Actual Duration': row['Total Duration Minutes'] || '',
     'Service in 7 Days': '',
     'Repeat Service': '',
     'Internet Connectivity': row['Internet Connectivity'] === 'Y',
-    'Customer ID': row['Cust Acct Number'],
-    'Customer Name': sanitizeName(row['Cust Name']),
-    'Customer Phone': sanitizeName(row['Home Phone']),
-    'Dwelling Type': row['Dwelling Type'],
+    'Customer ID': row['Cust Acct Number'] || '',
+    'Customer Name': sanitizeName(row['Cust Name']) || '',
+    'Customer Phone': sanitizeName(row['Home Phone']) || '',
+    'Dwelling Type': row['Dwelling Type'] || '',
     Address: row['House #'] + ' ' + row['Street Name'],
-    Zipcode: row['Zip'],
-    City: row['City'],
-    State: row['Service State'],
+    Zipcode: row['Zip'] || '',
+    City: row['City'] || '',
+    State: row['Service State'] || '',
     Latitude: row['Activity Geo Latitude'] / 1000000 || '',
     Longitude: row['Activity Geo Longitude'] / 1000000 || '',
   }
@@ -111,7 +111,7 @@ export default async ({ csvObjStream, dataSource }) => {
   timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
-    const { WorkOrder, WorkGroup, Company } = models
+    const { WorkOrder, WorkGroup, Company, Appointment, Employee } = models
     const knex = WorkOrder.knex()
     const dataSourceId = dataSource.id
     const workGroupCache = {}
@@ -148,7 +148,7 @@ export default async ({ csvObjStream, dataSource }) => {
     timer.split('Load Existing')
     const dbWorkOrders = _.keyBy(
       await WorkOrder.query()
-      .eager('workGroups')
+      .eager('[workGroups, appointments]')
       .where({ dataSourceId })
       .where(
         'date',
@@ -167,7 +167,7 @@ export default async ({ csvObjStream, dataSource }) => {
       let workOrder = dbWorkOrder
       if (!workOrder || !_.isEqual(workOrder.data, data)) {
         workOrder = await WorkOrder.query()
-        .eager('workGroups')
+        .eager('[workGroups, appointments]')
         .upsert({
           query: { dataSourceId, externalId: data['Activity #'] },
           update: {
@@ -177,6 +177,26 @@ export default async ({ csvObjStream, dataSource }) => {
             row: data.row,
           },
         })
+      }
+
+      let currentAppointment = _.find(workOrder.appointments, { date: workOrder.date })
+      if (!currentAppointment || !_.isEqual(currentAppointment.data, data)) {
+        const employee = await Employee.query()
+        .first()
+        .where({ dataSourceId, externalId: data.assignedTechId })
+        currentAppointment = await Appointment.query().upsert({
+          query: {
+            workOrderId: workOrder.id,
+            employeeId: employee.id,
+            date: workOrder.date,
+          },
+          update: {
+            status: workOrder.status,
+            row: data.row,
+          },
+        })
+        await workOrder.$relatedQuery('appointments').relate(currentAppointment)
+        await employee.$relatedQuery('appointments').relate(currentAppointment)
       }
 
       timer.split('Ensure Company')
