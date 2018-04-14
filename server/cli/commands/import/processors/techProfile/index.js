@@ -82,10 +82,10 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
 
     const companyNames = _.without(_.map(_.uniqBy(datas, 'Tech Type'), 'Tech Type'), w2CompanyName)
     const subcontractors = _.keyBy(
-      await Promise.map(companyNames, async name => {
-        const company = await Company.query().ensure(name)
-        // await company.$appendRelated('visibleDataSources', dataSource)
-        return company
+      await Promise.map(companyNames, name => {
+        return Company.query().ensure(name, {
+          onInsert: company => company.$relatedQuery('dataSources').relate(dataSource.id),
+        })
       }),
       'name'
     )

@@ -8,10 +8,6 @@ import { streamToArray } from 'server/util'
 import sanitizeName from 'server/util/sanitizeName'
 import Timer from 'server/util/Timer'
 
-const serviceW2Company = {
-  'Goodman Analytics': 'Goodman',
-  'DirectSat Analytics': 'DirectSat',
-}
 const getDateString = timeString => {
   if (!timeString) return null
   const badDateString = timeString.split(' ')[0]
@@ -105,7 +101,7 @@ const convertRowToStandardForm = ({ row, w2Company }) => {
   // Timezone: '(GMT-06:00) Central Time (US & Canada)' }
 */
 
-export default async ({ csvObjStream, dataSource }) => {
+export default async ({ csvObjStream, w2Company, dataSource }) => {
   const timer = new Timer()
   timer.start('Total')
   timer.start('Initialization')
@@ -117,7 +113,7 @@ export default async ({ csvObjStream, dataSource }) => {
     const workGroupCache = {}
 
     timer.split('SR Data Load')
-    const w2CompanyName = serviceW2Company[dataSource.service]
+    const w2CompanyName = w2Company.name
     const srData = _.keyBy(
       await WorkGroup.knex()
       .select('Service Region', 'Office', 'DMA', 'Division')
@@ -125,9 +121,6 @@ export default async ({ csvObjStream, dataSource }) => {
       .where({ HSP: w2CompanyName }),
       'Service Region'
     )
-
-    timer.split('Ensure Company')
-    const w2Company = await Company.query().ensure(w2CompanyName)
 
     timer.split('Stream to Array')
     const workOrderDatas = await streamToArray(csvObjStream, data => {

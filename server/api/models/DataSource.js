@@ -4,7 +4,7 @@ import { Model } from 'objection'
 export default class DataSource extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.uuid('companyId')
+    table.uuid('companyId') // one way
     table.string('name')
     table.json('reports')
     table.unique(['companyId', 'name'])
