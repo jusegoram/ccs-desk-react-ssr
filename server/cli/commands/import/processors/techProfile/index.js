@@ -1,11 +1,10 @@
 import _ from 'lodash'
 import Promise from 'bluebird'
-import sanitizeName from 'server/util/sanitizeName'
 
 import { transaction } from 'objection'
 import * as rawModels from 'server/api/models'
 import moment from 'moment-timezone'
-import { streamToArray } from 'server/util'
+import { streamToArray, sanitizeName, Timer } from 'server/util'
 
 const serviceW2Company = {
   'Goodman Analytics': 'Goodman',
@@ -46,6 +45,9 @@ const serviceW2Company = {
 */
 
 export default async ({ csvObjStream, dataSource }) => {
+  const timer = new Timer()
+  timer.start('Total')
+  timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
     const { WorkGroup, Company, Employee, Geography } = models
@@ -55,6 +57,7 @@ export default async ({ csvObjStream, dataSource }) => {
 
     const allEmployeeExternalIds = []
 
+    timer.split('SR Data Load')
     const w2CompanyName = serviceW2Company[dataSource.service]
     srData = _.keyBy(
       await WorkGroup.knex()
@@ -64,8 +67,10 @@ export default async ({ csvObjStream, dataSource }) => {
       'Service Region'
     )
 
+    timer.split('Ensure Company')
     const w2Company = await Company.query().ensure(w2CompanyName)
 
+    timer.split('Stream to Array')
     const techDatas = await streamToArray(csvObjStream, data => {
       if (data['Tech Type'] === 'W2' || !data['Tech Type']) data['Tech Type'] = w2CompanyName
       data.Company = data['Tech Type']
@@ -77,18 +82,22 @@ export default async ({ csvObjStream, dataSource }) => {
 
     const techDatasByCompany = _.groupBy(techDatas, 'Tech Type')
     await Promise.mapSeries(Object.keys(techDatasByCompany), async companyName => {
+      timer.split('Ensure Company')
       const company = await Company.query().ensure(companyName)
 
       const companyId = company.id
 
       const companyTechDatas = techDatasByCompany[companyName]
       await Promise.mapSeries(companyTechDatas, async techData => {
+        timer.split('Create Start Location')
         const latitude = techData['Start Latitude'] / 1000000 || null
         const longitude = techData['Start Longitude'] / 1000000 || null
         const startLocation = latitude && longitude && (await Geography.query().ensure({ latitude, longitude }))
-        // find timezone based on start location
-        const timezone = startLocation && (await startLocation.getTimezone())
 
+        timer.split('Get Timezone')
+        const timezone = startLocation && startLocation.timezone
+
+        timer.split('Upsert Employee')
         const employee = await Employee.query().upsert({
           query: { companyId, externalId: techData['Tech User ID'] },
           update: {
@@ -103,6 +112,8 @@ export default async ({ csvObjStream, dataSource }) => {
             startLocationId: startLocation && startLocation.id,
           },
         })
+
+        timer.split('Upsert Supervisor')
         const supervisor = await Employee.query().upsert({
           query: { companyId, externalId: techData['Tech Team Supervisor Login'] },
           update: {
@@ -119,6 +130,7 @@ export default async ({ csvObjStream, dataSource }) => {
         const techSR = techData['Service Region']
         const techSrData = srData[techSR]
 
+        timer.split('Ensure Work Groups')
         const techWorkGroups = await Promise.props({
           tech: WorkGroup.query().ensure(
             {
@@ -204,15 +216,24 @@ export default async ({ csvObjStream, dataSource }) => {
           }),
         })
 
+        timer.split('Relate Work Groups')
         await employee.removeFromAllWorkGroups()
-        await employee.$query().patch({ workGroupId: techWorkGroups.tech.id })
         await Promise.map(_.uniqBy(_.values(techWorkGroups), 'id'), workGroup => workGroup.addTech(employee))
+
+        timer.split('Set Tech Work Group')
+        await employee.$query().patch({ workGroupId: techWorkGroups.tech.id })
+
+        timer.split('Set Team Manager')
         await techWorkGroups.team.addManager(supervisor)
       })
+
+      timer.split('Mark Terminated')
       await Employee.query()
       .where({ dataSourceId: dataSource.id, role: 'Tech' })
       .whereNotIn('externalId', allEmployeeExternalIds)
       .patch({ terminatedAt: moment.utc().format() })
     })
   })
+  timer.stop('Total')
+  console.log(timer.toString()) // eslint-disable-line no-console
 }
