@@ -33,7 +33,9 @@
         "alias": {
           "server": "./server",
           "app": "./app",
-          "^react-apollo$": "./node_modules/react-apollo/index.js"
+          "@root": ".",
+          "^react-apollo$": "./node_modules/react-apollo/index.js",
+          "^moment-timezone$": "./util/defaultedTzMoment.js"
         }
       }
     ],

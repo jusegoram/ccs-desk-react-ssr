@@ -77,6 +77,7 @@ export default class WorkGroup extends APIModel {
     Tech: 6,
   }
 
+  static cache = {}
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
@@ -86,12 +87,17 @@ export default class WorkGroup extends APIModel {
         this.orderBy('WorkGroup.order')
       }
 
-      async ensure({ type, companyId, externalId, name }) {
+      async ensure({ companyId, type, externalId, name }) {
+        WorkGroup.cache[companyId] = WorkGroup.cache[companyId] || {}
+        WorkGroup.cache[companyId][type] = WorkGroup.cache[companyId][type] || {}
+        if (WorkGroup.cache[companyId][type][externalId]) return WorkGroup.cache[companyId][type][externalId]
         const order = WorkGroup.orderMap[type]
-        return this.upsert({
+        const workGroup = await this.upsert({
           query: { companyId, type, externalId },
           update: { name, order },
         })
+        WorkGroup.cache[companyId][type][externalId] = workGroup
+        return workGroup
       }
 
       async getDtvWorkGroups(w2Company) {
@@ -140,11 +146,6 @@ export default class WorkGroup extends APIModel {
     if (!employee.managedWorkGroups) await employee.$loadRelated('managedWorkGroups')
     const alreadyInWorkGroup = !!_.find(employee.managedWorkGroups, { id: this.id })
     if (!alreadyInWorkGroup) await employee.$relatedQuery('managedWorkGroups').relate(this)
-  }
-  async addWorkOrder(workOrder) {
-    if (!workOrder.workGroups) await workOrder.$loadRelated('workGroups')
-    const alreadyInWorkGroup = !!_.find(workOrder.workGroups, { id: this.id })
-    if (!alreadyInWorkGroup) await workOrder.$relatedQuery('workGroups').relate(this)
   }
 
   static get relationMappings() {

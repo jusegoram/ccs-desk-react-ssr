@@ -1,7 +1,8 @@
 {
   "path-autocomplete.pathMappings": {
     "server": "${workspace}/server",
-    "app": "${workspace}/app"
+    "app": "${workspace}/app",
+    "@root": "${workspace}"
   },
   "files.exclude": {
     "__error": "Not found",
