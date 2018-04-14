@@ -77,7 +77,6 @@ export default class WorkGroup extends APIModel {
     Tech: 6,
   }
 
-  static cache = {}
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
@@ -87,16 +86,18 @@ export default class WorkGroup extends APIModel {
         this.orderBy('WorkGroup.order')
       }
 
-      async ensure({ companyId, type, externalId, name }) {
-        WorkGroup.cache[companyId] = WorkGroup.cache[companyId] || {}
-        WorkGroup.cache[companyId][type] = WorkGroup.cache[companyId][type] || {}
-        if (WorkGroup.cache[companyId][type][externalId]) return WorkGroup.cache[companyId][type][externalId]
+      async ensure({ companyId, type, externalId, name }, cache) {
+        if (cache) {
+          cache[companyId] = cache[companyId] || {}
+          cache[companyId][type] = cache[companyId][type] || {}
+          if (cache[companyId][type][externalId]) return cache[companyId][type][externalId]
+        }
         const order = WorkGroup.orderMap[type]
         const workGroup = await this.upsert({
           query: { companyId, type, externalId },
           update: { name, order },
         })
-        WorkGroup.cache[companyId][type][externalId] = workGroup
+        if (cache) cache[companyId][type][externalId] = workGroup
         return workGroup
       }
 
