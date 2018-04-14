@@ -5,6 +5,7 @@ export default class DataImport extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.uuid('dataSourceId')
+    table.string('reportName')
     table.string('status').defaultTo('pending')
     table.text('error')
     table.timestamp('downloadedAt')

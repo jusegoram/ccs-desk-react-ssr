@@ -51,10 +51,6 @@ export default class WorkOrder extends APIModel {
     }
   }
 
-  async removeFromAllWorkGroups() {
-    await this.$relatedQuery('workGroups').unrelate()
-  }
-
   static get relationMappings() {
     return {
       dataSource: {
@@ -75,6 +71,14 @@ export default class WorkOrder extends APIModel {
             to: 'workGroupWorkOrders.workGroupId',
           },
           to: 'WorkGroup.id',
+        },
+      },
+      appointments: {
+        relation: Model.HasManyRelation,
+        modelClass: 'Appointment',
+        join: {
+          from: 'WorkOrder.id',
+          to: 'Appointment.workOrderId',
         },
       },
     }

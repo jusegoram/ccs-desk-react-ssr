@@ -16,6 +16,18 @@ export function up(knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
+  .createTable('Appointment', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    // <custom>
+    table.uuid('workOrderId').notNullable()
+    table.uuid('employeeId')
+    table.date('date')
+    table.string('status')
+    table.jsonb('row').index()
+    table.unique(['workOrderId', 'employeeId', 'date'])
+    // </custom>
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+  })
   .createTable('Company', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.string('name').unique()
@@ -25,6 +37,7 @@ export function up(knex) {
   .createTable('DataImport', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.uuid('dataSourceId')
+    table.string('reportName')
     table.string('status').defaultTo('pending')
     table.text('error')
     table.timestamp('downloadedAt')
@@ -34,11 +47,12 @@ export function up(knex) {
   })
   .createTable('DataSource', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.string('service')
+    table.uuid('companyId')
     table.string('name')
+    table.json('reports')
+    table.unique(['companyId', 'name'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
-    table.unique(['service', 'name'])
   })
   .createTable('Employee', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
@@ -58,7 +72,6 @@ export function up(knex) {
     table.json('row')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
-    table.unique(['externalId', 'companyId'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -99,6 +112,18 @@ export function up(knex) {
     table.uuid('token').defaultTo(knex.raw("uuid_generate_v4()"))
     table.uuid('senderId').notNullable()
     table.uuid('recipientId').notNullable()
+    // </custom>
+    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
+    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  })
+  .createTable('Measurement', table => {
+    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    // <custom>
+    table.uuid('workGroupId')
+    table.date('date')
+    table.string('name')
+    table.float('value')
+    table.unique(['workGroupId', 'date', 'name'])
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -220,6 +245,10 @@ export function up(knex) {
     table.foreign('employeeId').references('Employee.id')
     table.foreign('companyId').references('Company.id')
   })
+  .alterTable('Appointment', table => {
+    table.foreign('workOrderId').references('WorkOrder.id')
+    table.foreign('employeeId').references('Employee.id')
+  })
   .alterTable('DataImport', table => {
     table.foreign('dataSourceId').references('DataSource.id')
   })
@@ -234,6 +263,9 @@ export function up(knex) {
   .alterTable('Invite', table => {
     table.foreign('senderId').references('Account.id')
     table.foreign('recipientId').references('Account.id')
+  })
+  .alterTable('Measurement', table => {
+    table.foreign('workGroupId').references('WorkGroup.id')
   })
   .alterTable('Report', table => {
     table.foreign('creatorId').references('Account.id')
@@ -268,6 +300,14 @@ export function up(knex) {
   })
   .alterTable('WorkSchedule', table => {
     table.foreign('employeeId').references('Employee.id')
+  })
+  .createTable('companyDataSources', table => { 
+      table.uuid('dataSourceId').notNullable()
+      table.uuid('companyId').notNullable()
+      table.primary(['dataSourceId', 'companyId'])
+      table.unique(['companyId', 'dataSourceId'])
+      table.foreign('dataSourceId').references('DataSource.id')
+      table.foreign('companyId').references('Company.id')
   })
   .createTable('workGroupEmployees', table => { 
       table.uuid('workGroupId').notNullable()
