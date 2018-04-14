@@ -6,6 +6,7 @@ import * as rawModels from 'server/api/models'
 import moment from 'moment-timezone'
 import { streamToArray } from 'server/util'
 import sanitizeName from 'server/util/sanitizeName'
+import Timer from 'server/util/Timer'
 
 const serviceW2Company = {
   'Goodman Analytics': 'Goodman',
@@ -58,15 +59,11 @@ const getDateString = timeString => {
   'Internet Connectivity': 'Y',
   Timezone: '(GMT-06:00) Central Time (US & Canada)' }
 */
-const times = {
-  upsert: 0,
-  other: 0,
-  diff: 0,
-  ensureWG: 0,
-  newWG: 0,
-  oldWG: 0,
-}
+
 export default async ({ csvObjStream, dataSource }) => {
+  const timer = new Timer()
+  timer.start('Total')
+  timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
     const { WorkOrder, WorkGroup, Company } = models
@@ -74,6 +71,7 @@ export default async ({ csvObjStream, dataSource }) => {
     const dataSourceId = dataSource.id
     const workGroupCache = {}
 
+    timer.split('SR Data Load')
     const w2CompanyName = serviceW2Company[dataSource.service]
     const srData = _.keyBy(
       await WorkGroup.knex()
@@ -83,8 +81,10 @@ export default async ({ csvObjStream, dataSource }) => {
       'Service Region'
     )
 
+    timer.split('Ensure Company')
     const w2Company = await Company.query().ensure(w2CompanyName)
 
+    timer.split('Stream to Array')
     const workOrderDatas = await streamToArray(csvObjStream, data => {
       const serviceRegion = data.SR
       const groups = srData[serviceRegion]
@@ -99,13 +99,10 @@ export default async ({ csvObjStream, dataSource }) => {
       return data
     })
 
-    const getTimeDiff = t => {
-      const diff = process.hrtime(t)
-      return diff[0] * 1000000 + diff[1] / 1000
-    }
-
+    timer.split('Load Existing')
     const dbWorkOrders = _.keyBy(
-      await knex('WorkOrder')
+      await WorkOrder.query()
+      .eager('workGroups')
       .where({ dataSourceId })
       .where(
         'date',
@@ -119,15 +116,14 @@ export default async ({ csvObjStream, dataSource }) => {
     )
 
     await Promise.mapSeries(workOrderDatas, async data => {
-      let start = process.hrtime()
+      timer.split('Work Order Upsert')
       const dbWorkOrder = dbWorkOrders[data['Activity #']]
-      const workOrderQuery = WorkOrder.query()
-      .eager('workGroups')
-      .where({ dataSourceId, externalId: data['Activity #'] })
-      .first()
+      let workOrder = null
       if (!dbWorkOrder) {
-        await WorkOrder.query().upsert({
-          query: { dataSourceId: dataSource.id, externalId: data['Activity #'] },
+        workOrder = await WorkOrder.query()
+        .eager('workGroups')
+        .upsert({
+          query: { dataSourceId, externalId: data['Activity #'] },
           update: {
             date: getDateString(data['Activity Due Date']),
             type: data['Order Type'],
@@ -136,7 +132,8 @@ export default async ({ csvObjStream, dataSource }) => {
           },
         })
       } else if (!_.isEqual(dbWorkOrder.data, data)) {
-        workOrderQuery
+        workOrder = await WorkOrder.query()
+        .eager('workGroups')
         .patch({
           date: getDateString(data['Activity Due Date']),
           type: data['Order Type'],
@@ -144,13 +141,14 @@ export default async ({ csvObjStream, dataSource }) => {
           data,
         })
         .returning('*')
+      } else {
+        workOrder = dbWorkOrder
       }
-      const workOrder = await workOrderQuery
-      times.upsert += getTimeDiff(start)
 
-      start = process.hrtime()
+      timer.split('Ensure Company')
       const company = await Company.query().ensure(data.companyName)
 
+      timer.split('Work Group Datas')
       const employeeId = data.assignedTechId
       const techTeamId = data['Tech Team']
       const workGroupDatas = [
@@ -209,34 +207,35 @@ export default async ({ csvObjStream, dataSource }) => {
           },
         ]),
       ]
-      times.other += getTimeDiff(start)
 
-      start = process.hrtime()
+      timer.split('Work Groups _.differenceWith')
       const workGroupPrimaryKey = ['companyId', 'type', 'externalId']
       const hasSamePrimaryKey = (a, b) => _.isEqual(_.pick(a, workGroupPrimaryKey), _.pick(b, workGroupPrimaryKey))
       const newWorkGroupDatas = _.differenceWith(workGroupDatas, workOrder.workGroups, hasSamePrimaryKey)
       const obsoleteWorkGroups = _.differenceWith(workOrder.workGroups, workGroupDatas, hasSamePrimaryKey)
-      times.diff += getTimeDiff(start)
-      start = process.hrtime()
+
+      timer.split('Ensure New Work Groups')
       const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData =>
         WorkGroup.query().ensure(workGroupData, workGroupCache)
       )
-      times.ensureWG += getTimeDiff(start)
-      start = process.hrtime()
+
+      timer.split('Insert New Work Group Relations')
       await Promise.mapSeries(_.uniqBy(newWorkGroups, 'id'), workGroup =>
         knex('workGroupWorkOrders').insert({
           workOrderId: workOrder.id,
           workGroupId: workGroup.id,
         })
       )
-      times.newWG += getTimeDiff(start)
-      start = process.hrtime()
-      await knex('workGroupWorkOrders')
-      .where({ workOrderId: workOrder.id })
-      .whereIn('workGroupId', _.map(obsoleteWorkGroups, 'id'))
-      .delete()
-      times.oldWG += getTimeDiff(start)
+
+      timer.split('Delete Old Work Group Relations')
+      if (obsoleteWorkGroups.length) {
+        await knex('workGroupWorkOrders')
+        .where({ workOrderId: workOrder.id })
+        .whereIn('workGroupId', _.map(obsoleteWorkGroups, 'id'))
+        .delete()
+      }
     })
-    console.log(_.mapValues(times, time => time / 1000000)) // eslint-disable-line no-console
   })
+  timer.stop('Total')
+  console.log(timer.toString()) // eslint-disable-line no-console
 }
