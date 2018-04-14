@@ -118,8 +118,8 @@ export default async ({ csvObjStream, dataSource }) => {
     await Promise.mapSeries(workOrderDatas, async data => {
       timer.split('Work Order Upsert')
       const dbWorkOrder = dbWorkOrders[data['Activity #']]
-      let workOrder = null
-      if (!dbWorkOrder) {
+      let workOrder = dbWorkOrder
+      if (!workOrder || !_.isEqual(workOrder.data, data)) {
         workOrder = await WorkOrder.query()
         .eager('workGroups')
         .upsert({
@@ -131,18 +131,6 @@ export default async ({ csvObjStream, dataSource }) => {
             data,
           },
         })
-      } else if (!_.isEqual(dbWorkOrder.data, data)) {
-        workOrder = await WorkOrder.query()
-        .eager('workGroups')
-        .patch({
-          date: getDateString(data['Activity Due Date']),
-          type: data['Order Type'],
-          status: data['Status'],
-          data,
-        })
-        .returning('*')
-      } else {
-        workOrder = dbWorkOrder
       }
 
       timer.split('Ensure Company')

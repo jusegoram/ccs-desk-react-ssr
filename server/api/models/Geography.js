@@ -4,7 +4,6 @@ import { raw } from 'objection'
 import { GraphQLString } from 'graphql'
 import axios from 'axios'
 import ExpectedError from 'server/errors/ExpectedError'
-import _ from 'lodash'
 
 export default class Geography extends APIModel {
   static knexCreateTable = `
@@ -104,6 +103,7 @@ export default class Geography extends APIModel {
           address: { type: GraphQLString },
         },
         resolve: async (root, { address }) => {
+          const API_KEY = 'YOU NEED TO GET AN API KEY'
           const encodedAddress = encodeURIComponent(address)
           const result = await axios.get(
             `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${API_KEY}`
