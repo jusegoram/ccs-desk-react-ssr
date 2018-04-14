@@ -16,6 +16,9 @@ const keepTables = [
   'topology.topology',
   'spatial_ref_sys',
   'timezones',
+  'Employee',
+  'WorkGroup',
+  'workGroupEmployees',
 ]
 
 // keepTables.push(...['Company', 'Office', 'Team', 'Tech'])
