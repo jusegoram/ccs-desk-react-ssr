@@ -73,6 +73,7 @@ export function up(knex) {
   })
   .createTable('Geography', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.string('timezone')
     table.string('streetAddress')
     table.string('zipcode')
     table.string('city')
