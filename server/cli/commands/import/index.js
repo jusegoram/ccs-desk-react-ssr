@@ -25,7 +25,7 @@ const processors = {
   'Siebel Routelog': siebelRoutelogProcessor,
 }
 const mockFiles = {
-  'Tech Profile': 'techProfile.csv',
+  'Tech Profile': 'techProfile.full.csv',
   'Siebel Routelog': 'routelog.csv',
 }
 
