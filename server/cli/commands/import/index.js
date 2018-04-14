@@ -76,9 +76,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
     )
     // cleanCsvStream.pipe(fs.createWriteStream(path.resolve(__dirname, 'techProfile.csv')))
     await dataImport.$query().patch({ status: 'processing', downloadedAt: new Date() })
-    console.time('Processor Runtime')
     await processors[dataSourceName][reportName]({ csvObjStream, dataSource, w2Company })
-    console.timeEnd('Processor Runtime')
   } catch (e) {
     await dataImport.$query().patch({ status: 'errored' })
     throw e
