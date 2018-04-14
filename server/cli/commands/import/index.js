@@ -4,6 +4,7 @@ import csv from 'csv'
 import { DataImport, DataSource } from 'server/api/models'
 import techProfileProcessor from 'server/cli/commands/import/processors/techProfile'
 import siebelRoutelogProcessor from 'server/cli/commands/import/processors/routelog/siebel'
+import edgeRoutelogProcessor from 'server/cli/commands/import/processors/routelog/edge'
 
 const SiebelReportFetcher = require('./download/siebel/SiebelReportFetcher')
 const convertStringToStream = require('./download/siebel/convertStringToStream')
@@ -23,10 +24,12 @@ const analyticsCredentials = {
 const processors = {
   'Tech Profile': techProfileProcessor,
   'Siebel Routelog': siebelRoutelogProcessor,
+  'EdgeMW Routelog': edgeRoutelogProcessor,
 }
 const mockFiles = {
-  'Tech Profile': 'techProfile.full.csv',
+  'Tech Profile': 'techProfile.csv',
   'Siebel Routelog': 'routelog.csv',
+  'EdgeMW Routelog': 'edge.mw.csv',
 }
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
