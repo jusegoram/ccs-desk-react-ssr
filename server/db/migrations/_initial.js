@@ -195,12 +195,13 @@ export function up(knex) {
   .createTable('WorkOrder', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     // <custom>
-    table.uuid('dataSourceId').index()
+    table.uuid('dataSourceId')
     table.string('externalId').index()
     table.date('date')
     table.string('type')
     table.string('status')
     table.jsonb('data')
+    table.unique(['dataSourceId', 'externalId'])
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   })
