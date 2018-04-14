@@ -20,8 +20,8 @@ export default class WorkOrder extends APIModel {
   `
   static knexCreateJoinTables = {
     workGroupWorkOrders: `
-      table.uuid('workGroupId').notNullable()
       table.uuid('workOrderId').notNullable()
+      table.uuid('workGroupId').notNullable()
       table.primary(['workOrderId', 'workGroupId'])
       table.unique(['workGroupId', 'workOrderId'])
       table.foreign('workGroupId').references('WorkGroup.id')

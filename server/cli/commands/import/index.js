@@ -61,7 +61,9 @@ module.exports = async ({ service, name }) => {
     )
     // cleanCsvStream.pipe(fs.createWriteStream(path.resolve(__dirname, 'techProfile.csv')))
     await dataImport.$query().patch({ status: 'processing', downloadedAt: new Date() })
+    console.time('Processor Runtime')
     await processors[name]({ csvObjStream, dataSource })
+    console.timeEnd('Processor Runtime')
   } catch (e) {
     await dataImport.$query().patch({ status: 'errored' })
     throw e
