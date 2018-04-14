@@ -56,6 +56,7 @@ export default class WorkGroup extends APIModel {
   static visible = [
     'id',
     'company',
+    'externalId',
     'order',
     'type',
     'name',
