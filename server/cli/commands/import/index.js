@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import csv from 'csv'
+import moment from 'moment-timezone'
 import { DataImport, Company } from 'server/api/models'
 import techProfileProcessor from 'server/cli/commands/import/processors/techProfile'
 import siebelRoutelogProcessor from 'server/cli/commands/import/processors/routelog/siebel'
@@ -55,7 +56,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
   .returning('*')
   try {
     // const credentials = analyticsCredentials[service]
-    await dataImport.$query().patch({ status: 'downloading' })
+    await dataImport.$query().patch({ status: 'Downloading' })
     // const csvString = await new SiebelReportFetcher(credentials).fetchReport(dataSource.report, {
     //   loggingPrefix: 'CCS CLI',
     //   // screenshotsDirectory,
@@ -75,20 +76,13 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
       })
     )
     // cleanCsvStream.pipe(fs.createWriteStream(path.resolve(__dirname, 'techProfile.csv')))
-    await dataImport.$query().patch({ status: 'processing', downloadedAt: new Date() })
+    await dataImport.$query().patch({ status: 'Processing', downloadedAt: moment().format() })
     await processors[dataSourceName][reportName]({ csvObjStream, dataSource, w2Company })
+    await dataImport.$query().patch({ status: 'Complete', completedAt: moment().format() })
   } catch (e) {
-    await dataImport.$query().patch({ status: 'errored' })
+    await dataImport.$query().patch({ status: 'Errored' })
     throw e
   }
-  // await csvDbRecord.indicateSaturationRunning()
-  // try {
-  //   await Saturate[reportName]({ knex, source, csv_cid: csvDbRecord.cid, csv: csvDbRecord })
-  //   await csvDbRecord.indicateSaturationCompleted()
-  // } catch (e) {
-  //   await csvDbRecord.indicateSaturationErrored(e)
-  //   throw e
-  // }
 }
 
 module.exports.reports = Object.keys(SiebelReportFetcher.availableReports)
