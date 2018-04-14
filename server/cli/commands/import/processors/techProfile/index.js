@@ -49,6 +49,8 @@ export default async ({ csvObjStream, dataSource }) => {
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
     const { WorkGroup, Company, Employee, Geography } = models
+    const workGroupCache = {}
+
     let srData = null
 
     const allEmployeeExternalIds = []
@@ -118,63 +120,87 @@ export default async ({ csvObjStream, dataSource }) => {
         const techSrData = srData[techSR]
 
         const techWorkGroups = await Promise.props({
-          tech: WorkGroup.query().ensure({
-            w2Company,
-            type: 'Tech',
-            companyId: w2Company.id,
-            externalId: employee.externalId,
-            name: employee.name,
-          }),
-          team: WorkGroup.query().ensure({
-            w2Company,
-            type: 'Team',
-            companyId: w2Company.id,
-            externalId: techData['Team ID'],
-            name: sanitizeName(techData['Team Name']),
-          }),
-          w2Company: WorkGroup.query().ensure({
-            w2Company,
-            type: 'Company',
-            companyId: w2Company.id,
-            externalId: w2Company.name,
-            name: w2Company.name,
-          }),
-          company: WorkGroup.query().ensure({
-            w2Company,
-            type: 'Company',
-            companyId,
-            externalId: company.name,
-            name: company.name,
-          }),
+          tech: WorkGroup.query().ensure(
+            {
+              w2Company,
+              type: 'Tech',
+              companyId: w2Company.id,
+              externalId: employee.externalId,
+              name: employee.name,
+            },
+            workGroupCache
+          ),
+          team: WorkGroup.query().ensure(
+            {
+              w2Company,
+              type: 'Team',
+              companyId: w2Company.id,
+              externalId: techData['Team ID'],
+              name: sanitizeName(techData['Team Name']),
+            },
+            workGroupCache
+          ),
+          w2Company: WorkGroup.query().ensure(
+            {
+              w2Company,
+              type: 'Company',
+              companyId: w2Company.id,
+              externalId: w2Company.name,
+              name: w2Company.name,
+            },
+            workGroupCache
+          ),
+          company: WorkGroup.query().ensure(
+            {
+              w2Company,
+              type: 'Company',
+              companyId,
+              externalId: company.name,
+              name: company.name,
+            },
+            workGroupCache
+          ),
           ...(!!techSrData && {
-            serviceRegion: WorkGroup.query().ensure({
-              w2Company,
-              type: 'Service Region',
-              companyId: w2Company.id,
-              externalId: techSR,
-              name: techSR,
-            }),
-            office: WorkGroup.query().ensure({
-              w2Company,
-              type: 'Office',
-              companyId: w2Company.id,
-              externalId: techSrData['Office'],
-              name: techSrData['Office'],
-            }),
-            dma: WorkGroup.query().ensure({
-              w2Company,
-              type: 'DMA',
-              companyId: w2Company.id,
-              externalId: techSrData['DMA'],
-              name: techSrData['DMA'],
-            }),
-            division: WorkGroup.query().ensure({
-              w2Company,
-              type: 'Division',
-              companyId: w2Company.id,
-              externalId: techSrData['Division'],
-              name: techSrData['Division'],
-            }),
+            serviceRegion: WorkGroup.query().ensure(
+              {
+                w2Company,
+                type: 'Service Region',
+                companyId: w2Company.id,
+                externalId: techSR,
+                name: techSR,
+              },
+              workGroupCache
+            ),
+            office: WorkGroup.query().ensure(
+              {
+                w2Company,
+                type: 'Office',
+                companyId: w2Company.id,
+                externalId: techSrData['Office'],
+                name: techSrData['Office'],
+              },
+              workGroupCache
+            ),
+            dma: WorkGroup.query().ensure(
+              {
+                w2Company,
+                type: 'DMA',
+                companyId: w2Company.id,
+                externalId: techSrData['DMA'],
+                name: techSrData['DMA'],
+              },
+              workGroupCache
+            ),
+            division: WorkGroup.query().ensure(
+              {
+                w2Company,
+                type: 'Division',
+                companyId: w2Company.id,
+                externalId: techSrData['Division'],
+                name: techSrData['Division'],
+              },
+              workGroupCache
+            ),
           }),
         })
 
