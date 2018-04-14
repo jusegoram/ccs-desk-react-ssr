@@ -6,11 +6,6 @@ import * as rawModels from 'server/api/models'
 import moment from 'moment-timezone'
 import { streamToArray, sanitizeName, Timer } from 'server/util'
 
-const serviceW2Company = {
-  'Goodman Analytics': 'Goodman',
-  'DirectSat Analytics': 'DirectSat',
-}
-
 /* Sample Row Data:
   // { Region: 'AREA01',
   //   DMA: 'HOUSTON TX 1',
@@ -44,7 +39,7 @@ const serviceW2Company = {
   //   'End of Day Longitude': '0' }
 */
 
-export default async ({ csvObjStream, dataSource }) => {
+export default async ({ csvObjStream, dataSource, w2Company }) => {
   const timer = new Timer()
   timer.start('Total')
   timer.start('Initialization')
@@ -59,7 +54,7 @@ export default async ({ csvObjStream, dataSource }) => {
 
     const allEmployeeExternalIds = []
 
-    const w2CompanyName = serviceW2Company[dataSource.service]
+    const w2CompanyName = w2Company.name
     srData = _.keyBy(
       await knex
       .select('Service Region', 'Office', 'DMA', 'Division')
@@ -67,8 +62,6 @@ export default async ({ csvObjStream, dataSource }) => {
       .where({ HSP: w2CompanyName }),
       'Service Region'
     )
-
-    const w2Company = await Company.query().ensure(w2CompanyName)
 
     const datas = await streamToArray(csvObjStream, data => {
       data = _.mapValues(data, val => (!val || val === 'UNKNOWN' ? null : val))
@@ -87,10 +80,20 @@ export default async ({ csvObjStream, dataSource }) => {
       'externalId'
     )
 
+    const companyNames = _.without(_.map(_.uniqBy(datas, 'Tech Type'), 'Tech Type'), w2CompanyName)
+    const subcontractors = _.keyBy(
+      await Promise.map(companyNames, async name => {
+        const company = await Company.query().ensure(name)
+        // await company.$appendRelated('visibleDataSources', dataSource)
+        return company
+      }),
+      'name'
+    )
+
     await Promise.mapSeries(datas, async data => {
       try {
         timer.split('Ensure Company')
-        const company = await Company.query().ensure(data['Tech Type'])
+        const company = data['Tech Type'] === w2CompanyName ? w2Company : subcontractors[data['Tech Type']]
         const companyId = company.id
 
         timer.start('Employee Upsert')
@@ -238,16 +241,16 @@ export default async ({ csvObjStream, dataSource }) => {
           await teamWorkGroup.addManager(supervisor)
         }
       } catch (e) {
-        console.log(data)
+        console.error(data) // eslint-disable-line no-console
         throw e
       }
     })
 
-    // timer.split('Mark Terminated')
-    // await Employee.query()
-    // .where({ dataSourceId: dataSource.id, role: 'Tech' })
-    // .whereNotIn('externalId', allEmployeeExternalIds)
-    // .patch({ terminatedAt: moment.utc().format() })
+    timer.split('Mark Terminated')
+    await Employee.query()
+    .where({ dataSourceId: dataSource.id, role: 'Tech' })
+    .whereNotIn('externalId', allEmployeeExternalIds)
+    .patch({ terminatedAt: moment.utc().format() })
   })
   timer.stop('Total')
   console.log(timer.toString()) // eslint-disable-line no-console

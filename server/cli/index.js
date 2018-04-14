@@ -30,30 +30,10 @@ const runFunction = fn => async (args = {}, options = {}) => {
 prog
 .version('1.0.0')
 .command('import', 'download report from analytics and insert into database')
-.argument(
-  '<service>'
-  // 'the source from which to import the report: ' + importFromSiebel.sources.join(', ')
-  // new RegExp(`^${importFromSiebel.sources.join('|')}$`)
-)
-.argument(
-  '<name>'
-  // 'the name of the report to import: ' + importFromSiebel.reports.join(', ')
-  // new RegExp(`^${importFromSiebel.reports.join('|')}$`)
-)
+.argument('<companyName>')
+.argument('<dataSourceName>')
+.argument('<reportName>')
 .action(runFunction(importFromSiebel))
-.command('resaturate', 'resaturate imported report')
-.argument(
-  '<source>'
-  // 'the source from which to import the report: ' + importFromSiebel.sources.join(', '),
-  // new RegExp(`^${importFromSiebel.sources.join('|')}$`)
-)
-.argument(
-  '<reportName>'
-  // 'the name of the report to import: ' + importFromSiebel.reports.join(', '),
-  // new RegExp(`^${importFromSiebel.reports.join('|')}$`)
-)
-.argument('<cid>', 'the cid of the report to resaturate')
-.action(runFunction(resaturateReport))
 .command('crontab', 'synchronize crontab config with computer')
 .argument('<action>', 'what you want to do: test, update', /^(test|update)$/)
 .action(runFunction(crontab))
