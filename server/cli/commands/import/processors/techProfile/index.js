@@ -118,7 +118,7 @@ export default async ({ csvObjStream, dataSource }) => {
               schedule: data['Tech Schedule'],
               timezone,
               startLocationId: startLocation && startLocation.id,
-              data,
+              row: data,
             },
           })
         }
