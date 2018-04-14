@@ -308,10 +308,10 @@ export function up(knex) {
       table.string('HSP')
   })
   .createTable('workGroupWorkOrders', table => { 
-      table.uuid('workGroupId').notNullable()
       table.uuid('workOrderId').notNullable()
-      table.primary(['workGroupId', 'workOrderId'])
-      table.unique(['workOrderId', 'workGroupId'])
+      table.uuid('workGroupId').notNullable()
+      table.primary(['workOrderId', 'workGroupId'])
+      table.unique(['workGroupId', 'workOrderId'])
       table.foreign('workGroupId').references('WorkGroup.id')
       table.foreign('workOrderId').references('WorkOrder.id')
   })
