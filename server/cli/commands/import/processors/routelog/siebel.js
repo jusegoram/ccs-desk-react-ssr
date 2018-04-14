@@ -106,7 +106,14 @@ export default async ({ csvObjStream, dataSource }) => {
     const dbWorkOrders = _.keyBy(
       await knex('WorkOrder')
       .where({ dataSourceId })
-      .where('date', '>=', moment.tz('America/Los_Angeles')),
+      .where(
+        'date',
+        '>=',
+        moment
+        .tz('America/Los_Angeles')
+        .add(-1, 'day')
+        .format('YYYY-MM-DD')
+      ),
       'externalId'
     )
 
@@ -215,7 +222,7 @@ export default async ({ csvObjStream, dataSource }) => {
       )
       times.ensureWG += getTimeDiff(start)
       start = process.hrtime()
-      await Promise.map(newWorkGroups, workGroup =>
+      await Promise.mapSeries(_.uniqBy(newWorkGroups, 'id'), workGroup =>
         knex('workGroupWorkOrders').insert({
           workOrderId: workOrder.id,
           workGroupId: workGroup.id,
@@ -229,7 +236,6 @@ export default async ({ csvObjStream, dataSource }) => {
       .delete()
       times.oldWG += getTimeDiff(start)
     })
-    console.log(times)
     console.log(_.mapValues(times, time => time / 1000000))
   })
 }
