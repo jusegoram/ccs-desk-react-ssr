@@ -237,6 +237,6 @@ export default async ({ csvObjStream, dataSource }) => {
       .delete()
       times.oldWG += getTimeDiff(start)
     })
-    console.log(_.mapValues(times, time => time / 1000000))
+    console.log(_.mapValues(times, time => time / 1000000)) // eslint-disable-line no-console
   })
 }
