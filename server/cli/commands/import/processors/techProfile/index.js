@@ -71,9 +71,9 @@ export default async ({ csvObjStream, dataSource }) => {
     const w2Company = await Company.query().ensure(w2CompanyName)
 
     const datas = await streamToArray(csvObjStream, data => {
+      data = _.mapValues(data, val => (!val || val === 'UNKNOWN' ? null : val))
       if (data['Tech Type'] === 'W2' || !data['Tech Type']) data['Tech Type'] = w2CompanyName
       data.Company = data['Tech Type']
-      if (data.Company !== w2CompanyName || !data['Team ID'] || data['Team ID'] === 'UNKNOWN') delete data['Team ID']
       data.Team = data['Team ID']
       data.Tech = data['Tech User ID']
       return data
@@ -88,155 +88,165 @@ export default async ({ csvObjStream, dataSource }) => {
     )
 
     await Promise.mapSeries(datas, async data => {
-      timer.split('Ensure Company')
-      const company = await Company.query().ensure(data['Tech Type'])
-      const companyId = company.id
+      try {
+        timer.split('Ensure Company')
+        const company = await Company.query().ensure(data['Tech Type'])
+        const companyId = company.id
 
-      timer.start('Employee Upsert')
-      const dbEmployee = dbEmployees[data['Tech User ID']]
-      let employee = dbEmployee
-      if (!employee || !_.isEqual(employee.data, data)) {
-        timer.start('Create Start Location')
-        const latitude = data['Start Latitude'] / 1000000 || null
-        const longitude = data['Start Longitude'] / 1000000 || null
-        const startLocation = latitude && longitude && (await Geography.query().ensure({ latitude, longitude }))
-        const timezone = startLocation && startLocation.timezone
-        timer.stop('Create Start Location')
+        timer.start('Employee Upsert')
+        const dbEmployee = dbEmployees[data['Tech User ID']]
+        let employee = dbEmployee
+        if (!employee || !_.isEqual(employee.data, data)) {
+          timer.start('Create Start Location')
+          const latitude = data['Start Latitude'] / 1000000 || null
+          const longitude = data['Start Longitude'] / 1000000 || null
+          const startLocation = latitude && longitude && (await Geography.query().ensure({ latitude, longitude }))
+          const timezone = startLocation && startLocation.timezone
+          timer.stop('Create Start Location')
 
-        employee = await Employee.query()
-        .eager('[workGroups, startLocation]')
-        .upsert({
-          query: { dataSourceId, externalId: data['Tech User ID'] },
-          update: {
+          employee = await Employee.query()
+          .eager('[workGroups, startLocation]')
+          .upsert({
+            query: { dataSourceId, externalId: data['Tech User ID'] },
+            update: {
+              companyId,
+              alternateExternalId: data['Tech ATT UID'],
+              terminatedAt: null,
+              name: sanitizeName(data['Tech Full Name']),
+              phoneNumber: data['Tech Mobile Phone #'],
+              skills: data['Skill Package'],
+              schedule: data['Tech Schedule'],
+              timezone,
+              startLocationId: startLocation && startLocation.id,
+            },
+          })
+        }
+        allEmployeeExternalIds.push(employee.externalId)
+        timer.stop('Employee Upsert')
+
+        timer.split('Upsert Supervisor')
+        const supervisorId = data['Tech Team Supervisor Login']
+        const supervisor =
+          supervisorId &&
+          (await Employee.query().upsert({
+            query: { companyId, externalId: supervisorId },
+            update: {
+              role: 'Manager',
+              name: sanitizeName(data['Team Name']),
+              phoneNumber: data['Tech Team Supervisor Mobile #'],
+              dataSourceId: dataSource.id,
+              terminatedAt: null,
+              timezone: employee.timezone,
+            },
+          }))
+
+        timer.split('Ensure Work Groups')
+        const techSR = data['Service Region']
+        const techSrData = srData[techSR]
+        const workGroupDatas = _.filter([
+          {
+            type: 'Tech',
+            companyId: w2Company.id,
+            externalId: employee.externalId,
+            name: employee.name,
+          },
+          !!data['Team ID'] && {
+            type: 'Team',
+            companyId: w2Company.id,
+            externalId: data['Team ID'],
+            name: sanitizeName(data['Team Name']),
+          },
+          {
+            type: 'Company',
+            companyId: w2Company.id,
+            externalId: w2Company.name,
+            name: w2Company.name,
+          },
+          {
+            type: 'Company',
             companyId,
-            alternateExternalId: data['Tech ATT UID'],
-            terminatedAt: null,
-            name: sanitizeName(data['Tech Full Name']),
-            phoneNumber: data['Tech Mobile Phone #'],
-            skills: data['Skill Package'],
-            schedule: data['Tech Schedule'],
-            timezone,
-            startLocationId: startLocation && startLocation.id,
+            externalId: company.name,
+            name: company.name,
           },
-        })
+          ...(!!techSrData && [
+            {
+              type: 'Service Region',
+              companyId: w2Company.id,
+              externalId: techSR,
+              name: techSR,
+            },
+            {
+              type: 'Office',
+              companyId: w2Company.id,
+              externalId: techSrData['Office'],
+              name: techSrData['Office'],
+            },
+            {
+              type: 'DMA',
+              companyId: w2Company.id,
+              externalId: techSrData['DMA'],
+              name: techSrData['DMA'],
+            },
+            {
+              type: 'Division',
+              companyId: w2Company.id,
+              externalId: techSrData['Division'],
+              name: techSrData['Division'],
+            },
+          ]),
+        ])
+
+        timer.split('Work Groups _.differenceWith')
+        const workGroupPrimaryKey = ['companyId', 'type', 'externalId']
+        const hasSamePrimaryKey = (a, b) => _.isEqual(_.pick(a, workGroupPrimaryKey), _.pick(b, workGroupPrimaryKey))
+        const newWorkGroupDatas = _.differenceWith(workGroupDatas, employee.workGroups, hasSamePrimaryKey)
+        const obsoleteWorkGroups = _.differenceWith(employee.workGroups, workGroupDatas, hasSamePrimaryKey)
+
+        timer.split('Ensure New Work Groups')
+        const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData =>
+          WorkGroup.query().ensure(workGroupData, workGroupCache)
+        )
+
+        timer.split('Insert New Work Group Relations')
+        await Promise.mapSeries(_.uniqBy(newWorkGroups, 'id'), workGroup =>
+          knex('workGroupEmployees').insert({
+            employeeId: employee.id,
+            workGroupId: workGroup.id,
+            role: 'Tech',
+          })
+        )
+
+        timer.split('Delete Old Work Group Relations')
+        if (obsoleteWorkGroups.length) {
+          await knex('workGroupEmployees')
+          .where({ employeeId: employee.id, role: 'Tech' })
+          .whereIn('workGroupId', _.map(obsoleteWorkGroups, 'id'))
+          .delete()
+        }
+
+        timer.split('Refresh Employee Work Groups')
+        await employee.$loadRelated('workGroups')
+
+        timer.split('Set Tech Work Group')
+        const techWorkGroup = _.find(employee.workGroups, { type: 'Tech' })
+        await employee.$query().patch({ workGroupId: techWorkGroup.id })
+
+        timer.split('Set Team Manager')
+        const teamWorkGroup = _.find(employee.workGroups, { type: 'Team' })
+        if (teamWorkGroup && supervisor) {
+          await teamWorkGroup.addManager(supervisor)
+        }
+      } catch (e) {
+        console.log(data)
+        throw e
       }
-      allEmployeeExternalIds.push(employee.externalId)
-      timer.stop('Employee Upsert')
-
-      timer.split('Upsert Supervisor')
-      const supervisor = await Employee.query().upsert({
-        query: { companyId, externalId: data['Tech Team Supervisor Login'] },
-        update: {
-          role: 'Manager',
-          name: sanitizeName(data['Team Name']),
-          phoneNumber: data['Tech Team Supervisor Mobile #'],
-          dataSourceId: dataSource.id,
-          terminatedAt: null,
-          timezone: employee.timezone,
-        },
-      })
-
-      timer.split('Ensure Work Groups')
-      const techSR = data['Service Region']
-      const techSrData = srData[techSR]
-      const workGroupDatas = [
-        {
-          type: 'Tech',
-          companyId: w2Company.id,
-          externalId: employee.externalId,
-          name: employee.name,
-        },
-        {
-          type: 'Team',
-          companyId: w2Company.id,
-          externalId: data['Team ID'],
-          name: sanitizeName(data['Team Name']),
-        },
-        {
-          type: 'Company',
-          companyId: w2Company.id,
-          externalId: w2Company.name,
-          name: w2Company.name,
-        },
-        {
-          type: 'Company',
-          companyId,
-          externalId: company.name,
-          name: company.name,
-        },
-        ...(!!techSrData && [
-          {
-            type: 'Service Region',
-            companyId: w2Company.id,
-            externalId: techSR,
-            name: techSR,
-          },
-          {
-            type: 'Office',
-            companyId: w2Company.id,
-            externalId: techSrData['Office'],
-            name: techSrData['Office'],
-          },
-          {
-            type: 'DMA',
-            companyId: w2Company.id,
-            externalId: techSrData['DMA'],
-            name: techSrData['DMA'],
-          },
-          {
-            type: 'Division',
-            companyId: w2Company.id,
-            externalId: techSrData['Division'],
-            name: techSrData['Division'],
-          },
-        ]),
-      ]
-
-      timer.split('Work Groups _.differenceWith')
-      const workGroupPrimaryKey = ['companyId', 'type', 'externalId']
-      const hasSamePrimaryKey = (a, b) => _.isEqual(_.pick(a, workGroupPrimaryKey), _.pick(b, workGroupPrimaryKey))
-      const newWorkGroupDatas = _.differenceWith(workGroupDatas, employee.workGroups, hasSamePrimaryKey)
-      const obsoleteWorkGroups = _.differenceWith(employee.workGroups, workGroupDatas, hasSamePrimaryKey)
-
-      timer.split('Ensure New Work Groups')
-      const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData =>
-        WorkGroup.query().ensure(workGroupData, workGroupCache)
-      )
-
-      timer.split('Insert New Work Group Relations')
-      await Promise.mapSeries(_.uniqBy(newWorkGroups, 'id'), workGroup =>
-        knex('workGroupEmployees').insert({
-          employeeId: employee.id,
-          workGroupId: workGroup.id,
-          role: 'Tech',
-        })
-      )
-
-      timer.split('Delete Old Work Group Relations')
-      if (obsoleteWorkGroups.length) {
-        await knex('workGroupEmployees')
-        .where({ employeeId: employee.id, role: 'Tech' })
-        .whereIn('workGroupId', _.map(obsoleteWorkGroups, 'id'))
-        .delete()
-      }
-
-      timer.split('Refresh Employee Work Groups')
-      await employee.$loadRelated('workGroups')
-
-      timer.split('Set Tech Work Group')
-      const techWorkGroup = _.find(employee.workGroups, { type: 'Tech' })
-      await employee.$query().patch({ workGroupId: techWorkGroup.id })
-
-      timer.split('Set Team Manager')
-      const teamWorkGroup = _.find(employee.workGroups, { type: 'Team' })
-      await teamWorkGroup.addManager(supervisor)
     })
 
-    timer.split('Mark Terminated')
-    await Employee.query()
-    .where({ dataSourceId: dataSource.id, role: 'Tech' })
-    .whereNotIn('externalId', allEmployeeExternalIds)
-    .patch({ terminatedAt: moment.utc().format() })
+    // timer.split('Mark Terminated')
+    // await Employee.query()
+    // .where({ dataSourceId: dataSource.id, role: 'Tech' })
+    // .whereNotIn('externalId', allEmployeeExternalIds)
+    // .patch({ terminatedAt: moment.utc().format() })
   })
   timer.stop('Total')
   console.log(timer.toString()) // eslint-disable-line no-console
