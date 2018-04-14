@@ -1,5 +1,4 @@
 import { APIModel, BaseQueryBuilder } from 'server/api/util'
-import sanitizeName from 'server/util/sanitizeName'
 import { Model } from 'objection'
 import _ from 'lodash'
 
@@ -219,9 +218,6 @@ export default class Employee extends APIModel {
         join: {
           from: 'Employee.startLocationId',
           to: 'Geography.id',
-        },
-        modify: qb => {
-          qb.where('Geography.type', 'Start Location')
         },
       },
     }
