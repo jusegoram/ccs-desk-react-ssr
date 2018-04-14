@@ -12,7 +12,7 @@ exports.seed = async function() {
     },
     {
       service: 'Goodman Analytics',
-      name: 'Pending',
+      name: 'EdgeMW Routelog',
     },
     {
       service: 'DirectSat Analytics',

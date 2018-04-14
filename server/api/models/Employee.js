@@ -18,6 +18,7 @@ export default class Employee extends APIModel {
     table.string('email')
     table.string('skills')
     table.string('schedule')
+    table.jsonb('data')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
     table.unique(['externalId', 'companyId'])
@@ -96,10 +97,6 @@ export default class Employee extends APIModel {
         return this
       }
     }
-  }
-
-  async removeFromAllWorkGroups() {
-    await this.$relatedQuery('workGroups').unrelate()
   }
 
   static get relationMappings() {
