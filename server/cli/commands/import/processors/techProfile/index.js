@@ -130,7 +130,7 @@ export default async ({ csvObjStream, dataSource }) => {
             type: 'Team',
             companyId: w2Company.id,
             externalId: techData['Team ID'],
-            name: techData['Team ID'],
+            name: sanitizeName(techData['Team Name']),
           }),
           w2Company: WorkGroup.query().ensure({
             w2Company,
