@@ -5,12 +5,13 @@ export default class WorkOrder extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     // <custom>
-    table.uuid('dataSourceId').index()
+    table.uuid('dataSourceId')
     table.string('externalId').index()
     table.date('date')
     table.string('type')
     table.string('status')
     table.jsonb('data')
+    table.unique(['dataSourceId', 'externalId'])
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   `
@@ -21,8 +22,8 @@ export default class WorkOrder extends APIModel {
     workGroupWorkOrders: `
       table.uuid('workGroupId').notNullable()
       table.uuid('workOrderId').notNullable()
-      table.primary(['workGroupId', 'workOrderId'])
-      table.unique(['workOrderId', 'workGroupId'])
+      table.primary(['workOrderId', 'workGroupId'])
+      table.unique(['workGroupId', 'workOrderId'])
       table.foreign('workGroupId').references('WorkGroup.id')
       table.foreign('workOrderId').references('WorkOrder.id')
     `,
@@ -42,10 +43,12 @@ export default class WorkOrder extends APIModel {
     },
   }
 
-  static visible = ['id', 'externalId', 'type', 'status', 'date']
+  static visible = ['id', 'externalId', 'type', 'status', 'date', 'workGroups']
 
   static get QueryBuilder() {
-    return class extends BaseQueryBuilder {}
+    return class extends BaseQueryBuilder {
+      _contextFilter() {}
+    }
   }
 
   async removeFromAllWorkGroups() {
