@@ -58,11 +58,20 @@ const getDateString = timeString => {
   'Internet Connectivity': 'Y',
   Timezone: '(GMT-06:00) Central Time (US & Canada)' }
 */
-
+const times = {
+  upsert: 0,
+  other: 0,
+  diff: 0,
+  ensureWG: 0,
+  newWG: 0,
+  oldWG: 0,
+}
 export default async ({ csvObjStream, dataSource }) => {
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
-    const { WorkOrder, WorkGroup, Company, Employee } = models
+    const { WorkOrder, WorkGroup, Company } = models
+    const knex = WorkOrder.knex()
+    const dataSourceId = dataSource.id
 
     const w2CompanyName = serviceW2Company[dataSource.service]
     const srData = _.keyBy(
@@ -89,81 +98,138 @@ export default async ({ csvObjStream, dataSource }) => {
       return data
     })
 
+    const getTimeDiff = t => {
+      const diff = process.hrtime(t)
+      return diff[0] * 1000000 + diff[1] / 1000
+    }
+
+    const dbWorkOrders = _.keyBy(
+      await knex('WorkOrder')
+      .where({ dataSourceId })
+      .where('date', '>=', moment.tz('America/Los_Angeles')),
+      'externalId'
+    )
+
     await Promise.mapSeries(workOrderDatas, async data => {
-      const workOrder = await WorkOrder.query().upsert({
-        query: { dataSourceId: dataSource.id, externalId: data['Activity #'] },
-        update: {
+      let start = process.hrtime()
+      const dbWorkOrder = dbWorkOrders[data['Activity #']]
+      const workOrderQuery = WorkOrder.query()
+      .eager('workGroups')
+      .where({ dataSourceId, externalId: data['Activity #'] })
+      .first()
+      if (!dbWorkOrder) {
+        await WorkOrder.query().upsert({
+          query: { dataSourceId: dataSource.id, externalId: data['Activity #'] },
+          update: {
+            date: getDateString(data['Activity Due Date']),
+            type: data['Order Type'],
+            status: data['Status'],
+            data,
+          },
+        })
+      } else if (!_.isEqual(dbWorkOrder.data, data)) {
+        workOrderQuery
+        .patch({
           date: getDateString(data['Activity Due Date']),
           type: data['Order Type'],
           status: data['Status'],
           data,
-        },
-      })
+        })
+        .returning('*')
+      }
+      const workOrder = await workOrderQuery
+      times.upsert += getTimeDiff(start)
 
+      start = process.hrtime()
       const company = await Company.query().ensure(data.companyName)
 
       const employeeId = data.assignedTechId
       const techTeamId = data['Tech Team']
-      const workGroups = await Promise.all([
+      const workGroupDatas = [
         ...(employeeId && [
-          WorkGroup.query().ensure({
-            type: 'Tech',
+          {
             companyId: w2Company.id,
+            type: 'Tech',
             externalId: employeeId,
             name: sanitizeName(data['Tech Full Name']),
-          }),
+          },
         ]),
         ...(techTeamId && [
-          WorkGroup.query().ensure({
-            type: 'Team',
+          {
             companyId: w2Company.id,
+            type: 'Team',
             externalId: techTeamId,
             name: sanitizeName(data['Team Name']),
-          }),
+          },
         ]),
-        WorkGroup.query().ensure({
-          type: 'Company',
+        {
           companyId: w2Company.id,
+          type: 'Company',
           externalId: w2Company.name,
           name: w2Company.name,
-        }),
-        WorkGroup.query().ensure({
-          type: 'Company',
+        },
+        {
           companyId: company.id,
+          type: 'Company',
           externalId: company.name,
           name: company.name,
-        }),
+        },
         ...(!!data.SR && [
-          WorkGroup.query().ensure({
-            type: 'Service Region',
+          {
             companyId: w2Company.id,
+            type: 'Service Region',
             externalId: data.SR,
             name: data.SR,
-          }),
-          WorkGroup.query().ensure({
-            type: 'Office',
+          },
+          {
             companyId: w2Company.id,
+            type: 'Office',
             externalId: data.Office,
             name: data.Office,
-          }),
-          WorkGroup.query().ensure({
-            type: 'DMA',
+          },
+          {
             companyId: w2Company.id,
+            type: 'DMA',
             externalId: data.DMA,
             name: data.DMA,
-          }),
-          WorkGroup.query().ensure({
-            type: 'Division',
+          },
+          {
             companyId: w2Company.id,
+            type: 'Division',
             externalId: data.Division,
             name: data.Division,
-          }),
+          },
         ]),
-      ])
+      ]
+      times.other += getTimeDiff(start)
 
-      workOrder.$setRelated('workGroups', workGroups)
-      await WorkOrder.query().upsertGraph(workOrder, { relate: true, unrelate: true })
-      // await workOrder.$query().patch({ workGroupId: techWorkGroups.tech.id })
+      start = process.hrtime()
+      const workGroupPrimaryKey = ['companyId', 'type', 'externalId']
+      const hasSamePrimaryKey = (a, b) => _.isEqual(_.pick(a, workGroupPrimaryKey), _.pick(b, workGroupPrimaryKey))
+      const newWorkGroupDatas = _.differenceWith(workGroupDatas, workOrder.workGroups, hasSamePrimaryKey)
+      const obsoleteWorkGroups = _.differenceWith(workOrder.workGroups, workGroupDatas, hasSamePrimaryKey)
+      times.diff += getTimeDiff(start)
+      start = process.hrtime()
+      const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData =>
+        WorkGroup.query().ensure(workGroupData)
+      )
+      times.ensureWG += getTimeDiff(start)
+      start = process.hrtime()
+      await Promise.map(newWorkGroups, workGroup =>
+        knex('workGroupWorkOrders').insert({
+          workOrderId: workOrder.id,
+          workGroupId: workGroup.id,
+        })
+      )
+      times.newWG += getTimeDiff(start)
+      start = process.hrtime()
+      await knex('workGroupWorkOrders')
+      .where({ workOrderId: workOrder.id })
+      .whereIn('workGroupId', _.map(obsoleteWorkGroups, 'id'))
+      .delete()
+      times.oldWG += getTimeDiff(start)
     })
+    console.log(times)
+    console.log(_.mapValues(times, time => time / 1000000))
   })
 }
