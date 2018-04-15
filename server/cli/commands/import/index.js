@@ -11,16 +11,29 @@ const SiebelReportFetcher = require('./download/siebel/SiebelReportFetcher')
 const convertStringToStream = require('./download/siebel/convertStringToStream')
 const SanitizeStringStream = require('./download/siebel/SanitizeStringStream')
 
-// const analyticsCredentials = {
-//   'Goodman Analytics': {
-//     username: process.env.ANALYTICS_GOODMAN_USERNAME,
-//     password: process.env.ANALYTICS_GOODMAN_PASSWORD,
-//   },
-//   'DirectSat Analytics': {
-//     username: process.env.ANALYTICS_DIRECTSAT_USERNAME,
-//     password: process.env.ANALYTICS_DIRECTSAT_PASSWORD,
-//   },
-// }
+const analyticsCredentials = {
+  Goodman: {
+    username: 'MBMA090000',
+    password: process.env.ANALYTICS_GOODMAN_PASSWORD,
+  },
+  DirectSat: {
+    username: 'DSPA009875',
+    password: process.env.ANALYTICS_DIRECTSAT_PASSWORD,
+  },
+}
+
+const analyticsReportNames = {
+  Siebel: {
+    'Tech Profile': 'Tech Profile',
+    Routelog: 'routelog',
+  },
+  Edge: {
+    'MW Routelog': 'EDGEMW Bll',
+    'SE Routelog': 'EDGESE Bll',
+    'SW Routelog': 'EDGESW Bll',
+    'W Routelog': 'EDGEW Bll',
+  },
+}
 
 const processors = {
   Siebel: {
@@ -31,24 +44,24 @@ const processors = {
     'MW Routelog': edgeRoutelogProcessor,
   },
 }
-const mockFiles = {
-  Goodman: {
-    Siebel: {
-      'Tech Profile': 'techProfile.csv',
-      Routelog: 'routelog.csv',
-    },
-    Edge: {
-      'MW Routelog': 'edge.mw.csv',
-    },
-  },
-  DirectSat: {
-    Siebel: {
-      'Tech Profile': 'techProfile.ds.csv',
-      Routelog: 'routelog.ds.csv',
-    },
-    Edge: {},
-  },
-}
+// const mockFiles = {
+//   Goodman: {
+//     Siebel: {
+//       'Tech Profile': 'techProfile.csv',
+//       Routelog: 'routelog.csv',
+//     },
+//     Edge: {
+//       'MW Routelog': 'edge.mw.csv',
+//     },
+//   },
+//   DirectSat: {
+//     Siebel: {
+//       'Tech Profile': 'techProfile.ds.csv',
+//       Routelog: 'routelog.ds.csv',
+//     },
+//     Edge: {},
+//   },
+// }
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
 module.exports = async ({ companyName, dataSourceName, reportName }) => {
@@ -62,18 +75,19 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
   .insert({ dataSourceId: dataSource.id, reportName })
   .returning('*')
   try {
-    // const credentials = analyticsCredentials[service]
+    const credentials = analyticsCredentials[companyName]
     await dataImport.$query().patch({ status: 'Downloading' })
-    // const csvString = await new SiebelReportFetcher(credentials).fetchReport(dataSource.report, {
-    //   loggingPrefix: 'CCS CLI',
-    //   // screenshotsDirectory,
-    //   // screenshotsPrefix: `${dataSource.service}_${dataSource.report}`,
-    //   horsemanConfig: {
-    //     cookiesFile: path.join(__dirname, `${dataSource.service}_cookies.txt`),
-    //   },
-    // })
-    const csvString =
-      fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFiles[companyName][dataSourceName][reportName])) + ''
+    const analyticsReportName = analyticsReportNames[dataSourceName][reportName]
+    const csvString = await new SiebelReportFetcher(credentials).fetchReport(analyticsReportName, {
+      loggingPrefix: 'CCS CLI',
+      // screenshotsDirectory,
+      // screenshotsPrefix: `${dataSource.service}_${dataSource.report}`,
+      horsemanConfig: {
+        cookiesFile: path.join(__dirname, `${dataSource.service}_cookies.txt`),
+      },
+    })
+    // const mockFile = mockFiles[companyName][dataSourceName][reportName]
+    // const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
     const csvObjStream = convertStringToStream(csvString)
     .pipe(new SanitizeStringStream())
     .pipe(
@@ -85,12 +99,10 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
     )
     // cleanCsvStream.pipe(fs.createWriteStream(path.resolve(__dirname, 'techProfile.csv')))
     await dataImport.$query().patch({ status: 'Processing', downloadedAt: moment().format() })
-    await processors[dataSourceName][reportName]({ csvObjStream, dataSource, w2Company })
+    // await processors[dataSourceName][reportName]({ csvObjStream, dataSource, w2Company })
     await dataImport.$query().patch({ status: 'Complete', completedAt: moment().format() })
   } catch (e) {
     await dataImport.$query().patch({ status: 'Errored' })
     throw e
   }
 }
-
-module.exports.reports = Object.keys(SiebelReportFetcher.availableReports)
