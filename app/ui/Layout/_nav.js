@@ -12,7 +12,7 @@ export default {
     },
     {
       name: 'Techs',
-      url: '/techs',
+      url: '/organization/techs',
       icon: 'fa fa-users',
     },
     {

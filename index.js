@@ -48,7 +48,7 @@ nextApp
 
       const passwordResetTokenMatch = pathname.match(/^\/reset-password\/(.+)$/)
       const inviteTokenMatch = pathname.match(/^\/invites\/accept\/(.+)$/)
-      const employeeMatch = pathname.match(/^\/tech\/(.+)$/)
+      const employeeMatch = pathname.match(/^\/organization\/tech\/(.+)$/)
       if (passwordResetTokenMatch) {
         try {
           const passwordResetToken = passwordResetTokenMatch[1]
@@ -62,7 +62,7 @@ nextApp
         nextApp.render(req, res, '/invites/accept', query)
       } else if (employeeMatch) {
         query.employeeId = employeeMatch[1]
-        nextApp.render(req, res, '/tech', query)
+        nextApp.render(req, res, '/organization/tech', query)
       } else {
         nextRequestHandler(req, res, parsedUrl)
       }
