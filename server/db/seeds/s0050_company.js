@@ -17,14 +17,23 @@ exports.seed = async function(knex) {
           order: 0,
           externalId: 'DirectSat',
         },
+        {
+          '#id': 'directsatEmpath',
+          type: 'Company',
+          name: 'EMPATH',
+          order: 0,
+          externalId: 'EMPATH',
+        },
       ],
       dataSources: [
         {
+          '#id': 'directsatSiebel',
           company: { '#ref': 'directsatCompany' },
           name: 'Siebel',
           reports: JSON.stringify(['Tech Profile', 'Routelog']),
         },
         {
+          '#id': 'directsatEdge',
           company: { '#ref': 'directsatCompany' },
           name: 'Edge',
           reports: JSON.stringify(['MW Routelog']),
@@ -42,17 +51,44 @@ exports.seed = async function(knex) {
           order: 0,
           externalId: 'Goodman',
         },
+        {
+          '#id': 'goodmanEmpath',
+          type: 'Company',
+          name: 'EMPATH',
+          order: 0,
+          externalId: 'EMPATH',
+        },
       ],
       dataSources: [
         {
+          '#id': 'goodmanSiebel',
           company: { '#ref': 'goodmanCompany' },
           name: 'Siebel',
           reports: JSON.stringify(['Tech Profile', 'Routelog']),
         },
         {
+          '#id': 'goodmanEdge',
           company: { '#ref': 'goodmanCompany' },
           name: 'Edge',
           reports: JSON.stringify(['MW Routelog']),
+        },
+      ],
+      employees: [
+        {
+          '#id': 'goodmanAdmin',
+          name: 'Joe Goodman',
+          email: 'goodman@example.com',
+          externalId: 'goodman@example.com',
+          phoneNumber: '5555555555',
+          timezone: 'America/Chicago',
+          role: 'Manager',
+          account: {
+            name: 'Joe Goodman',
+            email: 'goodman@example.com',
+            password: 'demo',
+            company: { '#ref': 'goodmanCompany' },
+            permissions: [{ type: 'read', workGroups: [{ '#ref': 'goodman' }] }],
+          },
         },
       ],
     },
@@ -82,7 +118,10 @@ exports.seed = async function(knex) {
             password: 'demo',
             root: true,
             company: { '#ref': 'ccsCompany' },
-            permissions: [{ type: 'read', workGroups: [{ '#ref': 'goodman' }] }],
+            permissions: [
+              { type: 'read', workGroups: [{ '#ref': 'goodman' }] },
+              { type: 'read', workGroups: [{ '#ref': 'directsat' }] },
+            ],
           },
         },
         {
@@ -107,6 +146,37 @@ exports.seed = async function(knex) {
             password: 'demo',
             company: { '#ref': 'ccsCompany' },
             permissions: [{ type: 'read' }],
+          },
+        },
+      ],
+    },
+    {
+      '#id': 'empathCompany',
+      name: 'Empath',
+      dataSources: [
+        { '#ref': 'goodmanSiebel' },
+        { '#ref': 'goodmanEdge' },
+        { '#ref': 'directsatSiebel' },
+        { '#ref': 'directsatEdge' },
+      ],
+      employees: [
+        {
+          '#id': 'empathAdmin',
+          name: 'Joe Empath',
+          email: 'empath@example.com',
+          externalId: 'empath@example.com',
+          phoneNumber: '5555555555',
+          timezone: 'America/Chicago',
+          role: 'Manager',
+          account: {
+            name: 'Joe Empath',
+            email: 'empath@example.com',
+            password: 'demo',
+            company: { '#ref': 'empathCompany' },
+            permissions: [
+              { type: 'read', workGroups: [{ '#ref': 'goodmanEmpath' }] },
+              { type: 'read', workGroups: [{ '#ref': 'directsatEmpath' }] },
+            ],
           },
         },
       ],

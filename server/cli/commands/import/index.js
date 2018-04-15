@@ -41,6 +41,13 @@ const mockFiles = {
       'MW Routelog': 'edge.mw.csv',
     },
   },
+  DirectSat: {
+    Siebel: {
+      'Tech Profile': 'techProfile.ds.csv',
+      Routelog: 'routelog.ds.csv',
+    },
+    Edge: {},
+  },
 }
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
@@ -65,7 +72,8 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
     //     cookiesFile: path.join(__dirname, `${dataSource.service}_cookies.txt`),
     //   },
     // })
-    const csvString = fs.readFileSync(path.resolve(__dirname, mockFiles[companyName][dataSourceName][reportName])) + ''
+    const csvString =
+      fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFiles[companyName][dataSourceName][reportName])) + ''
     const csvObjStream = convertStringToStream(csvString)
     .pipe(new SanitizeStringStream())
     .pipe(

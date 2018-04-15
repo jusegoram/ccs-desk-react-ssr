@@ -90,7 +90,7 @@ export default class Employee extends APIModel {
         qb.where(function() {
           session.account.permissions.forEach(permission => {
             const workGroupsIds = _.map(permission.workGroups, 'id')
-            this.whereIn('workGroups.id', workGroupsIds)
+            this.orWhereIn('workGroups.id', workGroupsIds)
           })
         })
         return this
