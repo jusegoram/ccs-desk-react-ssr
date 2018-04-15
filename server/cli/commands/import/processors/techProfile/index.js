@@ -94,7 +94,6 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
       try {
         timer.split('Ensure Company')
         const company = data['Tech Type'] === w2CompanyName ? w2Company : subcontractors[data['Tech Type']]
-        const companyId = company.id
 
         timer.start('Employee Upsert')
         const dbEmployee = dbEmployees[data['Tech User ID']]
@@ -112,7 +111,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
           .upsert({
             query: { dataSourceId, externalId: data['Tech User ID'] },
             update: {
-              companyId,
+              companyId: company.id,
               alternateExternalId: data['Tech ATT UID'],
               terminatedAt: null,
               name: sanitizeName(data['Tech Full Name']),
@@ -168,7 +167,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
           },
           {
             type: 'Company',
-            companyId,
+            companyId: w2Company.id,
             externalId: company.name,
             name: company.name,
           },
