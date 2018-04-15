@@ -26,8 +26,6 @@ const selector = {
   exportHtml: '.ViewContent > table > tbody > tr > td:last-child',
 }
 
-const isOnUbuntu = process.env.HOME === '/root' || process.env.HOME === '/home/ubuntu'
-
 const generateGetScreenshotPath = options => screenshotName =>
   path.join(options.screenshotsDirectory, `${options.screenshotsPrefix}${screenshotName}.png`)
 const generateFormatLog = options => output =>

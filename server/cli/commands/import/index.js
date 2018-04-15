@@ -1,4 +1,4 @@
-import fs from 'fs'
+// import fs from 'fs'
 import path from 'path'
 import csv from 'csv'
 import moment from 'moment-timezone'
@@ -44,30 +44,30 @@ const processors = {
     'MW Routelog': edgeRoutelogProcessor,
   },
 }
-const mockFiles = {
-  Goodman: {
-    Siebel: {
-      'Tech Profile': 'full/Goodman/techProfile.csv',
-      Routelog: 'full/Goodman/routelog.csv',
-    },
-    Edge: {
-      'MW Routelog': 'full/Goodman/edge.mw.csv',
-      'SE Routelog': 'full/Goodman/edge.se.csv',
-      'SW Routelog': 'full/Goodman/edge.sw.csv',
-    },
-  },
-  DirectSat: {
-    Siebel: {
-      'Tech Profile': 'full/DirectSat/techProfile.csv',
-      Routelog: 'full/DirectSat/routelog.csv',
-    },
-    Edge: {
-      'MW Routelog': 'full/DirectSat/edge.mw.csv',
-      'SE Routelog': 'full/DirectSat/edge.se.csv',
-      'SW Routelog': 'full/DirectSat/edge.sw.csv',
-    },
-  },
-}
+// const mockFiles = {
+//   Goodman: {
+//     Siebel: {
+//       'Tech Profile': 'full/Goodman/techProfile.csv',
+//       Routelog: 'full/Goodman/routelog.csv',
+//     },
+//     Edge: {
+//       'MW Routelog': 'full/Goodman/edge.mw.csv',
+//       'SE Routelog': 'full/Goodman/edge.se.csv',
+//       'SW Routelog': 'full/Goodman/edge.sw.csv',
+//     },
+//   },
+//   DirectSat: {
+//     Siebel: {
+//       'Tech Profile': 'full/DirectSat/techProfile.csv',
+//       Routelog: 'full/DirectSat/routelog.csv',
+//     },
+//     Edge: {
+//       'MW Routelog': 'full/DirectSat/edge.mw.csv',
+//       'SE Routelog': 'full/DirectSat/edge.se.csv',
+//       'SW Routelog': 'full/DirectSat/edge.sw.csv',
+//     },
+//   },
+// }
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
 module.exports = async ({ companyName, dataSourceName, reportName }) => {
