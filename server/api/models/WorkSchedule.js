@@ -30,7 +30,11 @@ export default class WorkSchedule extends APIModel {
   static visible = ['id', 'employee', 'day', 'start', 'end']
 
   static get QueryBuilder() {
-    return class extends BaseQueryBuilder {}
+    return class extends BaseQueryBuilder {
+      _contextFilter() {
+        return super._contextFilter()
+      }
+    }
   }
 
   static get relationMappings() {

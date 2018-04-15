@@ -37,7 +37,11 @@ export default class Measurement extends APIModel {
   static visible = ['id', 'date', 'name', 'value', 'workGroup']
 
   static get QueryBuilder() {
-    return class extends BaseQueryBuilder {}
+    return class extends BaseQueryBuilder {
+      _contextFilter() {
+        return super._contextFilter()
+      }
+    }
   }
 
   static get relationMappings() {

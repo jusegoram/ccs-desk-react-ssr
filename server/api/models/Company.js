@@ -27,7 +27,7 @@ export default class Company extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        this.whereRaw('FALSE')
+        return super._contextFilter()
       }
       async ensure(name, { onInsert = identity } = {}) {
         if (companies[name]) return companies[name]

@@ -49,8 +49,8 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        const { session } = this.context()
-        if (!session) return this.whereRaw('FALSE')
+        const { session } = super._contextFilter().context()
+        if (!session) return this
         if (session.account.employee) this.where({ employeeId: session.account.employee.id })
         return this
       }

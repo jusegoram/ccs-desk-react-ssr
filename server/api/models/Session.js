@@ -41,10 +41,10 @@ export default class Session extends withDeletedAt(APIModel) {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        const { session } = this.context()
-        if (session === undefined) return
-        if (session === null) return this.whereRaw('FALSE')
+        const { session } = super._contextFilter().context()
+        if (!session) return this
         this.where({ 'Session.id': session.id })
+        return this
       }
     }
   }

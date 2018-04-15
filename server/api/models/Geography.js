@@ -62,7 +62,7 @@ export default class Geography extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        this.whereRaw('FALSE')
+        return super._contextFilter()
       }
       patch() {
         throw new Error('Calling patch on immutable model Geography')

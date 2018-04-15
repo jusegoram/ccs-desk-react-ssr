@@ -49,7 +49,11 @@ export default class Report extends withDeletedAt(APIModel) {
   static visible = ['id', 'name', 'createdAt', 'completedAt', 'questions', 'creator', 'template']
 
   static get QueryBuilder() {
-    return class extends BaseQueryBuilder {}
+    return class extends BaseQueryBuilder {
+      _contextFilter() {
+        return super._contextFilter()
+      }
+    }
   }
 
   static get relationMappings() {
