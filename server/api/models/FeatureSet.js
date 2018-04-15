@@ -33,10 +33,7 @@ export default class FeatureSet extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        const { session } = this.context()
-        if (!session) return this.whereRaw('FALSE')
-        if (session.account.employee) this.where({ id: session.account.employee.id })
-        return this
+        return super._contextFilter()
       }
     }
   }

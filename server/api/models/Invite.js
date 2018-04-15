@@ -1,10 +1,10 @@
 import { APIModel, BaseQueryBuilder } from 'server/api/util'
 import { Model } from 'objection'
-import { GraphQLString, GraphQLList } from 'graphql'
-import ExpectedError from 'server/errors/ExpectedError'
-import _ from 'lodash'
-import sendEmail from 'server/util/sendEmail'
-import inviteEmail from 'server/emails/invite'
+// import { GraphQLString, GraphQLList } from 'graphql'
+// import ExpectedError from 'server/errors/ExpectedError'
+// import _ from 'lodash'
+// import sendEmail from 'server/util/sendEmail'
+// import inviteEmail from 'server/emails/invite'
 
 export default class Invite extends APIModel {
   static knexCreateTable = `
@@ -48,10 +48,10 @@ export default class Invite extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        const { session } = this.context()
-        if (session === undefined) return
-        if (session === null) return this.whereRaw('FALSE')
+        const { session } = super._contextFilter().context()
+        if (!session) return this
         this.where({ 'Invite.senderId': session.account.id })
+        return this
       }
     }
   }

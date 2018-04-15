@@ -80,10 +80,12 @@ export default class WorkGroup extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
+        super._contextFilter()
         // const { session } = this.context()
         // if (session === undefined) return
         // if (session === null) return this.whereRaw('FALSE')
         this.orderBy('WorkGroup.order')
+        return this
       }
 
       async ensure({ companyId, type, externalId, name }, cache) {

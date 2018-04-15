@@ -37,7 +37,9 @@ export default class Appointment extends APIModel {
 
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
-      _contextFilter() {}
+      _contextFilter() {
+        return super._contextFilter()
+      }
     }
   }
 

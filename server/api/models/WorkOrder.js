@@ -47,7 +47,9 @@ export default class WorkOrder extends APIModel {
 
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
-      _contextFilter() {}
+      _contextFilter() {
+        return super._contextFilter()
+      }
     }
   }
 

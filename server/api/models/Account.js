@@ -52,13 +52,12 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        const { session } = this.context()
-        if (session === undefined) return
-        if (session === null) return this.whereRaw('FALSE')
+        const { session } = super._contextFilter().context()
         if (!session.rootAccount) {
           this.where({ id: session.account.id })
         }
         this.orderByRaw('ABS(? - "Account".order)', session.account.order)
+        return this
       }
     }
   }

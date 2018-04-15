@@ -39,7 +39,11 @@ export default class Vehicle extends APIModel {
   static visible = ['id', 'externalId']
 
   static get QueryBuilder() {
-    return class extends BaseQueryBuilder {}
+    return class extends BaseQueryBuilder {
+      _contextFilter() {
+        return super._contextFilter()
+      }
+    }
   }
 
   static get relationMappings() {
