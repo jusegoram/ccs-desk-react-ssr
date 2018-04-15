@@ -129,7 +129,7 @@ class SiebelReportFetcher {
       cookiesFile: path.join(__dirname, 'cookies.txt'),
       injectBluebird: false,
       injectJquery: false,
-      phantomPath: isOnUbuntu ? '/usr/bin/phantomjs' : '/usr/local/bin/phantomjs',
+      phantomPath: '/usr/local/bin/phantomjs',
     }
 
     if (options.loggingPrefix) {
