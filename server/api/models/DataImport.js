@@ -45,7 +45,7 @@ export default class DataImport extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        // this.whereRaw('FALSE')
+        return super._contextFilter()
       }
     }
   }

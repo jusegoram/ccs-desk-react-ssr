@@ -40,7 +40,11 @@ export default class Permission extends withDeletedAt(APIModel) {
   static visible = ['id', 'readOnly', 'workGroup']
 
   static get QueryBuilder() {
-    return class extends BaseQueryBuilder {}
+    return class extends BaseQueryBuilder {
+      _contextFilter() {
+        return super._contextFilter()
+      }
+    }
   }
 
   static get relationMappings() {

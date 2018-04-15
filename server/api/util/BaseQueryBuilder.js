@@ -3,8 +3,8 @@ import { QueryBuilder, raw } from 'objection'
 export default class extends QueryBuilder {
   _contextFilter() {
     const { session } = this.context()
-    if (session === undefined) return this
-    if (session === null) return this.whereRaw('FALSE')
+    if (!session) this.whereRaw('FALSE')
+    return this
   }
   near(field, { lat, lng, radius }) {
     this.whereRaw('ST_Distance(ST_Point(?, ?)::geography, ??::geography) < ?', [lng, lat, field, radius]).orderBy(
