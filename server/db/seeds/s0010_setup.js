@@ -5,7 +5,9 @@ exports.seed = function(knex) {
 
   return knex
   .raw(DROP_ALL_TABLES_QUERY)
-  .then(() => knex('knex_migrations').delete())
+  .then(() => knex.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'))
+  .then(() => knex.raw('CREATE EXTENSION IF NOT EXISTS postgis'))
+  .then(async () => (await knex.schema.hasTable('knex_migrations')) && knex('knex_migrations').delete())
   .then(() => knex.migrate.latest())
 }
 
