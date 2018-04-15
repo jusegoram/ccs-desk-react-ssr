@@ -1,9 +1,9 @@
 import React from 'react'
 import ReactTable from 'react-table'
 import { Query } from 'react-apollo'
-import moment from 'moment-timezone'
-import { Card, CardHeader, CardBody, Button } from 'reactstrap'
-import alert from 'sweetalert'
+// import moment from 'moment-timezone'
+import { Card, CardHeader, CardBody } from 'reactstrap'
+// import alert from 'sweetalert'
 import Link from 'next/link'
 
 import asNextJSPage from 'app/util/asNextJSPage'
@@ -46,7 +46,8 @@ export default asNextJSPage(
                       onClick={() => {
                         window.open('https://endeavorfleet.com/download/timecards')
                         alert(
-                          "The download should be starting. If it hasn't, verify that your popup blocker isn't preventing it from opening."
+                          "The download should be starting. "
+                          + "If it hasn't, verify that your popup blocker isn't preventing it from opening."
                         )
                       }}
                     >
