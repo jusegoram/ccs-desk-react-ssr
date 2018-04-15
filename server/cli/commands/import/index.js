@@ -94,8 +94,8 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
         cookiesFile: path.join(__dirname, `${companyName}_cookies.txt`),
       },
     })
-    const mockFile = mockFiles[companyName][dataSourceName][reportName]
-    const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
+    // const mockFile = mockFiles[companyName][dataSourceName][reportName]
+    // const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
     const csvObjStream = convertStringToStream(csvString)
     .pipe(new SanitizeStringStream())
     .pipe(
