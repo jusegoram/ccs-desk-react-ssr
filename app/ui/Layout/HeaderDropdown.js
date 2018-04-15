@@ -152,13 +152,15 @@ class HeaderDropdown extends Component {
               <i className="fa icon-book-open" /> View Invites
             </DropdownItem>
           </Link> */}
-          {p(props, 'session.rootAccount') && <Link shallow href="/root/mimic">
-            <DropdownItem onClick={() => this.logout(p(props, 'session.id'))}>
-              <i className="fa fa-user-circle" /> Mimic User
-            </DropdownItem>
-          </Link>}
+          {p(props, 'session.rootAccount') && (
+            <Link shallow href="/root/mimic">
+              <DropdownItem onClick={() => this.logout(p(props, 'session.id'))}>
+                <i className="fa fa-user-secret" style={{ fontSize: 18 }} /> Mimic User
+              </DropdownItem>
+            </Link>
+          )}
           <DropdownItem onClick={() => this.logout(p(props, 'session.id'))}>
-            <i className="fa fa-lock" /> Logout
+            <i className="fa fa-lock" style={{ fontSize: 18 }} /> Logout
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>
@@ -332,7 +334,13 @@ class HeaderDropdown extends Component {
     const { notif, accnt, tasks, mssgs } = this.props
     return notif
       ? this.dropNotif()
-      : accnt ? this.dropAccnt() : tasks ? this.dropTasks() : mssgs ? this.dropMssgs() : null
+      : accnt
+        ? this.dropAccnt()
+        : tasks
+          ? this.dropTasks()
+          : mssgs
+            ? this.dropMssgs()
+            : null
   }
 }
 
