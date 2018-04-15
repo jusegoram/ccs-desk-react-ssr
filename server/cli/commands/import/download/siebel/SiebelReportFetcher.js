@@ -18,7 +18,7 @@ const selector = {
   passwordInput: '#password',
   loginSubmitButton:
     'body > div > div.ping-body-container > div:nth-child(2) > form > div.ping-buttons > a.ping-button.normal.allow',
-  navMenuItems: '#PageContentOuterDiv #DashboardPageContentDiv .FitContent table.ColumnTable',
+  navMenuItems: '#PageContentOuterDiv #DashboardPageContentDiv',
   getNthNavMenuReportLink(n) {
     return `#PageContentOuterDiv #DashboardPageContentDiv .FitContent .ColumnTable > tbody > tr:nth-child(${1 +
       2 * n[0]}) .SectionTable table tr:nth-child(${1 + 2 * n[1]}) a`
@@ -35,15 +35,6 @@ const generateFormatLog = options => output =>
 
 class SiebelReportFetcher {
   static initClass() {
-    this.availableReports = {
-      'Tech Profile': 'Tech Profile',
-      Routelog: 'Route Log - Time - Zones',
-      // BBE: 'BBE+BBR',
-      // Sclosed: 'Sclosed',
-      Pending: 'Pending',
-      // AIQNum: 'Closed_AiQ-Num',
-      // AIQDen: 'Closed_AiQ-Den',
-    }
     this.reportParamsPageHandlers = {
       Sclosed: function(horseman) {
         const twoDaysAgo = moment().add(-2, 'day')
@@ -82,7 +73,7 @@ class SiebelReportFetcher {
     this.fetchReport = this.fetchReport.bind(this)
     this.attemptToFetchReport = this.attemptToFetchReport.bind(this)
     this.credentials = credentials
-    if (!this.credentials || !this.credentials.username || !this.credentials.password) {
+    if (!credentials || !credentials.username || !credentials.password) {
       throw new Error('Credentials required.')
     }
   }
@@ -102,7 +93,7 @@ class SiebelReportFetcher {
 
     let retries = 0
     var attempt = () => {
-      const reportLinkText = SiebelReportFetcher.availableReports[reportName]
+      const reportLinkText = reportName
       return Promise.resolve()
       .then(() => {
         return this.attemptToFetchReport(reportLinkText, options)
@@ -147,16 +138,6 @@ class SiebelReportFetcher {
 
     const getScreenshotPath = generateGetScreenshotPath(options)
 
-    if (Object.values(SiebelReportFetcher.availableReports).indexOf(reportLinkText) === -1) {
-      return Promise.reject(
-        new Error(
-          `Invalid report name: ${reportLinkText}. Please specify one of: ${Object.values(
-            SiebelReportFetcher.availableReports
-          ).join(', ')}`
-        )
-      )
-    }
-
     // for referencing this from child scopes
     const thisReportFetcher = this
 
@@ -190,17 +171,17 @@ class SiebelReportFetcher {
           }
 
           thisChain = thisChain
-          // wait for username to be present
+            // wait for username to be present
           .waitForSelector(selector.usernameInput)
-          // wait for password to be present
+            // wait for password to be present
           .waitForSelector(selector.passwordInput)
-          // wait for submit button to be present
+            // wait for submit button to be present
           .waitForSelector(selector.loginSubmitButton)
-          // wait half a second, just to be sure
+            // wait half a second, just to be sure
           .wait(500)
-          // fill in username
+            // fill in username
           .type(selector.usernameInput, thisReportFetcher.credentials.username)
-          // fill in password
+            // fill in password
           .type(selector.passwordInput, thisReportFetcher.credentials.password)
 
           if (options.screenshotsDirectory) {
@@ -209,7 +190,7 @@ class SiebelReportFetcher {
 
           thisChain = thisChain
           .wait(1000)
-          // click log in button
+            // click log in button
           .click(selector.loginSubmitButton)
 
           if (options.loggingPrefix) {
@@ -236,9 +217,9 @@ class SiebelReportFetcher {
       }
 
       horseman = horseman
-      // grab the entire DOM for the nav menu items
+        // grab the entire DOM for the nav menu items
       .html(selector.navMenuItems)
-      // use cheerio to browse the DOM and ensure that you know which link gets which report
+        // use cheerio to browse the DOM and ensure that you know which link gets which report
       .then(function(html) {
         const dashboardLinkClickHandlers = {}
         const $ = cheerio.load(html)
@@ -276,7 +257,7 @@ class SiebelReportFetcher {
       }
 
       horseman = horseman
-      // navigate to the generated URL
+        // navigate to the generated URL
       .then(function(reportUrl) {
         return this.openTab(reportUrl)
       })
@@ -299,10 +280,10 @@ class SiebelReportFetcher {
         horseman = horseman.log(formatLog('\nGenerating CSV download URL...'))
       }
       return (horseman = horseman
-      // grab the entire DOM for the links at the bottom
+        // grab the entire DOM for the links at the bottom
       .html(selector.exportHtml)
-      // use cheerio to locate the menu item you want - namely, the one labeled "CSV Format"
-      // once you have it, parse its "onclick" handler in order to generate the download URL
+        // use cheerio to locate the menu item you want - namely, the one labeled "CSV Format"
+        // once you have it, parse its "onclick" handler in order to generate the download URL
       .then(html => {
         const $ = cheerio.load(html)
         for (const el of Array.from($('.NQWMenuItem').toArray())) {
