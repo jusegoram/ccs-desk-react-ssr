@@ -32,7 +32,7 @@ export default class DataSource extends APIModel {
     },
   }
 
-  static visible = ['id', 'name']
+  static visible = ['id', 'name', 'company']
 
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {

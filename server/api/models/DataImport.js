@@ -23,18 +23,29 @@ export default class DataImport extends APIModel {
 
     properties: {
       id: { type: 'string' },
+      reportName: { type: 'string' },
       status: { type: 'string' },
       createdAt: { type: 'string', format: 'date-time' },
-      completedAt: { type: 'string', format: 'date-time' },
+      downloadedAt: { type: ['string', 'null'], format: 'date-time' },
+      completedAt: { type: ['string', 'null'], format: 'date-time' },
     },
   }
 
-  static visible = ['id', 'status', 'dataSource', 'createdAt', 'downloadedAt', 'completedAt']
+  static visible = [
+    'id',
+    'reportName',
+    'status',
+    'dataSource',
+    'createdAt',
+    'downloadedAt',
+    'completedAt',
+    'downloadedAt',
+  ]
 
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        this.whereRaw('FALSE')
+        // this.whereRaw('FALSE')
       }
     }
   }

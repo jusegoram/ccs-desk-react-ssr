@@ -13,7 +13,7 @@ export default {
     {
       name: 'Techs',
       url: '/techs',
-      icon: 'icon-people',
+      icon: 'fa fa-users',
     },
     {
       title: true,
@@ -28,10 +28,10 @@ export default {
       url: '/data/techs',
       icon: 'fa fa-users',
     },
-    // {
-    //   name: 'Work Order Data',
-    //   url: '/data/work-orders',
-    //   icon: 'fa fa-car',
-    // },
+    {
+      name: 'Work Order Data',
+      url: '/data/work-orders',
+      icon: 'fa fa-tasks',
+    },
   ],
 }
