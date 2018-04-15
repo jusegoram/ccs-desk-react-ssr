@@ -24,10 +24,10 @@ module.exports = {
   production: {
     client: 'postgresql',
     connection: {
-      host: '',
+      host: 'ccs2.cljr4tpdvim0.us-east-1.rds.amazonaws.com',
       user: 'master',
       password: process.env.DB_PASSWORD_PRODUCTION,
-      database: 'fleet',
+      database: 'ccs2',
       multipleStatements: true,
       charset: 'utf8',
     },
