@@ -59,8 +59,8 @@ const mockFiles = {
   },
   DirectSat: {
     Siebel: {
-      'Tech Profile': 'full/DirectSat/techProfile.ds.csv',
-      Routelog: 'full/DirectSat/routelog.ds.csv',
+      'Tech Profile': 'full/DirectSat/techProfile.csv',
+      Routelog: 'full/DirectSat/routelog.csv',
     },
     Edge: {
       'MW Routelog': 'full/DirectSat/edge.mw.csv',
@@ -94,8 +94,8 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
         cookiesFile: path.join(__dirname, `${companyName}_cookies.txt`),
       },
     })
-    // const mockFile = mockFiles[companyName][dataSourceName][reportName]
-    // const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
+    const mockFile = mockFiles[companyName][dataSourceName][reportName]
+    const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
     const csvObjStream = convertStringToStream(csvString)
     .pipe(new SanitizeStringStream())
     .pipe(
@@ -107,7 +107,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
     )
     // cleanCsvStream.pipe(fs.createWriteStream(path.resolve(__dirname, 'techProfile.csv')))
     await dataImport.$query().patch({ status: 'Processing', downloadedAt: moment().format() })
-    // await processors[dataSourceName][reportName]({ csvObjStream, dataSource, w2Company })
+    await processors[dataSourceName][reportName]({ csvObjStream, dataSource, w2Company })
     await dataImport.$query().patch({ status: 'Complete', completedAt: moment().format() })
   } catch (e) {
     await dataImport.$query().patch({ status: 'Errored' })
