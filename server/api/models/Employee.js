@@ -85,12 +85,9 @@ export default class Employee extends APIModel {
       _contextFilter() {
         const { session } = this.context()
         if (!session) return this.whereRaw('FALSE')
-        const qb = this
-        qb.joinRelation('workGroups')
-        qb.where(function() {
+        this.joinRelation('workGroups').where(function() {
           session.account.permissions.forEach(permission => {
-            const workGroupsIds = _.map(permission.workGroups, 'id')
-            this.orWhereIn('workGroups.id', workGroupsIds)
+            this.orWhereIn('workGroups.id', _.map(permission.workGroups, 'id'))
           })
         })
         return this
