@@ -221,7 +221,12 @@ class SiebelReportFetcher {
       .html(selector.navMenuItems)
         // use cheerio to browse the DOM and ensure that you know which link gets which report
       .then(function(html) {
-        const dashboardLinkClickHandlers = {}
+        const dashboardLinkClickHandlers = {
+          'EDGEMW Bll': horseman => horseman.click('.promptButtonsCell > input'),
+          'EDGESE Bll': horseman => horseman.click('.promptButtonsCell > input'),
+          'EDGESW Bll': horseman => horseman.click('.promptButtonsCell > input'),
+          'EDGEW Bll': horseman => horseman.click('.promptButtonsCell > input'),
+        }
         const $ = cheerio.load(html)
         const allLinks = $('a')
         .toArray()

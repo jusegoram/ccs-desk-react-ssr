@@ -83,7 +83,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
       // screenshotsDirectory,
       // screenshotsPrefix: `${dataSource.service}_${dataSource.report}`,
       horsemanConfig: {
-        cookiesFile: path.join(__dirname, `${dataSource.service}_cookies.txt`),
+        cookiesFile: path.join(__dirname, `${companyName}_cookies.txt`),
       },
     })
     // const mockFile = mockFiles[companyName][dataSourceName][reportName]
