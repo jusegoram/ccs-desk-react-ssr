@@ -1,8 +1,7 @@
 import React from 'react'
-import autobind from 'autobind-decorator'
 import ReactTable from 'react-table'
 import { Query } from 'react-apollo'
-import { Card, CardHeader, CardBody, Button } from 'reactstrap'
+import { Card, CardHeader, CardBody, Button, Badge } from 'reactstrap'
 import Moment from 'react-moment'
 import alert from 'sweetalert'
 
@@ -11,17 +10,29 @@ import data from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'
 
+const statusColors = {
+  Complete: 'success',
+  Errored: 'danger',
+  Pending: 'info',
+  Downloading: 'info',
+  Processing: 'info',
+}
+
 export default asNextJSPage(
   class TechData extends React.Component {
     render() {
-      const format = 'MMM Do, h:mm a'
+      const format = 'MMM Do, h:mm:ss a'
       const columns = [
         {
           Header: 'Started At',
           accessor: 'createdAt',
           Cell: ({ original: { createdAt: time } }) => time && <Moment {...{ format }}>{time}</Moment>,
         },
-        { Header: 'Status', accessor: 'status' },
+        {
+          Header: 'Status',
+          accessor: 'status',
+          Cell: ({ original: { status } }) => <Badge color={statusColors[status]}>{status}</Badge>,
+        },
         {
           Header: 'Provided By',
           accessor: 'dataSource.company.name',
@@ -39,7 +50,12 @@ export default asNextJSPage(
       ]
       return (
         <Layout>
-          <Query {...data.DataImport.QUERY_recentTechImports} variables={{ limit: 10 }} fetchPolicy="cache-and-network">
+          <Query
+            {...data.DataImport.QUERY_recentTechImports}
+            variables={{ limit: 10 }}
+            fetchPolicy="cache-and-network"
+            pollInterval={5000}
+          >
             {({ loading, data }) => {
               return (
                 <Card>
@@ -62,21 +78,14 @@ export default asNextJSPage(
                   </CardHeader>
                   <CardBody className="p-0">
                     <ReactTable
-                      ref={r => (this.checkboxTable = r)}
                       style={{ backgroundColor: 'white' }}
-                      filterable
                       className="-striped -highlight"
-                      loading={loading}
+                      loading={(!data || !data.dataImports) && loading}
+                      sortable={false}
                       data={data && data.dataImports}
                       defaultPageSize={10}
                       showPaginationBottom={false}
-                      defaultSorted={[{ id: 'age', desc: true }]}
                       columns={columns}
-                      defaultFilterMethod={(filter, row) =>
-                        String(row[filter.id])
-                        .toLowerCase()
-                        .indexOf(String(filter.value).toLowerCase()) !== -1
-                      }
                     />
                   </CardBody>
                 </Card>
