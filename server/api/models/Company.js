@@ -29,7 +29,7 @@ export default class Company extends APIModel {
       _contextFilter() {
         this.whereRaw('FALSE')
       }
-      async ensure(name, { onInsert = identity }) {
+      async ensure(name, { onInsert = identity } = {}) {
         if (companies[name]) return companies[name]
         companies[name] = await this.clone()
         .where({ name })
