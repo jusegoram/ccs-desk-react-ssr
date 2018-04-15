@@ -132,8 +132,9 @@ export default asNextJSPage(
                                   className="-striped -highlight"
                                   loading={!data.workGroups && loading}
                                   data={workGroups}
-                                  showPageSizeOptions={false}
-                                  defaultPageSize={8}
+                                  showPaginationBottom={false}
+                                  defaultPageSize={7}
+                                  pageSize={data && data.workGroups && data.workGroups.length}
                                   columns={columns}
                                   defaultFilterMethod={(filter, row) =>
                                     String(row[filter.id])
