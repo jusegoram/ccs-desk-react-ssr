@@ -44,24 +44,32 @@ const processors = {
     'MW Routelog': edgeRoutelogProcessor,
   },
 }
-// const mockFiles = {
-//   Goodman: {
-//     Siebel: {
-//       'Tech Profile': 'techProfile.csv',
-//       Routelog: 'routelog.csv',
-//     },
-//     Edge: {
-//       'MW Routelog': 'edge.mw.csv',
-//     },
-//   },
-//   DirectSat: {
-//     Siebel: {
-//       'Tech Profile': 'techProfile.ds.csv',
-//       Routelog: 'routelog.ds.csv',
-//     },
-//     Edge: {},
-//   },
-// }
+const mockFiles = {
+  Goodman: {
+    Siebel: {
+      'Tech Profile': 'full/Goodman/techProfile.csv',
+      Routelog: 'full/Goodman/routelog.csv',
+    },
+    Edge: {
+      'MW Routelog': 'full/Goodman/edge.mw.csv',
+      'SE Routelog': 'full/Goodman/edge.se.csv',
+      'SW Routelog': 'full/Goodman/edge.sw.csv',
+      'W Routelog': 'full/Goodman/edge.w.csv',
+    },
+  },
+  DirectSat: {
+    Siebel: {
+      'Tech Profile': 'full/DirectSat/techProfile.ds.csv',
+      Routelog: 'full/DirectSat/routelog.ds.csv',
+    },
+    Edge: {
+      'MW Routelog': 'full/DirectSat/edge.mw.csv',
+      'SE Routelog': 'full/DirectSat/edge.se.csv',
+      'SW Routelog': 'full/DirectSat/edge.sw.csv',
+      'W Routelog': 'full/DirectSat/edge.w.csv',
+    },
+  },
+}
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
 module.exports = async ({ companyName, dataSourceName, reportName }) => {
