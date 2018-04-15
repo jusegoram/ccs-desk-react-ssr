@@ -54,7 +54,6 @@ const mockFiles = {
       'MW Routelog': 'full/Goodman/edge.mw.csv',
       'SE Routelog': 'full/Goodman/edge.se.csv',
       'SW Routelog': 'full/Goodman/edge.sw.csv',
-      'W Routelog': 'full/Goodman/edge.w.csv',
     },
   },
   DirectSat: {
@@ -66,7 +65,6 @@ const mockFiles = {
       'MW Routelog': 'full/DirectSat/edge.mw.csv',
       'SE Routelog': 'full/DirectSat/edge.se.csv',
       'SW Routelog': 'full/DirectSat/edge.sw.csv',
-      'W Routelog': 'full/DirectSat/edge.w.csv',
     },
   },
 }
