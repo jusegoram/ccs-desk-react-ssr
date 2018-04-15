@@ -170,8 +170,6 @@ export default class VehicleClaim extends withDeletedAt(APIModel) {
           const { moment } = context
           if (!latitude || !longitude)
             throw new ExpectedError('In order to return a vehicle, you must specify your location')
-          console.log('latitude', latitude)
-          console.log('longitude', longitude)
           const Geography = require('./Geography').default
           return await transaction(VehicleClaim, Geography, async (VehicleClaim, Geography) => {
             const vehicleClaim = await VehicleClaim.query()
