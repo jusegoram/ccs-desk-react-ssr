@@ -108,7 +108,6 @@ export default class Session extends withDeletedAt(APIModel) {
           accountId: { type: GraphQLString },
         },
         resolve: async (root, { accountId }, { session }) => {
-          console.log(session)
           if (!session.rootAccount) throw new ExpectedError('You are not allowed to do that.')
           const Account = require('./Account').default
           const account = await Account.query()
