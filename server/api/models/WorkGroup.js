@@ -17,8 +17,6 @@ export default class WorkGroup extends APIModel {
     table.string('name').notNullable()
     table.unique(['companyId', 'type', 'externalId'])
     table.uuid('geographyId')
-    table.specificType('techBitset', 'BIT VARYING').defaultTo('')
-    table.specificType('managerBitset', 'BIT VARYING').defaultTo('')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
