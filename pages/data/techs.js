@@ -40,7 +40,15 @@ export default asNextJSPage(
           Cell: ({ original: { status } }) => <Badge color={statusColors[status]}>{status}</Badge>,
         },
         {
-          Header: 'Provided By',
+          Header: 'Report',
+          accessor: 'reportName',
+        },
+        {
+          Header: 'Source',
+          accessor: 'dataSource.name',
+        },
+        {
+          Header: 'Company',
           accessor: 'dataSource.company.name',
         },
         {
@@ -57,8 +65,15 @@ export default asNextJSPage(
       return (
         <Layout>
           <Query
-            {...data.DataImport.QUERY_recentTechImports}
-            variables={{ limit: 10 }}
+            {...data.DataImport.QUERY_todaysTechImports}
+            variables={{
+              createdAtGte: moment()
+              .startOf('day')
+              .format(),
+              createdAtLt: moment()
+              .endOf('day')
+              .format(),
+            }}
             fetchPolicy="cache-and-network"
             pollInterval={5000}
           >
@@ -88,13 +103,12 @@ export default asNextJSPage(
                   </CardHeader>
                   <CardBody className="p-0">
                     <ReactTable
-                      style={{ backgroundColor: 'white' }}
+                      style={{ backgroundColor: 'white', height: 'calc(100vh - 146px)' }}
                       className="-striped -highlight"
                       loading={(!data || !data.dataImports) && loading}
                       sortable={false}
                       data={data && data.dataImports}
-                      defaultPageSize={10}
-                      showPaginationBottom={false}
+                      defaultPageSize={15}
                       columns={columns}
                     />
                   </CardBody>
