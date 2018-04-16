@@ -16,6 +16,7 @@ import config from 'server/config'
 const statusColors = {
   Complete: 'success',
   Errored: 'danger',
+  Aborted: 'danger',
   Pending: 'info',
   Downloading: 'info',
   Processing: 'info',
