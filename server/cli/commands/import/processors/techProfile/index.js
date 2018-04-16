@@ -248,9 +248,9 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         // const techWorkGroup = _.find(employee.workGroups, { type: 'Tech' })
         // await employee.$query().patch({ workGroupId: techWorkGroup.id })
 
-        // timer.split('Set Team Manager')
-        // const teamWorkGroups = _.filter(employee.workGroups, { type: 'Team' })
-        // supervisor && (await Promise.mapSeries(teamWorkGroups, group => group.addManager(supervisor)))
+        timer.split('Set Team Manager')
+        const teamWorkGroups = _.filter(employee.workGroups, { type: 'Team' })
+        supervisor && (await Promise.mapSeries(teamWorkGroups, group => group.addManager(supervisor)))
       } catch (e) {
         console.error(data) // eslint-disable-line no-console
         throw e
