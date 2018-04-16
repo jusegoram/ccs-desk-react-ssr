@@ -49,7 +49,7 @@ export default class Session extends withDeletedAt(APIModel) {
     }
   }
 
-  static defaultEagerRelations = '[rootAccount, account.[permissions.workGroups, employee.company]]'
+  static defaultEagerRelations = '[rootAccount, account.[employee, company]]'
   static get relationMappings() {
     return {
       account: {

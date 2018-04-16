@@ -10,12 +10,13 @@ export default class WorkGroup extends APIModel {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
     // <custom>
+    table.uuid('scopeCompanyId')
     table.uuid('companyId')
     table.integer('order').notNullable()
     table.string('type').notNullable() // 'Company', 'Office', 'Team', 'DMA', 'Service Region', 'Division'
     table.string('externalId').notNullable()
     table.string('name').notNullable()
-    table.unique(['companyId', 'type', 'externalId'])
+    table.unique(['scopeCompanyId', 'companyId', 'type', 'externalId'])
     table.uuid('geographyId')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
@@ -24,6 +25,7 @@ export default class WorkGroup extends APIModel {
   static knexAlterTable = `
     table.foreign('geographyId').references('Geography.id')
     table.foreign('companyId').references('Company.id')
+    table.foreign('scopeCompanyId').references('Company.id')
   `
   static knexCreateJoinTables = {
     directv_sr_data: `
@@ -153,6 +155,14 @@ export default class WorkGroup extends APIModel {
 
   static get relationMappings() {
     return {
+      scopeCompany: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: 'Company',
+        join: {
+          from: 'WorkGroup.scopeCompanyId',
+          to: 'Company.id',
+        },
+      },
       company: {
         relation: Model.BelongsToOneRelation,
         modelClass: 'Company',
