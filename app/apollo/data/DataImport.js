@@ -36,8 +36,10 @@ export default class DataImport {
   }
   static QUERY_todaysWorkOrderImports = {
     query: gql`
-      query dataImports($date: String!) {
-        dataImports(reportNameIn: ${JSON.stringify(reports.workOrders)}, orderByDesc: createdAt, date: $date) {
+      query dataImports($createdAtGte: String!, $createdAtLt: String!) {
+        dataImports(reportNameIn: ${JSON.stringify(
+      reports.workOrders
+    )}, orderByDesc: createdAt, createdAtGte: $createdAtGte, createdAtLt: $createdAtLt) {
           ${props}
         }
       }
