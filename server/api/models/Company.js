@@ -49,7 +49,7 @@ export default class Company extends APIModel {
         modelClass: 'WorkGroup',
         join: {
           from: 'Company.id',
-          to: 'WorkGroup.companyId',
+          to: 'WorkGroup.scopeCompanyId',
         },
       },
       featureSet: {

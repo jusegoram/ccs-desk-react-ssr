@@ -87,7 +87,6 @@ exports.seed = async function(knex) {
             email: 'goodman@example.com',
             password: 'demo',
             company: { '#ref': 'goodmanCompany' },
-            permissions: [{ type: 'read', workGroups: [{ '#ref': 'goodman' }] }],
           },
         },
       ],
@@ -118,10 +117,6 @@ exports.seed = async function(knex) {
             password: 'demo',
             root: true,
             company: { '#ref': 'ccsCompany' },
-            permissions: [
-              { type: 'read', workGroups: [{ '#ref': 'goodman' }] },
-              { type: 'read', workGroups: [{ '#ref': 'directsat' }] },
-            ],
           },
         },
         {
@@ -145,7 +140,6 @@ exports.seed = async function(knex) {
             email: 'agent2@example.com',
             password: 'demo',
             company: { '#ref': 'ccsCompany' },
-            permissions: [{ type: 'read' }],
           },
         },
       ],
@@ -173,10 +167,6 @@ exports.seed = async function(knex) {
             email: 'empath@example.com',
             password: 'demo',
             company: { '#ref': 'empathCompany' },
-            permissions: [
-              { type: 'read', workGroups: [{ '#ref': 'goodmanEmpath' }] },
-              { type: 'read', workGroups: [{ '#ref': 'directsatEmpath' }] },
-            ],
           },
         },
       ],

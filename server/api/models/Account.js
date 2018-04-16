@@ -72,14 +72,6 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
           to: 'Session.accountId',
         },
       },
-      permissions: {
-        relation: Model.HasManyRelation,
-        modelClass: 'Permission',
-        join: {
-          from: 'Account.id',
-          to: 'Permission.accountId',
-        },
-      },
       employee: {
         relation: Model.BelongsToOneRelation,
         modelClass: 'Employee',
