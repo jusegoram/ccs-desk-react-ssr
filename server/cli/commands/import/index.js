@@ -53,7 +53,8 @@ const mockFiles = {
       Routelog: 'routelog.csv',
     },
     Edge: {
-      'MW Routelog': 'full/Goodman/edge.mw.csv',
+      // 'MW Routelog': 'full/Goodman/edge.mw.csv',
+      'MW Routelog': 'edge.mw.csv',
       'SE Routelog': 'full/Goodman/edge.se.csv',
       'SW Routelog': 'full/Goodman/edge.sw.csv',
     },
