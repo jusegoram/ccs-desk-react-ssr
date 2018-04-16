@@ -67,6 +67,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
     const datas = await streamToArray(csvObjStream, data => {
       data = _.mapValues(data, val => (!val || val === 'UNKNOWN' ? null : val))
       if (data['Tech Type'] === 'W2' || !data['Tech Type']) data['Tech Type'] = w2CompanyName
+      if (data['Tech Type'] === 'EMPATH') data['Tech Type'] = 'Empath'
       data.Company = data['Tech Type']
       data.Team = data['Team ID']
       data.Tech = data['Tech User ID']
@@ -147,54 +148,62 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         timer.split('Ensure Work Groups')
         const techSR = data['Service Region']
         const techSrData = srData[techSR]
-        const getWorkGroupDatas = workGroupCompany =>
+        const getWorkGroupDatas = scopeCompany =>
           _.filter([
             {
               type: 'Tech',
-              companyId: workGroupCompany.id,
+              scopeCompanyId: scopeCompany.id,
+              companyId: company.id,
               externalId: employee.externalId,
               name: employee.name,
             },
             !!data['Team ID'] && {
               type: 'Team',
-              companyId: workGroupCompany.id,
+              scopeCompanyId: scopeCompany.id,
+              companyId: company.id,
               externalId: data['Team ID'],
               name: sanitizeName(data['Team Name']),
             },
             {
               type: 'Company',
-              companyId: workGroupCompany.id,
+              scopeCompanyId: scopeCompany.id,
+              companyId: company.id,
               externalId: w2Company.name,
               name: w2Company.name,
             },
             {
               type: 'Company',
-              companyId: workGroupCompany.id,
+              scopeCompanyId: scopeCompany.id,
+              companyId: company.id,
               externalId: company.name,
               name: company.name,
             },
             ...(!!techSrData && [
               {
                 type: 'Service Region',
-                companyId: workGroupCompany.id,
+                scopeCompanyId: scopeCompany.id,
+                companyId: company.id,
                 externalId: techSR,
                 name: techSR,
               },
               {
                 type: 'Office',
-                companyId: workGroupCompany.id,
+                scopeCompanyId: scopeCompany.id,
+                companyId: company.id,
                 externalId: techSrData['Office'],
                 name: techSrData['Office'],
               },
               {
                 type: 'DMA',
-                companyId: workGroupCompany.id,
+                scopeCompanyId: scopeCompany.id,
+                companyId: company.id,
                 externalId: techSrData['DMA'],
                 name: techSrData['DMA'],
               },
               {
                 type: 'Division',
-                companyId: workGroupCompany.id,
+                scopeCompanyId: scopeCompany.id,
+                companyId: company.id,
                 externalId: techSrData['Division'],
                 name: techSrData['Division'],
               },
@@ -205,7 +214,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         const workGroupDatas = w2WorkGroupDatas.concat(subWorkGroupDatas)
 
         timer.split('Work Groups _.differenceWith')
-        const workGroupPrimaryKey = ['companyId', 'type', 'externalId']
+        const workGroupPrimaryKey = ['scopeCompanyId', 'type', 'externalId']
         const hasSamePrimaryKey = (a, b) => _.isEqual(_.pick(a, workGroupPrimaryKey), _.pick(b, workGroupPrimaryKey))
         const newWorkGroupDatas = _.differenceWith(workGroupDatas, employee.workGroups, hasSamePrimaryKey)
         const obsoleteWorkGroups = _.differenceWith(employee.workGroups, workGroupDatas, hasSamePrimaryKey)
