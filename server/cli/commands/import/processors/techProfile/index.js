@@ -92,7 +92,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
       'name'
     )
 
-    await Promise.mapSeries(datas, async data => {
+    await Promise.mapSeries(datas.slice(0, 1), async data => {
       try {
         timer.split('Ensure Company')
         const company = data['Tech Type'] === w2CompanyName ? w2Company : subcontractors[data['Tech Type']]
@@ -214,15 +214,16 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         const workGroupDatas = w2WorkGroupDatas.concat(subWorkGroupDatas)
 
         timer.split('Work Groups _.differenceWith')
-        const workGroupPrimaryKey = ['scopeCompanyId', 'type', 'externalId']
+        const workGroupPrimaryKey = ['scopeCompanyId', 'companyId', 'type', 'externalId']
         const hasSamePrimaryKey = (a, b) => _.isEqual(_.pick(a, workGroupPrimaryKey), _.pick(b, workGroupPrimaryKey))
         const newWorkGroupDatas = _.differenceWith(workGroupDatas, employee.workGroups, hasSamePrimaryKey)
         const obsoleteWorkGroups = _.differenceWith(employee.workGroups, workGroupDatas, hasSamePrimaryKey)
 
         timer.split('Ensure New Work Groups')
-        const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData =>
-          WorkGroup.query().ensure(workGroupData, workGroupCache)
-        )
+        const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData => {
+          console.log(workGroupData)
+          return WorkGroup.query().ensure(workGroupData, workGroupCache)
+        })
 
         timer.split('Insert New Work Group Relations')
         await Promise.mapSeries(_.uniqBy(newWorkGroups, 'id'), workGroup =>
@@ -244,15 +245,15 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         timer.split('Refresh Employee Work Groups')
         await employee.$loadRelated('workGroups')
 
-        timer.split('Set Tech Work Group')
-        const techWorkGroup = _.find(employee.workGroups, { type: 'Tech' })
-        await employee.$query().patch({ workGroupId: techWorkGroup.id })
+        // timer.split('Set Tech Work Group')
+        // const techWorkGroup = _.find(employee.workGroups, { type: 'Tech' })
+        // await employee.$query().patch({ workGroupId: techWorkGroup.id })
 
-        timer.split('Set Team Manager')
-        const teamWorkGroup = _.find(employee.workGroups, { type: 'Team' })
-        if (teamWorkGroup && supervisor) {
-          await teamWorkGroup.addManager(supervisor)
-        }
+        // timer.split('Set Team Manager')
+        // const teamWorkGroup = _.find(employee.workGroups, { type: 'Team' })
+        // if (teamWorkGroup && supervisor) {
+        //   await teamWorkGroup.addManager(supervisor)
+        // }
       } catch (e) {
         console.error(data) // eslint-disable-line no-console
         throw e
