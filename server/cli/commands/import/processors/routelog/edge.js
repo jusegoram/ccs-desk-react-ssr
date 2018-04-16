@@ -24,7 +24,7 @@ const convertRowToStandardForm = ({ row, w2Company, employee }) => {
   const standardRow = {
     Source: 'Edge',
     'Partner Name': w2Company.name || '',
-    Subcontractor: (employee && employee.company) || '',
+    Subcontractor: (employee && employee.company.name) || '',
     'Activity ID': row['Activity ID'] || '',
     'Tech ID': (employee && employee.alternateExternalId) || '',
     'Tech Name': (employee && employee.name) || '',

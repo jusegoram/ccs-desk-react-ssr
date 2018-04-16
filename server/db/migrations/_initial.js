@@ -56,7 +56,6 @@ export function up(knex) {
   })
   .createTable('Employee', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.specificType('bit', 'SERIAL')
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
     table.uuid('workGroupId')
@@ -125,16 +124,6 @@ export function up(knex) {
     table.string('name')
     table.float('value')
     table.unique(['workGroupId', 'date', 'name'])
-    // </custom>
-    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
-    table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
-  })
-  .createTable('Permission', table => {
-    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.timestamp('deletedAt').index()
-    // <custom>
-    table.uuid('accountId')
-    table.string('type').defaultTo('read').notNullable()
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -209,15 +198,14 @@ export function up(knex) {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
     // <custom>
+    table.uuid('scopeCompanyId')
     table.uuid('companyId')
     table.integer('order').notNullable()
     table.string('type').notNullable() // 'Company', 'Office', 'Team', 'DMA', 'Service Region', 'Division'
     table.string('externalId').notNullable()
     table.string('name').notNullable()
-    table.unique(['companyId', 'type', 'externalId'])
+    table.unique(['scopeCompanyId', 'companyId', 'type', 'externalId'])
     table.uuid('geographyId')
-    table.specificType('techBitset', 'BIT VARYING').defaultTo('')
-    table.specificType('managerBitset', 'BIT VARYING').defaultTo('')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -297,6 +285,7 @@ export function up(knex) {
   .alterTable('WorkGroup', table => {
     table.foreign('geographyId').references('Geography.id')
     table.foreign('companyId').references('Company.id')
+    table.foreign('scopeCompanyId').references('Company.id')
   })
   .alterTable('WorkOrder', table => {
     table.foreign('dataSourceId').references('DataSource.id')
@@ -320,14 +309,6 @@ export function up(knex) {
       table.unique(['role', 'employeeId', 'workGroupId'])
       table.foreign('workGroupId').references('WorkGroup.id')
       table.foreign('employeeId').references('Employee.id')
-  })
-  .createTable('permissionWorkGroups', table => { 
-      table.uuid('permissionId').notNullable()
-      table.uuid('workGroupId').notNullable()
-      table.primary(['permissionId', 'workGroupId'])
-      table.unique(['workGroupId', 'permissionId'])
-      table.foreign('permissionId').references('Permission.id')
-      table.foreign('workGroupId').references('WorkGroup.id')
   })
   .createTable('reportQuestions', table => { 
       table.uuid('reportId').notNullable()

@@ -9,22 +9,6 @@ exports.seed = async function(knex) {
     {
       '#id': 'directsatCompany',
       name: 'DirectSat',
-      workGroups: [
-        {
-          '#id': 'directsat',
-          type: 'Company',
-          name: 'DirectSat',
-          order: 0,
-          externalId: 'DirectSat',
-        },
-        {
-          '#id': 'directsatEmpath',
-          type: 'Company',
-          name: 'EMPATH',
-          order: 0,
-          externalId: 'EMPATH',
-        },
-      ],
       dataSources: [
         {
           '#id': 'directsatSiebel',
@@ -43,22 +27,6 @@ exports.seed = async function(knex) {
     {
       '#id': 'goodmanCompany',
       name: 'Goodman',
-      workGroups: [
-        {
-          '#id': 'goodman',
-          type: 'Company',
-          name: 'Goodman',
-          order: 0,
-          externalId: 'Goodman',
-        },
-        {
-          '#id': 'goodmanEmpath',
-          type: 'Company',
-          name: 'EMPATH',
-          order: 0,
-          externalId: 'EMPATH',
-        },
-      ],
       dataSources: [
         {
           '#id': 'goodmanSiebel',
