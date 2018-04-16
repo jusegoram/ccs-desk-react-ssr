@@ -11,8 +11,8 @@ import restRouter from 'server/api/restRouter'
 import createToken from 'server/api/util/createToken'
 import createClientMoment from 'server/api/util/createClientMoment'
 import CSV from 'easy-csv'
-import moment from 'moment-timezone'
 import stream from 'stream'
+import _ from 'lodash'
 
 const { Readable } = stream
 
@@ -23,7 +23,7 @@ const graphqlSchema = graphQlBuilder()
 .selectFiltering(false)
 .allModels(Object.values(models))
 .extendWithModelMutations({ prefixWithClassName: true })
-.argFactory((fields, modelClass) => {
+.argFactory((/*fields, modelClass*/) => {
   /* These Must Be Synchronous */
   const args = {
     limit: {
@@ -50,64 +50,137 @@ const graphqlSchema = graphQlBuilder()
 })
 .build()
 export default async app => {
-  app.get('/download/vehicleClaims', async (req, res) => {
-    const vehicleClaims = await models.VehicleClaim.query()
-    .select()
-    .eager('[employee vehicle]')
-    const data = vehicleClaims.map(c => ({
-      Name: c.employee.name,
-      Date: moment(c.date).format('MM/DD/YYYY'),
-      'Vechicle ID': c.vehicle.externalId,
-      'Claimed At': !c.claimedAt ? '' : moment.tz(c.claimedAt, 'America/Chicago').format('h:mm A'),
-      'Returned At': !c.returnedAt ? '' : moment.tz(c.returnedAt, 'America/Chicago').format('h:mm A'),
-      'Duration (hours)': !(c.claimedAt && c.returnedAt)
-        ? 'N/A'
-        : moment(c.returnedAt)
-        .diff(c.claimedAt, 'hours', true)
-        .toFixed(1),
-    }))
-    const csv = await CSV.toCSV(data)
-    const csvStream = new Readable()
-    csvStream.push(csv)
-    csvStream.push(null)
-    res.writeHead(200, {
-      'Content-Type': 'text/csv',
-      'Access-Control-Allow-Origin': '*',
-      'Content-Disposition': 'attachment; filename=VehicleClaims.csv',
-    })
-    csvStream.pipe(res)
+  // app.get('/download/vehicleClaims', async (req, res) => {
+  //   const vehicleClaims = await models.VehicleClaim.query()
+  //   .select()
+  //   .eager('[employee vehicle]')
+  //   const data = vehicleClaims.map(c => ({
+  //     Name: c.employee.name,
+  //     Date: moment(c.date).format('MM/DD/YYYY'),
+  //     'Vechicle ID': c.vehicle.externalId,
+  //     'Claimed At': !c.claimedAt ? '' : moment.tz(c.claimedAt, 'America/Chicago').format('h:mm A'),
+  //     'Returned At': !c.returnedAt ? '' : moment.tz(c.returnedAt, 'America/Chicago').format('h:mm A'),
+  //     'Duration (hours)': !(c.claimedAt && c.returnedAt)
+  //       ? 'N/A'
+  //       : moment(c.returnedAt)
+  //       .diff(c.claimedAt, 'hours', true)
+  //       .toFixed(1),
+  //   }))
+  //   const csv = await CSV.toCSV(data)
+  //   const csvStream = new Readable()
+  //   csvStream.push(csv)
+  //   csvStream.push(null)
+  //   res.writeHead(200, {
+  //     'Content-Type': 'text/csv',
+  //     'Access-Control-Allow-Origin': '*',
+  //     'Content-Disposition': 'attachment; filename=VehicleClaims.csv',
+  //   })
+  //   csvStream.pipe(res)
+  // })
+  // app.get('/download/timecards', async (req, res) => {
+  //   const timecards = await models.Timecard.query()
+  //   .select()
+  //   .eager('employee')
+  //   const data = timecards.map(t => ({
+  //     Name: t.employee.name,
+  //     Date: moment(t.date).format('MM/DD/YYYY'),
+  //     'Clock In': !t.clockedInAt ? '' : moment.tz(t.clockedInAt, 'America/Chicago').format('h:mm A'),
+  //     'Clock Out': !t.clockedOutAt ? '' : moment.tz(t.clockedOutAt, 'America/Chicago').format('h:mm A'),
+  //     'Duration (hours)': !(t.clockedInAt && t.clockedOutAt)
+  //       ? 'N/A'
+  //       : moment(t.clockedOutAt)
+  //       .diff(t.clockedInAt, 'hours', true)
+  //       .toFixed(1),
+  //   }))
+  //   const csv = await CSV.toCSV(data)
+  //   const csvStream = new Readable()
+  //   csvStream.push(csv)
+  //   csvStream.push(null)
+  //   res.writeHead(200, {
+  //     'Content-Type': 'text/csv',
+  //     'Access-Control-Allow-Origin': '*',
+  //     'Content-Disposition': 'attachment; filename=Timecards.csv',
+  //   })
+  //   csvStream.pipe(res)
+  // })
+  app.get('/download/techs', async (req, res) => {
+    try {
+      const moment = require('moment-timezone')
+      const { token } = req.query
+      let session = null
+      if (token) {
+        const jwtPayload = jwt.decode(token) //verify(token, process.env.JWT_SECRET)
+        console.log(jwtPayload)
+        const { sessionId } = jwtPayload
+        session = await models.Session.query()
+        .eager(models.Session.defaultEagerRelations)
+        .findById(sessionId)
+        const techs = await models.Employee.query()
+        .mergeContext({ session, moment })
+        ._contextFilter()
+        .where({ role: 'Tech' })
+        const csv = await CSV.toCSV(_.map(techs, 'row'))
+        const csvStream = new Readable()
+        csvStream.push(csv)
+        csvStream.push(null)
+        res.writeHead(200, {
+          'Content-Type': 'text/csv',
+          'Access-Control-Allow-Origin': '*',
+          'Content-Disposition': 'attachment; filename=Techs.csv',
+        })
+        csvStream.pipe(res)
+      } else {
+        res.status(401).json({})
+      }
+    } catch (e) {
+      console.error(e) // eslint-disable-line no-console
+      res.status(401).json({})
+    }
   })
-  app.get('/download/timecards', async (req, res) => {
-    const timecards = await models.Timecard.query()
-    .select()
-    .eager('employee')
-    const data = timecards.map(t => ({
-      Name: t.employee.name,
-      Date: moment(t.date).format('MM/DD/YYYY'),
-      'Clock In': !t.clockedInAt ? '' : moment.tz(t.clockedInAt, 'America/Chicago').format('h:mm A'),
-      'Clock Out': !t.clockedOutAt ? '' : moment.tz(t.clockedOutAt, 'America/Chicago').format('h:mm A'),
-      'Duration (hours)': !(t.clockedInAt && t.clockedOutAt)
-        ? 'N/A'
-        : moment(t.clockedOutAt)
-        .diff(t.clockedInAt, 'hours', true)
-        .toFixed(1),
-    }))
-    const csv = await CSV.toCSV(data)
-    const csvStream = new Readable()
-    csvStream.push(csv)
-    csvStream.push(null)
-    res.writeHead(200, {
-      'Content-Type': 'text/csv',
-      'Access-Control-Allow-Origin': '*',
-      'Content-Disposition': 'attachment; filename=Timecards.csv',
-    })
-    csvStream.pipe(res)
+  app.get('/download/work-orders', async (req, res) => {
+    try {
+      const timezone = req.query.timezone
+      const moment = timezone && createClientMoment(timezone)
+      const useCookieToken = true
+      const cookieToken = req.headers.cookie && cookie.parse(req.headers.cookie).token
+      const authHeaderToken = req.headers.authorization && req.headers.authorization.split(' ')[1]
+      const token = useCookieToken ? cookieToken || authHeaderToken : authHeaderToken
+      let session = null
+      if (token) {
+        const jwtPayload = jwt.verify(token, process.env.JWT_SECRET)
+        const { sessionId } = jwtPayload
+        session = await models.Session.query()
+        .eager(models.Session.defaultEagerRelations)
+        .findById(sessionId)
+        const workOrders = await models.WorkOrder.query()
+        .mergeContext({ session, moment })
+        ._contextFilter()
+        .select('row')
+        const csv = await CSV.toCSV(_.map(workOrders, 'row'))
+        const csvStream = new Readable()
+        csvStream.push(csv)
+        csvStream.push(null)
+        res.writeHead(200, {
+          'Content-Type': 'text/csv',
+          'Access-Control-Allow-Origin': '*',
+          'Content-Disposition': 'attachment; filename=WorkOrders.csv',
+        })
+        csvStream.pipe(res)
+      } else {
+        res.status(401).json({})
+      }
+    } catch (e) {
+      console.error(e) // eslint-disable-line no-console
+      res.status(401).json({})
+    }
   })
   app.use('/api', restRouter)
   app.use(
     '/graphql',
     graphqlExpress(async (req, res) => {
-      const moment = createClientMoment(req.headers.timezone)
+      const timezone = req.headers.timezone
+      res.cookie('timezone', timezone)
+      const moment = createClientMoment(timezone)
       let session = null
       const clientContext = req.headers.clientcontext || 'Website'
       const clientVersion = req.headers.clientversion
