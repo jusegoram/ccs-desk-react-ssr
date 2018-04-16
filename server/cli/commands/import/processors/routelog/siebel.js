@@ -1,6 +1,4 @@
 import _ from 'lodash'
-import Promise from 'bluebird'
-
 import { transaction } from 'objection'
 import * as rawModels from 'server/api/models'
 import { streamToArray } from 'server/util'

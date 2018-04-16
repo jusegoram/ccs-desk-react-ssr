@@ -3,7 +3,6 @@ import Promise from 'bluebird'
 
 import { transaction } from 'objection'
 import * as rawModels from 'server/api/models'
-import moment from 'moment-timezone'
 import { streamToArray } from 'server/util'
 import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
