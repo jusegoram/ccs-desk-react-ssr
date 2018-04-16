@@ -10,6 +10,7 @@ const props = `
   completedAt
   dataSource {
     id
+    name
     company {
       id
       name
@@ -22,19 +23,23 @@ const reports = {
 }
 export default class DataImport {
   static props = props
-  static QUERY_recentTechImports = {
+  static QUERY_todaysTechImports = {
     query: gql`
-      query dataImports($limit: Int!) {
-        dataImports(reportName: "${reports.techs}", orderByDesc: createdAt, limit: $limit) {
+      query dataImports($createdAtGte: String!, $createdAtLt: String!) {
+        dataImports(reportName: "${
+          reports.techs
+        }", orderByDesc: createdAt, createdAtGte: $createdAtGte, createdAtLt: $createdAtLt) {
           ${props}
         }
       }
     `,
   }
-  static QUERY_recentWorkOrderImports = {
+  static QUERY_todaysWorkOrderImports = {
     query: gql`
-      query dataImports($limit: Int!) {
-        dataImports(reportNameIn: ${JSON.stringify(reports.workOrders)}, orderByDesc: createdAt, limit: $limit) {
+      query dataImports($createdAtGte: String!, $createdAtLt: String!) {
+        dataImports(reportNameIn: ${JSON.stringify(
+      reports.workOrders
+    )}, orderByDesc: createdAt, createdAtGte: $createdAtGte, createdAtLt: $createdAtLt) {
           ${props}
         }
       }
