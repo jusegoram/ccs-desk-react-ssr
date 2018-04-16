@@ -26,9 +26,9 @@ const upload = multer({
 
 const router = express.Router()
 
-router.post('/', upload.single('file'), (req, res) => {
-  console.log('uploaded image', req.file)
-  res.json({ uri: req.file.uri })
-})
+// router.post('/', upload.single('file'), (req, res) => {
+//   console.log('uploaded image', req.file)
+//   res.json({ uri: req.file.uri })
+// })
 
 export default router
