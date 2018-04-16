@@ -27,7 +27,7 @@ export default class Appointment extends APIModel {
     properties: {
       id: { type: 'string' },
       // <custom>
-      date: { type: 'string', format: 'date' },
+      date: { type: ['string', 'null'], format: 'date' },
       status: { type: ['string', 'null'] },
       // </custom>
     },

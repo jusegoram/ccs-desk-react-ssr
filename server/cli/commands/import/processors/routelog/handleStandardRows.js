@@ -58,17 +58,19 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
       .first()
       .where({ dataSourceId, externalId: data['Activity ID'] })
 
-      currentAppointment = await Appointment.query().upsert({
-        query: {
-          workOrderId: workOrder.id,
-          ...(employee && { employeeId: employee.id }),
-          date: workOrder.date,
-        },
-        update: {
-          status: workOrder.status,
-          row: data,
-        },
-      })
+      currentAppointment =
+        workOrder.date &&
+        (await Appointment.query().upsert({
+          query: {
+            workOrderId: workOrder.id,
+            ...(employee && { employeeId: employee.id }),
+            date: workOrder.date,
+          },
+          update: {
+            status: workOrder.status,
+            row: data,
+          },
+        }))
       await workOrder.$relatedQuery('appointments').relate(currentAppointment)
       employee && (await employee.$relatedQuery('appointments').relate(currentAppointment))
     }
