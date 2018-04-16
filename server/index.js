@@ -10,9 +10,10 @@ import { GraphQLInt, GraphQLBoolean } from 'graphql'
 import restRouter from 'server/api/restRouter'
 import createToken from 'server/api/util/createToken'
 import createClientMoment from 'server/api/util/createClientMoment'
-import CSV from 'easy-csv'
+import csv from 'csv'
 import stream from 'stream'
 import _ from 'lodash'
+import stringify from 'csv-stringify'
 
 const { Readable } = stream
 
@@ -114,20 +115,24 @@ export default async app => {
         session = await models.Session.query()
         .eager(models.Session.defaultEagerRelations)
         .findById(sessionId)
-        const techs = await models.Employee.query()
-        .mergeContext({ session, moment })
-        ._contextFilter()
-        .where({ role: 'Tech' })
-        const csv = await CSV.toCSV(_.map(techs, 'row'))
-        const csvStream = new Readable()
-        csvStream.push(csv)
-        csvStream.push(null)
+
         res.writeHead(200, {
           'Content-Type': 'text/csv',
           'Access-Control-Allow-Origin': '*',
           'Content-Disposition': 'attachment; filename=Techs.csv',
         })
-        csvStream.pipe(res)
+
+        const stringifier = stringify({ header: true })
+        await models.Employee.query()
+        .mergeContext({ session, moment })
+        ._contextFilter()
+        .where({ role: 'Tech' })
+        .map(tech => {
+          stringifier.write(tech.row)
+        })
+        stringifier.end()
+
+        stringifier.pipe(res)
       } else {
         res.status(401).json({})
       }
@@ -151,21 +156,23 @@ export default async app => {
         session = await models.Session.query()
         .eager(models.Session.defaultEagerRelations)
         .findById(sessionId)
-        const workOrders = await models.WorkOrder.query()
-        .mergeContext({ session, moment })
-        ._contextFilter()
-        .select('row')
-        .where({ date: moment().format('YYYY-MM-DD') })
-        const csv = await CSV.toCSV(_.map(workOrders, 'row'))
-        const csvStream = new Readable()
-        csvStream.push(csv)
-        csvStream.push(null)
         res.writeHead(200, {
           'Content-Type': 'text/csv',
           'Access-Control-Allow-Origin': '*',
           'Content-Disposition': 'attachment; filename=WorkOrders.csv',
         })
-        csvStream.pipe(res)
+        const stringifier = stringify({ header: true })
+        await models.WorkOrder.query()
+        .mergeContext({ session, moment })
+        ._contextFilter()
+        .select('row')
+        .where({ date: moment().format('YYYY-MM-DD') })
+        .map(workOrder => {
+          stringifier.write(workOrder.row)
+        })
+        stringifier.end()
+
+        stringifier.pipe(res)
       } else {
         res.status(401).json({})
       }
