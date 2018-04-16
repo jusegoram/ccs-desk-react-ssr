@@ -103,12 +103,6 @@ exports.seed = async function(knex) {
             company: { '#ref': 'ccsCompany' },
             techs: [{ '#ref': 'employee2' }],
           },
-          account: {
-            name: 'Agent Mueller',
-            email: 'agent2@example.com',
-            password: 'demo',
-            company: { '#ref': 'ccsCompany' },
-          },
         },
       ],
     },
