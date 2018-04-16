@@ -27,4 +27,13 @@ export default class DataImport {
       }
     `,
   }
+  static QUERY_recentWorkOrderImports = {
+    query: gql`
+      query dataImports($limit: Int!) {
+        dataImports(reportNameIn: ["Routelog", "MW Routelog", "SE Routelog", "SW Routelog", "W Routelog"], orderByDesc: createdAt, limit: $limit) {
+          ${props}
+        }
+      }
+    `,
+  }
 }
