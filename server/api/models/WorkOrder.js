@@ -55,6 +55,7 @@ export default class WorkOrder extends APIModel {
         .joinRelation('workGroups')
         .where('workGroups.scopeCompanyId', session.account.company.id)
         this.whereIn('id', workOrderIds)
+        return this
       }
     }
   }
