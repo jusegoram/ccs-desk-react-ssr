@@ -1,4 +1,4 @@
-import fs from 'fs'
+// import fs from 'fs'
 import path from 'path'
 import csv from 'csv'
 import moment from 'moment-timezone'
@@ -44,35 +44,35 @@ const processors = {
     'MW Routelog': edgeRoutelogProcessor,
   },
 }
-const mockFiles = {
-  Goodman: {
-    Siebel: {
-      // 'Tech Profile': 'full/Goodman/techProfile.csv',
-      'Tech Profile': 'techProfile.csv',
-      // Routelog: 'full/Goodman/routelog.csv',
-      Routelog: 'routelog.csv',
-    },
-    Edge: {
-      // 'MW Routelog': 'full/Goodman/edge.mw.csv',
-      'MW Routelog': 'edge.mw.csv',
-      'SE Routelog': 'full/Goodman/edge.se.csv',
-      'SW Routelog': 'full/Goodman/edge.sw.csv',
-    },
-  },
-  DirectSat: {
-    Siebel: {
-      'Tech Profile': 'full/DirectSat/techProfile.csv',
-      Routelog: 'full/DirectSat/routelog.csv',
-    },
-    Edge: {
-      'MW Routelog': 'full/DirectSat/edge.mw.csv',
-      'SE Routelog': 'full/DirectSat/edge.se.csv',
-      'SW Routelog': 'full/DirectSat/edge.sw.csv',
-    },
-  },
-}
+// const mockFiles = {
+//   Goodman: {
+//     Siebel: {
+//       // 'Tech Profile': 'full/Goodman/techProfile.csv',
+//       'Tech Profile': 'techProfile.csv',
+//       // Routelog: 'full/Goodman/routelog.csv',
+//       Routelog: 'routelog.csv',
+//     },
+//     Edge: {
+//       // 'MW Routelog': 'full/Goodman/edge.mw.csv',
+//       'MW Routelog': 'edge.mw.csv',
+//       'SE Routelog': 'full/Goodman/edge.se.csv',
+//       'SW Routelog': 'full/Goodman/edge.sw.csv',
+//     },
+//   },
+//   DirectSat: {
+//     Siebel: {
+//       'Tech Profile': 'full/DirectSat/techProfile.csv',
+//       Routelog: 'full/DirectSat/routelog.csv',
+//     },
+//     Edge: {
+//       'MW Routelog': 'full/DirectSat/edge.mw.csv',
+//       'SE Routelog': 'full/DirectSat/edge.se.csv',
+//       'SW Routelog': 'full/DirectSat/edge.sw.csv',
+//     },
+//   },
+// }
 
-const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
+// const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
 module.exports = async ({ companyName, dataSourceName, reportName }) => {
   const w2Company = await Company.query().findOne({ name: companyName })
   const dataSource = await w2Company
@@ -84,19 +84,19 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
   .insert({ dataSourceId: dataSource.id, reportName })
   .returning('*')
   try {
-    // const credentials = analyticsCredentials[companyName]
+    const credentials = analyticsCredentials[companyName]
     await dataImport.$query().patch({ status: 'Downloading' })
-    // const analyticsReportName = analyticsReportNames[dataSourceName][reportName]
-    // const csvString = await new SiebelReportFetcher(credentials).fetchReport(analyticsReportName, {
-    //   loggingPrefix: 'CCS CLI',
-    //   // screenshotsDirectory,
-    //   // screenshotsPrefix: `${dataSource.service}_${dataSource.report}`,
-    //   horsemanConfig: {
-    //     cookiesFile: path.join(__dirname, `${companyName}_cookies.txt`),
-    //   },
-    // })
-    const mockFile = mockFiles[companyName][dataSourceName][reportName]
-    const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
+    const analyticsReportName = analyticsReportNames[dataSourceName][reportName]
+    const csvString = await new SiebelReportFetcher(credentials).fetchReport(analyticsReportName, {
+      loggingPrefix: 'CCS CLI',
+      // screenshotsDirectory,
+      // screenshotsPrefix: `${dataSource.service}_${dataSource.report}`,
+      horsemanConfig: {
+        cookiesFile: path.join(__dirname, `${companyName}_cookies.txt`),
+      },
+    })
+    // const mockFile = mockFiles[companyName][dataSourceName][reportName]
+    // const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
     const csvObjStream = convertStringToStream(csvString)
     .pipe(new SanitizeStringStream())
     .pipe(
