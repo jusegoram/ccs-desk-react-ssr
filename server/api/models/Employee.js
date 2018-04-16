@@ -1,6 +1,5 @@
 import { APIModel, BaseQueryBuilder } from 'server/api/util'
 import { Model } from 'objection'
-import _ from 'lodash'
 
 export default class Employee extends APIModel {
   static knexCreateTable = `
@@ -124,6 +123,8 @@ export default class Employee extends APIModel {
           to: 'WorkGroup.id',
         },
         modify: qb => {
+          // const { session } = qb.context()
+          // qb.where({ 'WorkGroup.scopeCompanyId': session.account.company.id })
           qb.orderBy('WorkGroup.order')
         },
       },
