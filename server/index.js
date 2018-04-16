@@ -109,8 +109,7 @@ export default async app => {
       const { token } = req.query
       let session = null
       if (token) {
-        const jwtPayload = jwt.decode(token) //verify(token, process.env.JWT_SECRET)
-        console.log(jwtPayload)
+        const jwtPayload = jwt.verify(token, process.env.JWT_SECRET)
         const { sessionId } = jwtPayload
         session = await models.Session.query()
         .eager(models.Session.defaultEagerRelations)
