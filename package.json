@@ -54,6 +54,7 @@
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.4",
     "csv": "^2.0.0",
+    "csv-stringify": "^3.0.0",
     "easy-csv": "0.0.2",
     "env-cmd": "^7.0.0",
     "eslint-import-resolver-babel-module": "^4.0.0",
