@@ -82,26 +82,26 @@ export default class WorkGroup extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        super._contextFilter()
-        // const { session } = this.context()
-        // if (session === undefined) return
-        // if (session === null) return this.whereRaw('FALSE')
+        const { session } = super._contextFilter().context()
+        this.where({ 'WorkGroup.scopeCompanyId': session.account.company.id })
         this.orderBy('WorkGroup.order')
         return this
       }
 
-      async ensure({ companyId, type, externalId, name }, cache) {
+      async ensure({ scopeCompanyId, companyId, type, externalId, name }, cache) {
         if (cache) {
           cache[companyId] = cache[companyId] || {}
           cache[companyId][type] = cache[companyId][type] || {}
-          if (cache[companyId][type][externalId]) return cache[companyId][type][externalId]
+          cache[companyId][type][externalId] = cache[companyId][type][externalId] || {}
+          if (cache[companyId][type][externalId][scopeCompanyId])
+            return cache[companyId][type][externalId][scopeCompanyId]
         }
         const order = WorkGroup.orderMap[type]
         const workGroup = await this.upsert({
-          query: { companyId, type, externalId },
+          query: { scopeCompanyId, companyId, type, externalId },
           update: { name, order },
         })
-        if (cache) cache[companyId][type][externalId] = workGroup
+        if (cache) cache[companyId][type][externalId][scopeCompanyId] = workGroup
         return workGroup
       }
 
