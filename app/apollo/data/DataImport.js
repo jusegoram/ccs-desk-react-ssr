@@ -16,12 +16,16 @@ const props = `
     }
   }
 `
+const reports = {
+  techs: 'Tech Profile',
+  workOrders: ['Routelog', 'MW Routelog', 'SE Routelog', 'SW Routelog', 'W Routelog'],
+}
 export default class DataImport {
   static props = props
   static QUERY_recentTechImports = {
     query: gql`
       query dataImports($limit: Int!) {
-        dataImports(reportName: "Tech Profile", orderByDesc: createdAt, limit: $limit) {
+        dataImports(reportName: "${reports.techs}", orderByDesc: createdAt, limit: $limit) {
           ${props}
         }
       }
@@ -30,7 +34,7 @@ export default class DataImport {
   static QUERY_recentWorkOrderImports = {
     query: gql`
       query dataImports($limit: Int!) {
-        dataImports(reportNameIn: ["Routelog", "MW Routelog", "SE Routelog", "SW Routelog", "W Routelog"], orderByDesc: createdAt, limit: $limit) {
+        dataImports(reportNameIn: ${JSON.stringify(reports.workOrders)}, orderByDesc: createdAt, limit: $limit) {
           ${props}
         }
       }
