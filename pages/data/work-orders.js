@@ -19,7 +19,7 @@ const statusColors = {
 }
 
 export default asNextJSPage(
-  class TechData extends React.Component {
+  class WorkOrderData extends React.Component {
     render() {
       const format = 'MMM Do, h:mm:ss a'
       const columns = [
@@ -51,7 +51,7 @@ export default asNextJSPage(
       return (
         <Layout>
           <Query
-            {...data.DataImport.QUERY_recentTechImports}
+            {...data.DataImport.QUERY_recentWorkOrderImports}
             variables={{ limit: 10 }}
             fetchPolicy="cache-and-network"
             pollInterval={5000}
@@ -61,7 +61,7 @@ export default asNextJSPage(
                 <Card>
                   <CardHeader style={{ position: 'relative' }}>
                     {/*relative because card-actions is absolute*/}
-                    <i className="icon-menu" /> Last 10 Tech Imports
+                    <i className="icon-menu" /> Last 10 Work Order Imports
                     <Button
                       className="card-actions mt-0 h-100"
                       color="primary"
@@ -73,7 +73,7 @@ export default asNextJSPage(
                         )
                       }}
                     >
-                      <i className="fa fa-download fa-lg mr-1" /> Download Tech Data
+                      <i className="fa fa-download fa-lg mr-1" /> Download Work Order Data
                     </Button>
                   </CardHeader>
                   <CardBody className="p-0">
