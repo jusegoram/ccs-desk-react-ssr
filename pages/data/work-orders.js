@@ -66,14 +66,7 @@ export default asNextJSPage(
         <Layout>
           <Query
             {...data.DataImport.QUERY_todaysWorkOrderImports}
-            variables={{
-              createdAtGte: moment()
-              .startOf('day')
-              .format(),
-              createdAtLt: moment()
-              .endOf('day')
-              .format(),
-            }}
+            variables={{ date: moment().format('YYYY-MM-DD') }}
             fetchPolicy="cache-and-network"
             pollInterval={5000}
           >
