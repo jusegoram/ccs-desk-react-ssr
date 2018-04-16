@@ -5,7 +5,6 @@ import _ from 'lodash'
 export default class Employee extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.specificType('bit', 'SERIAL')
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
     table.uuid('workGroupId')
