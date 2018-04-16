@@ -48,7 +48,13 @@ export default class WorkOrder extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        return super._contextFilter()
+        const { session } = super._contextFilter().context()
+        if (!session) return this
+        const workOrderIds = this.clone()
+        .select('WorkOrder.id')
+        .joinRelation('workGroups')
+        .where('workGroups.scopeCompanyId', session.account.company.id)
+        this.whereIn('id', workOrderIds)
       }
     }
   }
