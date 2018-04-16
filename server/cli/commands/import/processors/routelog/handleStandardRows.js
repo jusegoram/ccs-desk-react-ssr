@@ -75,13 +75,15 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
 
     timer.split('Ensure Company')
     const company = await Company.query().ensure(data.Subcontractor || data['Partner Name'])
+    const ccsCompany = await Company.query().ensure('CCS')
 
     timer.split('Work Group Datas')
     const employeeId = data['Tech ID']
     const techTeamId = data['Tech Team']
-    const workGroupDatas = [
+    const getWorkGroupDatas = scopeCompany => [
       ...(employeeId && [
         {
+          scopeCompanyId: scopeCompany.id,
           companyId: w2Company.id,
           type: 'Tech',
           externalId: employeeId,
@@ -90,6 +92,7 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
       ]),
       ...(techTeamId && [
         {
+          scopeCompanyId: scopeCompany.id,
           companyId: w2Company.id,
           type: 'Team',
           externalId: techTeamId,
@@ -97,12 +100,14 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
         },
       ]),
       {
+        scopeCompanyId: scopeCompany.id,
         companyId: w2Company.id,
         type: 'Company',
         externalId: w2Company.name,
         name: w2Company.name,
       },
       {
+        scopeCompanyId: scopeCompany.id,
         companyId: w2Company.id,
         type: 'Company',
         externalId: company.name,
@@ -110,24 +115,28 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
       },
       ...(!!data['Service Region'] && [
         {
+          scopeCompanyId: scopeCompany.id,
           companyId: w2Company.id,
           type: 'Service Region',
           externalId: data['Service Region'],
           name: data['Service Region'],
         },
         {
+          scopeCompanyId: scopeCompany.id,
           companyId: w2Company.id,
           type: 'Office',
           externalId: data.Office,
           name: data.Office,
         },
         {
+          scopeCompanyId: scopeCompany.id,
           companyId: w2Company.id,
           type: 'DMA',
           externalId: data.DMA,
           name: data.DMA,
         },
         {
+          scopeCompanyId: scopeCompany.id,
           companyId: w2Company.id,
           type: 'Division',
           externalId: data.Division,
@@ -136,16 +145,20 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
       ]),
     ]
 
+    const w2WorkGroupDatas = getWorkGroupDatas(ccsCompany).concat(getWorkGroupDatas(w2Company))
+    const subWorkGroupDatas = w2Company.id === company.id ? [] : getWorkGroupDatas(company)
+    const workGroupDatas = w2WorkGroupDatas.concat(subWorkGroupDatas)
+
     timer.split('Work Groups _.differenceWith')
-    const workGroupPrimaryKey = ['companyId', 'type', 'externalId']
+    const workGroupPrimaryKey = ['scopeCompanyId', 'companyId', 'type', 'externalId']
     const hasSamePrimaryKey = (a, b) => _.isEqual(_.pick(a, workGroupPrimaryKey), _.pick(b, workGroupPrimaryKey))
     const newWorkGroupDatas = _.differenceWith(workGroupDatas, workOrder.workGroups, hasSamePrimaryKey)
     const obsoleteWorkGroups = _.differenceWith(workOrder.workGroups, workGroupDatas, hasSamePrimaryKey)
 
     timer.split('Ensure New Work Groups')
-    const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData =>
-      WorkGroup.query().ensure(workGroupData, workGroupCache)
-    )
+    const newWorkGroups = await Promise.mapSeries(newWorkGroupDatas, workGroupData => {
+      return WorkGroup.query().ensure(workGroupData, workGroupCache)
+    })
 
     timer.split('Insert New Work Group Relations')
     await Promise.mapSeries(_.uniqBy(newWorkGroups, 'id'), workGroup =>

@@ -49,7 +49,8 @@ const mockFiles = {
     Siebel: {
       // 'Tech Profile': 'full/Goodman/techProfile.csv',
       'Tech Profile': 'techProfile.csv',
-      Routelog: 'full/Goodman/routelog.csv',
+      // Routelog: 'full/Goodman/routelog.csv',
+      Routelog: 'routelog.csv',
     },
     Edge: {
       'MW Routelog': 'full/Goodman/edge.mw.csv',
