@@ -11,6 +11,7 @@ import data from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'
 import cookie from 'cookie'
+import config from 'server/config'
 
 const statusColors = {
   Complete: 'success',
@@ -72,8 +73,7 @@ export default asNextJSPage(
                       onClick={() => {
                         const token = encodeURIComponent(cookie.parse(document.cookie).token)
                         const timezone = encodeURIComponent(moment.tz.guess())
-                        const downloadUrl =
-                          'https://local.endeavorfleet.com/download/techs' + `?token=${token}&timezone=${timezone}`
+                        const downloadUrl = config.host + '/download/techs' + `?token=${token}&timezone=${timezone}`
                         this.setState({ downloadUrl }, () => {
                           alert(
                             'The download should be starting.' +
