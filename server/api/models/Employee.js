@@ -83,7 +83,12 @@ export default class Employee extends APIModel {
     return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = super._contextFilter().context()
-        this.where({ companyId: session.account.company.id })
+        if (!session) return this
+        const employeeIds = this.clone()
+        .select('Employee.id')
+        .joinRelation('workGroups')
+        .where('workGroups.scopeCompanyId', session.account.company.id)
+        this.whereIn('id', employeeIds)
         return this
       }
     }
