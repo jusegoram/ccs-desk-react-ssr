@@ -220,7 +220,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         const obsoleteWorkGroups = _.differenceWith(employee.workGroups, workGroupDatas, hasSamePrimaryKey)
 
         timer.split('Ensure New Work Groups')
-        const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData => {
+        const newWorkGroups = await Promise.mapSeries(newWorkGroupDatas, workGroupData => {
           return WorkGroup.query().ensure(workGroupData, workGroupCache)
         })
 
@@ -248,9 +248,9 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         // const techWorkGroup = _.find(employee.workGroups, { type: 'Tech' })
         // await employee.$query().patch({ workGroupId: techWorkGroup.id })
 
-        timer.split('Set Team Manager')
-        const teamWorkGroups = _.filter(employee.workGroups, { type: 'Team' })
-        supervisor && (await Promise.mapSeries(teamWorkGroups, group => group.addManager(supervisor)))
+        // timer.split('Set Team Manager')
+        // const teamWorkGroups = _.filter(employee.workGroups, { type: 'Team' })
+        // supervisor && (await Promise.mapSeries(teamWorkGroups, group => group.addManager(supervisor)))
       } catch (e) {
         console.error(data) // eslint-disable-line no-console
         throw e
