@@ -92,7 +92,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
       'name'
     )
 
-    await Promise.mapSeries(datas.slice(0, 1), async data => {
+    await Promise.mapSeries(datas, async data => {
       try {
         timer.split('Ensure Company')
         const company = data['Tech Type'] === w2CompanyName ? w2Company : subcontractors[data['Tech Type']]
@@ -221,7 +221,6 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
 
         timer.split('Ensure New Work Groups')
         const newWorkGroups = await Promise.map(newWorkGroupDatas, workGroupData => {
-          console.log(workGroupData)
           return WorkGroup.query().ensure(workGroupData, workGroupCache)
         })
 
@@ -249,11 +248,9 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         // const techWorkGroup = _.find(employee.workGroups, { type: 'Tech' })
         // await employee.$query().patch({ workGroupId: techWorkGroup.id })
 
-        // timer.split('Set Team Manager')
-        // const teamWorkGroup = _.find(employee.workGroups, { type: 'Team' })
-        // if (teamWorkGroup && supervisor) {
-        //   await teamWorkGroup.addManager(supervisor)
-        // }
+        timer.split('Set Team Manager')
+        const teamWorkGroups = _.filter(employee.workGroups, { type: 'Team' })
+        supervisor && (await Promise.mapSeries(teamWorkGroups, group => group.addManager(supervisor)))
       } catch (e) {
         console.error(data) // eslint-disable-line no-console
         throw e
