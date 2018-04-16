@@ -4,11 +4,13 @@ import { Query } from 'react-apollo'
 import { Card, CardHeader, CardBody, Button, Badge } from 'reactstrap'
 import Moment from 'react-moment'
 import alert from 'sweetalert'
+import moment from 'moment-timezone'
 
 import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'
+import cookie from 'cookie'
 
 const statusColors = {
   Complete: 'success',
@@ -20,7 +22,9 @@ const statusColors = {
 
 export default asNextJSPage(
   class TechData extends React.Component {
+    state = { downloadUrl: null }
     render() {
+      const { downloadUrl } = this.state
       const format = 'MMM Do, h:mm:ss a'
       const columns = [
         {
@@ -66,11 +70,16 @@ export default asNextJSPage(
                       className="card-actions mt-0 h-100"
                       color="primary"
                       onClick={() => {
-                        window.open('https://endeavorfleet.com/download/timecards')
-                        alert(
-                          'The download should be starting.' +
-                            " If it hasn't, verify that your popup blocker isn't preventing it from opening."
-                        )
+                        const token = encodeURIComponent(cookie.parse(document.cookie).token)
+                        const timezone = encodeURIComponent(moment.tz.guess())
+                        const downloadUrl =
+                          'https://local.endeavorfleet.com/download/techs' + `?token=${token}&timezone=${timezone}`
+                        this.setState({ downloadUrl }, () => {
+                          alert(
+                            'The download should be starting.' +
+                              " If it hasn't, verify that your popup blocker isn't preventing it from opening."
+                          )
+                        })
                       }}
                     >
                       <i className="fa fa-download fa-lg mr-1" /> Download Tech Data
@@ -88,6 +97,7 @@ export default asNextJSPage(
                       columns={columns}
                     />
                   </CardBody>
+                  {downloadUrl && <iframe style={{ display: 'none' }} src={downloadUrl} />}
                 </Card>
               )
             }}
