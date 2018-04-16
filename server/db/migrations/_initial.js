@@ -38,7 +38,7 @@ export function up(knex) {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.uuid('dataSourceId')
     table.string('reportName')
-    table.string('status').defaultTo('pending')
+    table.string('status').defaultTo('Pending')
     table.text('error')
     table.timestamp('downloadedAt')
     table.timestamp('completedAt')
@@ -47,7 +47,7 @@ export function up(knex) {
   })
   .createTable('DataSource', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.uuid('companyId')
+    table.uuid('companyId') // one way
     table.string('name')
     table.json('reports')
     table.unique(['companyId', 'name'])
@@ -56,6 +56,7 @@ export function up(knex) {
   })
   .createTable('Employee', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
+    table.specificType('bit', 'SERIAL')
     table.timestamp('terminatedAt')
     table.uuid('companyId').notNullable()
     table.uuid('workGroupId')
@@ -215,6 +216,8 @@ export function up(knex) {
     table.string('name').notNullable()
     table.unique(['companyId', 'type', 'externalId'])
     table.uuid('geographyId')
+    table.specificType('techBitset', 'BIT VARYING').defaultTo('')
+    table.specificType('managerBitset', 'BIT VARYING').defaultTo('')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()

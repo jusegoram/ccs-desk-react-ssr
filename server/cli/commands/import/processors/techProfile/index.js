@@ -49,6 +49,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
     const knex = Employee.knex()
     const dataSourceId = dataSource.id
     const workGroupCache = {}
+    const ccsCompany = await Company.query().findOne({ name: 'CCS' })
 
     let srData = null
 
@@ -146,58 +147,62 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         timer.split('Ensure Work Groups')
         const techSR = data['Service Region']
         const techSrData = srData[techSR]
-        const workGroupDatas = _.filter([
-          {
-            type: 'Tech',
-            companyId: w2Company.id,
-            externalId: employee.externalId,
-            name: employee.name,
-          },
-          !!data['Team ID'] && {
-            type: 'Team',
-            companyId: w2Company.id,
-            externalId: data['Team ID'],
-            name: sanitizeName(data['Team Name']),
-          },
-          {
-            type: 'Company',
-            companyId: w2Company.id,
-            externalId: w2Company.name,
-            name: w2Company.name,
-          },
-          {
-            type: 'Company',
-            companyId: w2Company.id,
-            externalId: company.name,
-            name: company.name,
-          },
-          ...(!!techSrData && [
+        const getWorkGroupDatas = workGroupCompany =>
+          _.filter([
             {
-              type: 'Service Region',
-              companyId: w2Company.id,
-              externalId: techSR,
-              name: techSR,
+              type: 'Tech',
+              companyId: workGroupCompany.id,
+              externalId: employee.externalId,
+              name: employee.name,
+            },
+            !!data['Team ID'] && {
+              type: 'Team',
+              companyId: workGroupCompany.id,
+              externalId: data['Team ID'],
+              name: sanitizeName(data['Team Name']),
             },
             {
-              type: 'Office',
-              companyId: w2Company.id,
-              externalId: techSrData['Office'],
-              name: techSrData['Office'],
+              type: 'Company',
+              companyId: workGroupCompany.id,
+              externalId: w2Company.name,
+              name: w2Company.name,
             },
             {
-              type: 'DMA',
-              companyId: w2Company.id,
-              externalId: techSrData['DMA'],
-              name: techSrData['DMA'],
+              type: 'Company',
+              companyId: workGroupCompany.id,
+              externalId: company.name,
+              name: company.name,
             },
-            {
-              type: 'Division',
-              companyId: w2Company.id,
-              externalId: techSrData['Division'],
-              name: techSrData['Division'],
-            },
-          ]),
-        ])
+            ...(!!techSrData && [
+              {
+                type: 'Service Region',
+                companyId: workGroupCompany.id,
+                externalId: techSR,
+                name: techSR,
+              },
+              {
+                type: 'Office',
+                companyId: workGroupCompany.id,
+                externalId: techSrData['Office'],
+                name: techSrData['Office'],
+              },
+              {
+                type: 'DMA',
+                companyId: workGroupCompany.id,
+                externalId: techSrData['DMA'],
+                name: techSrData['DMA'],
+              },
+              {
+                type: 'Division',
+                companyId: workGroupCompany.id,
+                externalId: techSrData['Division'],
+                name: techSrData['Division'],
+              },
+            ]),
+          ])
+        const w2WorkGroupDatas = getWorkGroupDatas(ccsCompany).concat(getWorkGroupDatas(w2Company))
+        const subWorkGroupDatas = w2Company.id === company.id ? [] : getWorkGroupDatas(company)
+        const workGroupDatas = w2WorkGroupDatas.concat(subWorkGroupDatas)
 
         timer.split('Work Groups _.differenceWith')
         const workGroupPrimaryKey = ['companyId', 'type', 'externalId']
