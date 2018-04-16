@@ -155,6 +155,7 @@ export default async app => {
         .mergeContext({ session, moment })
         ._contextFilter()
         .select('row')
+        .where({ date: moment().format('YYYY-MM-DD') })
         const csv = await CSV.toCSV(_.map(workOrders, 'row'))
         const csvStream = new Readable()
         csvStream.push(csv)
