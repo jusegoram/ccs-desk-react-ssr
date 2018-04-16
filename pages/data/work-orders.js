@@ -107,8 +107,8 @@ export default asNextJSPage(
                       style={{ backgroundColor: 'white', height: 'calc(100vh - 146px)' }}
                       className="-striped -highlight"
                       loading={(!data || !data.dataImports) && loading}
-                      sortable={false}
                       data={data && data.dataImports}
+                      filterable={true}
                       defaultPageSize={15}
                       columns={columns}
                     />
