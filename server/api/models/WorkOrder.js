@@ -37,7 +37,7 @@ export default class WorkOrder extends APIModel {
       id: { type: 'string' },
       // <custom>
       externalId: { type: ['string', 'null'] },
-      date: { type: 'string', format: 'date' },
+      date: { type: ['string', 'null'], format: 'date' },
       status: { type: ['string', 'null'] },
       // </custom>
     },
