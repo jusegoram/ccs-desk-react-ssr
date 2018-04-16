@@ -82,7 +82,7 @@ export default class ApolloFactory {
         })
       if (networkError) {
         if (process.browser) {
-          alert('Error', 'An unexpected error has occurred. Please try again later.', 'error')
+          alert('Error', 'There appears to be an issue with the network. Please try again later.', 'error')
           console.error(JSON.stringify(errorInfo, null, '\t')) // eslint-disable-line no-console
         }
       }

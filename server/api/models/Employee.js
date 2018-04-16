@@ -84,11 +84,7 @@ export default class Employee extends APIModel {
     return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = super._contextFilter().context()
-        this.joinRelation('workGroups').where(function() {
-          session.account.permissions.forEach(permission => {
-            this.orWhereIn('workGroups.id', _.map(permission.workGroups, 'id'))
-          })
-        })
+        this.where({ companyId: session.account.company.id })
         return this
       }
     }
