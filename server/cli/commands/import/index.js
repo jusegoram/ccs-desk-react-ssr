@@ -42,6 +42,9 @@ const processors = {
   },
   Edge: {
     'MW Routelog': edgeRoutelogProcessor,
+    'SE Routelog': edgeRoutelogProcessor,
+    'SW Routelog': edgeRoutelogProcessor,
+    'W Routelog': edgeRoutelogProcessor,
   },
 }
 // const mockFiles = {
