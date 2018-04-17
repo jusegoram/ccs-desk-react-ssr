@@ -7,6 +7,8 @@ import { streamToArray } from 'server/util'
 import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
 
+const booleanYNMap = { Y: 'TRUE', N: 'FALSE' }
+
 const convertRowToStandardForm = ({ row, w2Company, employee }) => {
   const getWorkGroup = type => (employee && _.find(employee.workGroups, { type })) || {}
   const standardRow = {
@@ -36,8 +38,8 @@ const convertRowToStandardForm = ({ row, w2Company, employee }) => {
     'Negative Reschedules': row['Negative Reschedule Count'] || '',
     'Planned Duration': '',
     'Actual Duration': '',
-    'Service in 7 Days': row['Service Within 7 Days Flag'] === 'Y',
-    'Repeat Service': row['Repeat Service Flag'] === 'Y',
+    'Service in 7 Days': booleanYNMap[row['Service Within 7 Days Flag']] || '',
+    'Repeat Service': booleanYNMap[row['Repeat Service Flag']] || '',
     'Internet Connectivity': '',
     'Customer ID': '',
     'Customer Name': '',
