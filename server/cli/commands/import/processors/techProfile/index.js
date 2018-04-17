@@ -111,9 +111,9 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
           employee = await Employee.query()
           .eager('[workGroups, startLocation]')
           .upsert({
-            query: { dataSourceId, externalId: data['Tech User ID'] },
+            query: { companyId: company.id, externalId: data['Tech User ID'] },
             update: {
-              companyId: company.id,
+              dataSourceId,
               alternateExternalId: data['Tech ATT UID'],
               terminatedAt: null,
               name: sanitizeName(data['Tech Full Name']),
@@ -134,12 +134,12 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         const supervisor =
           supervisorId &&
           (await Employee.query().upsert({
-            query: { companyId: w2Company.id, externalId: supervisorId },
+            query: { companyId: company.id, externalId: data['Tech User ID'] },
             update: {
+              dataSourceId,
               role: 'Manager',
               name: sanitizeName(data['Team Name']),
               phoneNumber: data['Tech Team Supervisor Mobile #'],
-              dataSourceId: dataSource.id,
               terminatedAt: null,
               timezone: employee.timezone,
             },
