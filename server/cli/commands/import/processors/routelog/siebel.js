@@ -6,13 +6,14 @@ import sanitizeName from 'server/util/sanitizeName'
 import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
 
-const convertRowToStandardForm = ({ row, w2Company }) => {
+const convertRowToStandardForm = ({ row, w2Company, employee }) => {
   const standardRow = {
     Source: 'Siebel',
     'Partner Name': w2Company.name || '',
     Subcontractor: row['Tech Type'] || '',
     'Activity ID': row['Activity #'] || '',
-    'Tech ID': row['Tech User ID'] || '',
+    'Tech Siebel ID': row['Tech User ID'] || '',
+    'Tech Edge ID': (employee && employee.externalId) || '',
     'Tech Name': sanitizeName(row['Tech Full Name']) || '',
     'Tech Team': row['Tech Team'] || '',
     'Tech Supervisor': sanitizeName(row['Team Name']) || '',
@@ -97,7 +98,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
   timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
-    const { WorkGroup } = models
+    const { WorkGroup, Employee } = models
 
     timer.split('SR Data Load')
     const w2CompanyName = w2Company.name
@@ -110,7 +111,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
     )
 
     timer.split('Stream to Array')
-    const rows = await streamToArray(csvObjStream, data => {
+    const datas = await streamToArray(csvObjStream, data => {
       const serviceRegion = data.SR
       const groups = srData[serviceRegion]
       if (groups) {
@@ -121,7 +122,13 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
       data.companyName = !data['Tech Type'] || data['Tech Type'] === 'W2' ? w2Company.name : data['Tech Type']
       if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
       data.assignedTechId = data['Tech User ID']
-      return convertRowToStandardForm({ row: data, w2Company })
+    })
+
+    const rows = await Promise.mapSeries(datas, async data => {
+      const employee = await Employee.query()
+      .eager('[company, workGroups]')
+      .findOne({ externalId: data['Tech User ID'] })
+      return convertRowToStandardForm({ row: data, w2Company, employee })
     })
 
     await handleStandardRows({ rows, timer, models, dataSource, w2Company })

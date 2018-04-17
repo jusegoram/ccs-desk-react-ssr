@@ -54,11 +54,9 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
     timer.split('Appointment Upsert')
     let currentAppointment = _.find(workOrder.appointments, { date: workOrder.date })
     if (!currentAppointment || !_.isEqual(currentAppointment.data, data)) {
-      const techIdMatch =
-        data['Source'] === 'Edge' ? { alternateExternalId: data['Tech ID'] } : { externalId: data['Tech ID'] }
       const employee = await Employee.query()
       .first()
-      .where({ dataSourceId, ...techIdMatch })
+      .where({ externalId: data['Tech Siebel ID'] })
 
       currentAppointment =
         workOrder.date &&
@@ -82,7 +80,7 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
     const ccsCompany = await Company.query().ensure('CCS')
 
     timer.split('Work Group Datas')
-    const employeeId = data['Tech ID']
+    const employeeId = data['Tech Siebel ID']
     const techTeamId = data['Tech Team']
     const getWorkGroupDatas = scopeCompany => [
       ...(employeeId && [
