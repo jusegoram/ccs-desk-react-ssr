@@ -114,12 +114,16 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
       return data
     })
 
-    const rows = await Promise.mapSeries(datas, async data => {
-      const employee = await Employee.query()
-      .eager('[company, workGroups]')
-      .findOne({ alternateExternalId: data['Tech ID'] })
-      return convertRowToStandardForm({ row: data, w2Company, employee })
-    })
+    const rows = await Promise.mapSeries(
+      datas,
+      async data => {
+        const employee = await Employee.query()
+        .eager('[company, workGroups]')
+        .findOne({ alternateExternalId: data['Tech ID'] })
+        return convertRowToStandardForm({ row: data, w2Company, employee })
+      },
+      { concurrency: 40 }
+    )
 
     await handleStandardRows({ rows, timer, models, dataSource, w2Company })
   })
