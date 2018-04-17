@@ -210,94 +210,11 @@ class SiebelReportFetcher {
       if (options.screenshotsDirectory) {
         horseman = horseman.screenshot(getScreenshotPath('2_dashboard'))
       }
-      if (options.loggingPrefix) {
-        horseman = horseman.log(formatLog('\nFinding desired report nav menu item...'))
-      }
 
-      horseman = horseman
-        // grab the entire DOM for the nav menu items
-      .html(selector.navMenuItems)
-        // use cheerio to browse the DOM and ensure that you know which link gets which report
-      .then(function(html) {
-        const dashboardLinkClickHandlers = {}
-        const $ = cheerio.load(html)
-        const allLinks = $('a')
-        .toArray()
-        .filter(link => /[A-Za-z0-9]/.test($(link).text()))
-        allLinks.forEach(link => (dashboardLinkClickHandlers[$(link).text()] = $(link).attr('onclick')))
-        const onClickAttr = dashboardLinkClickHandlers[reportLinkText]
-        if (!onClickAttr) {
-          console.log(`No dashboard link found called ${reportLinkText}`)
-          console.log("Here's the dashboard links:")
-          console.log(JSON.stringify(dashboardLinkClickHandlers, null, '\t'))
-          throw new Error(`Missing dashboard link: ${reportLinkText}`)
-        }
-        const reportLinkParams = onClickAttr
-        .slice(28, +-2 + 1 || undefined)
-        .split(',')
-        .map(el => el.trim().replace(/(^'|'$)/g, ''))
-        return this.attribute('#idViewStateDiv', 'stateID').then(
-          stateId =>
-            baseUrl +
-                reportLinkParams[0] +
-                '&ViewState=' +
-                stateId +
-                '&StateAction=samePageState&ViewID=' +
-                reportLinkParams[1] +
-                '&Done=Close'
-        )
-      })
-
-      if (options.loggingPrefix) {
-        horseman = horseman
-        .log(formatLog('Desired nav menu item found. Report download page URL generated.'))
-        .log(formatLog('\nOpening report link (this may take a few minutes)...'))
-      }
-
-      horseman = horseman
-        // navigate to the generated URL
-      .then(function(reportUrl) {
-        return this.openTab(reportUrl)
-      })
-
-      if (SiebelReportFetcher.reportParamsPageHandlers[reportLinkText] != null) {
-        const reportParamsPageHandler = SiebelReportFetcher.reportParamsPageHandlers[reportLinkText]
-        horseman = reportParamsPageHandler(horseman, options)
-      }
-
-      // wait for the links at the bottom to show up
-      horseman = horseman.waitForSelector(selector.exportHtml)
-
-      if (options.loggingPrefix) {
-        horseman = horseman.log(formatLog('Report link opened.'))
-      }
-      if (options.screenshotsDirectory) {
-        horseman = horseman.screenshot(getScreenshotPath('5_reportPageOpened'))
-      }
-      if (options.loggingPrefix) {
-        horseman = horseman.log(formatLog('\nGenerating CSV download URL...'))
-      }
-      return (horseman = horseman
-        // grab the entire DOM for the links at the bottom
-      .html(selector.exportHtml)
-        // use cheerio to locate the menu item you want - namely, the one labeled "CSV Format"
-        // once you have it, parse its "onclick" handler in order to generate the download URL
-      .then(html => {
-        const $ = cheerio.load(html)
-        for (const el of Array.from($('.NQWMenuItem').toArray())) {
-          if ($('table.MenuItemTable > tbody > tr > td:last-child', el).text() === 'CSV Format') {
-            const clickFunctionText = $(el).attr('onclick')
-            return baseUrl + clickFunctionText.slice(38, +-4 + 1 || undefined)
-          }
-        }
-      })
-      .then(function(downloadUrl) {
-        if (options.loggingPrefix) {
-          console.log(formatLog(`CSV download URL generated: ${downloadUrl}`))
-        }
-        // download the file located at the generated URL
-        return this.download(downloadUrl)
-      }))
+      const encodedReportPath = encodeURIComponent(`/shared/FSS HSP Objects - Transfer/STL/${reportLinkText}`)
+      return horseman.download(
+        `https://sesar.directv.com/analytics/saw.dll?Go&path=${encodedReportPath}&Format=csv&Extension=.csv`
+      )
     })
     .tap(() => {
       if (options.loggingPrefix) {
