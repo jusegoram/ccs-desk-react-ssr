@@ -123,14 +123,21 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
       data.companyName = !data['Tech Type'] || data['Tech Type'] === 'W2' ? w2Company.name : data['Tech Type']
       if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
       data.assignedTechId = data['Tech User ID']
+      return data
     })
 
-    const rows = await Promise.mapSeries(datas, async data => {
-      const employee = await Employee.query()
-      .eager('[company, workGroups]')
-      .findOne({ externalId: data['Tech User ID'] })
-      return convertRowToStandardForm({ row: data, w2Company, employee })
-    })
+    const rows = await Promise.map(
+      datas,
+      async data => {
+        const employee =
+          data['Tech User ID'] &&
+          (await Employee.query()
+          .eager('[company, workGroups]')
+          .findOne({ externalId: data['Tech User ID'] }))
+        return convertRowToStandardForm({ row: data, w2Company, employee })
+      },
+      { concurrency: 40 }
+    )
 
     await handleStandardRows({ rows, timer, models, dataSource, w2Company })
   })
