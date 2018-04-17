@@ -14,7 +14,8 @@ const convertRowToStandardForm = ({ row, w2Company, employee }) => {
     'Partner Name': w2Company.name || '',
     Subcontractor: (employee && employee.company.name) || '',
     'Activity ID': row['Activity ID'] || '',
-    'Tech ID': (employee && employee.alternateExternalId) || '',
+    'Tech Siebel ID': (employee && employee.externalId) || '',
+    'Tech Edge ID': row['Tech ID'] || '',
     'Tech Name': (employee && employee.name) || '',
     'Tech Team': getWorkGroup('Team').externalId || '',
     'Tech Supervisor': getWorkGroup('Team').name || '',
@@ -114,7 +115,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
     const rows = await Promise.mapSeries(datas, async data => {
       const employee = await Employee.query()
       .eager('[company, workGroups]')
-      .findOne({ dataSourceId: dataSource.id, alternateExternalId: data['Tech ID'] })
+      .findOne({ alternateExternalId: data['Tech ID'] })
       return convertRowToStandardForm({ row: data, w2Company, employee })
     })
 

@@ -166,7 +166,14 @@ export default async app => {
         .mergeContext({ session, moment })
         ._contextFilter()
         .select('row')
-        .where({ date: moment().format('YYYY-MM-DD') })
+          .where({ date: moment().format('YYYY-MM-DD') })
+          // {"Source":"Edge","Partner Name":"Goodman","Subcontractor":"","Activity ID":"M8076014345","Tech ID":"","Tech Name":"","Tech Team":"","Tech Supervisor":"","Order Type":"New Install","Status":"Closed","Reason Code":"","Service Region":"IL31","DMA":"EVANSVILLE IN","Office":"EVANSVILLE","Division":"WEST","Time Zone":"CENTRAL","Created Date":"","Due Date":"2018-04-15 23:59:59","Planned Start Date":"2018-04-15 08:27:16","Actual Start Date":"2018-04-15 08:27:16","Actual End Date":"2018-04-15","Cancelled Date":"","Negative Reschedules":"0","Planned Duration":"","Actual Duration":"","Service in 7 Days":false,"Repeat Service":false,"Internet Connectivity":"","Customer ID":"","Customer Name":"","Customer Phone":"","Dwelling Type":"","Address":"2821 SHADY HOLLOW TRL","Zipcode":"47715","City":"EVANSVILLE","State":"IN","Latitude":"","Longitude":""}
+          .map(async workOrder => {
+            const { row } = workOrder
+            if (row.Source == 'Edge') {
+              const employee = await knex('Employee').where({alternateExternalId: row['']})
+            }
+        })  
         .map(workOrder => {
           stringifier.write(workOrder.row)
         })
