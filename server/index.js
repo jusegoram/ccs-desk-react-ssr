@@ -164,8 +164,8 @@ export default async app => {
         })
         const stringifier = stringify({ header: true })
         await models.WorkOrder.query()
-        .mergeContext({ session, moment })
-        ._contextFilter()
+        // .mergeContext({ session, moment })
+        // ._contextFilter()
         .select('row')
         .where({ date: moment().format('YYYY-MM-DD') })
         .map(async workOrder =>
