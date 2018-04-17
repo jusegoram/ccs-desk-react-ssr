@@ -123,7 +123,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
     //   },
     // })
     const mockFile = mockFiles[companyName][dataSourceName][reportName]
-    const csvString = fs.readFileSync(path.resolve('~', mockFile)) + ''
+    const csvString = fs.readFileSync(path.resolve('/home/ubuntu/fleet', mockFile)) + ''
     const csvObjStream = convertStringToStream(csvString)
     .pipe(new SanitizeStringStream())
     .pipe(
