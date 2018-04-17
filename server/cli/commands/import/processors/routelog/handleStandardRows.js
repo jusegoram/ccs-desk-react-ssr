@@ -54,9 +54,11 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
     timer.split('Appointment Upsert')
     let currentAppointment = _.find(workOrder.appointments, { date: workOrder.date })
     if (!currentAppointment || !_.isEqual(currentAppointment.data, data)) {
+      const techIdMatch =
+        data['Source'] === 'Edge' ? { alternateExternalId: data['Tech ID'] } : { externalId: data['Tech ID'] }
       const employee = await Employee.query()
       .first()
-      .where({ dataSourceId, externalId: data['Activity ID'] })
+      .where({ dataSourceId, ...techIdMatch })
 
       currentAppointment =
         workOrder.date &&
