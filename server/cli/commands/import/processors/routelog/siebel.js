@@ -5,6 +5,7 @@ import { streamToArray } from 'server/util'
 import sanitizeName from 'server/util/sanitizeName'
 import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
+import Promise from 'bluebird'
 
 const convertRowToStandardForm = ({ row, w2Company, employee }) => {
   const standardRow = {
