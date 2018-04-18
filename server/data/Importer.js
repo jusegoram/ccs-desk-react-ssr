@@ -1,6 +1,7 @@
 import path from 'path'
 import csv from 'csv'
 import moment from 'moment-timezone'
+import { Company, DataImport } from 'server/api/models'
 import techProfileProcessor from 'server/data/processors/techProfile'
 import siebelRoutelogProcessor from 'server/data/processors/routelog/siebel'
 import edgeRoutelogProcessor from 'server/data/processors/routelog/edge'
@@ -42,7 +43,6 @@ export default class Importer {
   }
 
   async importReport({ reportName }) {
-    const { Company, DataImport } = this.models
     const dataSourceName = Importer.dataSourceForReport({ reportName })
     const w2Company = await Company.query().findOne({ name: this.companyName })
     const dataSource = await w2Company
