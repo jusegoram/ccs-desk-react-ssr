@@ -22,18 +22,18 @@ const analyticsCredentials = {
   },
 }
 
-// const analyticsReportNames = {
-//   Siebel: {
-//     'Tech Profile': 'Tech Profile',
-//     Routelog: 'routelog',
-//   },
-//   Edge: {
-//     'MW Routelog': 'EDGEMW Bll',
-//     'SE Routelog': 'EDGESE Bll',
-//     'SW Routelog': 'EDGESW Bll',
-//     'W Routelog': 'EDGEW Bll',
-//   },
-// }
+const analyticsReportNames = {
+  Siebel: {
+    'Tech Profile': 'Tech Profile',
+    Routelog: 'routelog',
+  },
+  Edge: {
+    'MW Routelog': 'EDGEMW Bll',
+    'SE Routelog': 'EDGESE Bll',
+    'SW Routelog': 'EDGESW Bll',
+    'W Routelog': 'EDGEW Bll',
+  },
+}
 
 const processors = {
   Siebel: {
@@ -48,26 +48,26 @@ const processors = {
     'W Routelog': edgeRoutelogProcessor,
   },
 }
-const mockFiles = {
-  Goodman: {
-    Siebel: {
-      'Tech Profile': 'techProfile.mb.csv',
-      Routelog: 'routelog.mb.csv',
-    },
-    Edge: {
-      Routelog: 'edge.mb.csv',
-    },
-  },
-  DirectSat: {
-    Siebel: {
-      'Tech Profile': 'techProfile.ds.csv',
-      Routelog: 'routelog.ds.csv',
-    },
-    Edge: {
-      Routelog: 'edge.ds.csv',
-    },
-  },
-}
+// const mockFiles = {
+//   Goodman: {
+//     Siebel: {
+//       'Tech Profile': 'techProfile.mb.csv',
+//       Routelog: 'routelog.mb.csv',
+//     },
+//     Edge: {
+//       Routelog: 'edge.mb.csv',
+//     },
+//   },
+//   DirectSat: {
+//     Siebel: {
+//       'Tech Profile': 'techProfile.ds.csv',
+//       Routelog: 'routelog.ds.csv',
+//     },
+//     Edge: {
+//       Routelog: 'edge.ds.csv',
+//     },
+//   },
+// }
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
 module.exports = async ({ companyName, dataSourceName, reportName }) => {
@@ -81,11 +81,9 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
   .insert({ dataSourceId: dataSource.id, reportName })
   .returning('*')
   try {
-    process.stdin.resume() //so the program will not close instantly
-
-    const exitHandler = (options, err) => {
+    const exitHandler = async (options, err) => {
       if (options.cleanup) {
-        dataImport.$query().patch({ status: 'Aborted' })
+        await dataImport.$query().patch({ status: 'Aborted' })
       }
       if (err) console.log(err.stack)
       if (options.exit) process.exit()
@@ -106,17 +104,17 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
 
     const credentials = analyticsCredentials[companyName]
     await dataImport.$query().patch({ status: 'Downloading' })
-    // const analyticsReportName = analyticsReportNames[dataSourceName][reportName]
-    // const csvString = await new SiebelReportFetcher(credentials).fetchReport(analyticsReportName, {
-    //   loggingPrefix: 'CCS CLI',
-    //   // screenshotsDirectory,
-    //   // screenshotsPrefix: `${dataSource.service}_${dataSource.report}`,
-    //   horsemanConfig: {
-    //     cookiesFile: path.join(__dirname, `${companyName}_cookies.txt`),
-    //   },
-    // })
-    const mockFile = mockFiles[companyName][dataSourceName][reportName]
-    const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
+    const analyticsReportName = analyticsReportNames[dataSourceName][reportName]
+    const csvString = await new SiebelReportFetcher(credentials).fetchReport(analyticsReportName, {
+      loggingPrefix: 'CCS CLI',
+      // screenshotsDirectory,
+      // screenshotsPrefix: `${dataSource.service}_${dataSource.report}`,
+      horsemanConfig: {
+        cookiesFile: path.join(__dirname, `${companyName}_cookies.txt`),
+      },
+    })
+    // const mockFile = mockFiles[companyName][dataSourceName][reportName]
+    // const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
     const csvObjStream = convertStringToStream(csvString)
     .pipe(new SanitizeStringStream())
     .pipe(
