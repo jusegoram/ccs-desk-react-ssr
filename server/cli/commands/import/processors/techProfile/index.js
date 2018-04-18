@@ -148,21 +148,14 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         timer.split('Ensure Work Groups')
         const techSR = data['Service Region']
         const techSrData = srData[techSR]
-        const getWorkGroupDatas = scopeCompany =>
-          _.filter([
+        const getWorkGroupDatas = scopeCompany => {
+          const workGroupDatas = [
             {
               type: 'Tech',
               scopeCompanyId: scopeCompany.id,
               companyId: company.id,
               externalId: employee.externalId,
               name: employee.name,
-            },
-            !!data['Team ID'] && {
-              type: 'Team',
-              scopeCompanyId: scopeCompany.id,
-              companyId: company.id,
-              externalId: data['Team ID'],
-              name: sanitizeName(data['Team Name']),
             },
             {
               type: 'Company',
@@ -178,37 +171,51 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
               externalId: company.name,
               name: company.name,
             },
-            ...(!!techSrData && [
-              {
-                type: 'Service Region',
-                scopeCompanyId: scopeCompany.id,
-                companyId: company.id,
-                externalId: techSR,
-                name: techSR,
-              },
-              {
-                type: 'Office',
-                scopeCompanyId: scopeCompany.id,
-                companyId: company.id,
-                externalId: techSrData['Office'],
-                name: techSrData['Office'],
-              },
-              {
-                type: 'DMA',
-                scopeCompanyId: scopeCompany.id,
-                companyId: company.id,
-                externalId: techSrData['DMA'],
-                name: techSrData['DMA'],
-              },
-              {
-                type: 'Division',
-                scopeCompanyId: scopeCompany.id,
-                companyId: company.id,
-                externalId: techSrData['Division'],
-                name: techSrData['Division'],
-              },
-            ]),
-          ])
+          ]
+          if (data['Team ID'])
+            workGroupDatas.push({
+              type: 'Team',
+              scopeCompanyId: scopeCompany.id,
+              companyId: company.id,
+              externalId: data['Team ID'],
+              name: sanitizeName(data['Team Name']),
+            })
+          if (techSrData) {
+            workGroupDatas.push(
+              ...[
+                {
+                  type: 'Service Region',
+                  scopeCompanyId: scopeCompany.id,
+                  companyId: company.id,
+                  externalId: techSR,
+                  name: techSR,
+                },
+                {
+                  type: 'Office',
+                  scopeCompanyId: scopeCompany.id,
+                  companyId: company.id,
+                  externalId: techSrData['Office'],
+                  name: techSrData['Office'],
+                },
+                {
+                  type: 'DMA',
+                  scopeCompanyId: scopeCompany.id,
+                  companyId: company.id,
+                  externalId: techSrData['DMA'],
+                  name: techSrData['DMA'],
+                },
+                {
+                  type: 'Division',
+                  scopeCompanyId: scopeCompany.id,
+                  companyId: company.id,
+                  externalId: techSrData['Division'],
+                  name: techSrData['Division'],
+                },
+              ]
+            )
+          }
+          return workGroupDatas
+        }
         const w2WorkGroupDatas = getWorkGroupDatas(ccsCompany).concat(getWorkGroupDatas(w2Company))
         const subWorkGroupDatas = w2Company.id === company.id ? [] : getWorkGroupDatas(company)
         const workGroupDatas = w2WorkGroupDatas.concat(subWorkGroupDatas)
