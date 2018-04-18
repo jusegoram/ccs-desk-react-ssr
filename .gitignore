@@ -1,5 +1,6 @@
 .next
 server/db/seedData/timezones.csv
+server/importer/*_cookies.txt
 
 .template
 
