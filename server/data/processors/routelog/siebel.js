@@ -147,7 +147,9 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
         return convertRowToStandardForm({ row: data, w2Company, employee })
       },
       { concurrency: 40 }
-    ).filter(row => !_.isEqual(row, workOrdersByExternalId[row['Activity ID']]))
+    ).filter(
+      row => !workOrdersByExternalId[row['Activity ID']] || !_.isEqual(row, workOrdersByExternalId[row['Activity ID']])
+    )
     console.log('Num Changed CSV Rows', rows.length)
 
     // await handleStandardRows({ rows, timer, models, dataSource, w2Company })
