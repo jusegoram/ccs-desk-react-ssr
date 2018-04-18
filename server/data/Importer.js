@@ -45,7 +45,7 @@ export default class Importer {
   constructor({ models, companyName }) {
     this.models = models
     this.companyName = companyName
-    this.credentials = Importer.analyticsCredentials[companyName]
+    this.credentials = Importer.credentials[companyName]
   }
 
   async importReport({ reportName }) {
