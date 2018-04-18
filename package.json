@@ -6,7 +6,7 @@
     "dev": "nodemon -w index.js -w server -w package.json -x env-cmd .env babel-node index.js",
     "start-dev": "env-cmd .env babel-node index.js",
     "build": "env-cmd .env next build",
-    "start": "NODE_ENV=production env-cmd .env babel-node index.js",
+    "start": "env-cmd .env babel-node index.js",
     "knex:seed": "env-cmd .env babel-node node_modules/.bin/knex seed:run",
     "knex:migrate:latest": "env-cmd .env babel-node node_modules/.bin/knex migrate:latest",
     "knex:migrate:rollback": "env-cmd .env babel-node node_modules/.bin/knex migrate:rollback",
@@ -138,6 +138,7 @@
     "eslint-plugin-mocha": "^4.11.0",
     "eslint-plugin-prettier": "^2.3.1",
     "eslint-plugin-react": "^7.4.0",
+    "flow-bin": "^0.70.0",
     "jsdom-quokka-plugin": "^1.0.10"
   },
   "quokka": {
