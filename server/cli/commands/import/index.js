@@ -1,4 +1,4 @@
-import fs from 'fs'
+// import fs from 'fs'
 import path from 'path'
 import csv from 'csv'
 import moment from 'moment-timezone'
@@ -85,7 +85,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
       if (options.cleanup) {
         await dataImport.$query().patch({ status: 'Aborted' })
       }
-      if (err) console.log(err.stack)
+      if (err) console.log(err.stack) // eslint-disable-line no-console
       if (options.exit) process.exit()
     }
 
