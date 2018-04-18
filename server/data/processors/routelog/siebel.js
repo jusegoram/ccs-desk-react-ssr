@@ -99,7 +99,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
   timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
-    const { WorkGroup, Employee } = models
+    const { WorkOrder, WorkGroup, Employee } = models
 
     timer.split('SR Data Load')
     const w2CompanyName = w2Company.name
@@ -126,20 +126,31 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
       return data
     })
 
+    const employeeExternalIds = _.filter(_.map(datas, 'Tech User ID'))
+    const employeesByExternalId = _.keyBy(
+      await Employee.query()
+      .eager('[company, workGroups]')
+      .whereIn('externalId', employeeExternalIds),
+      'externalId'
+    )
+
+    const workOrderExternalIds = _.filter(_.map(datas, 'Activity ID'))
+    const workOrdersByExternalId = _.keyBy(
+      await WorkOrder.query().whereIn('externalId', workOrderExternalIds),
+      'externalId'
+    )
+    console.log('Num CSV Rows', datas.length)
     const rows = await Promise.map(
       datas,
       async data => {
-        const employee =
-          data['Tech User ID'] &&
-          (await Employee.query()
-          .eager('[company, workGroups]')
-          .findOne({ externalId: data['Tech User ID'] }))
+        const employee = data['Tech User ID'] && employeesByExternalId[data['Tech User ID']]
         return convertRowToStandardForm({ row: data, w2Company, employee })
       },
       { concurrency: 40 }
-    )
+    ).filter(row => !_.isEqual(row, workOrdersByExternalId[row['Activity ID']]))
+    console.log('Num Changed CSV Rows', rows.length)
 
-    await handleStandardRows({ rows, timer, models, dataSource, w2Company })
+    // await handleStandardRows({ rows, timer, models, dataSource, w2Company })
   })
   timer.stop('Total')
   console.log(timer.toString()) // eslint-disable-line no-console
