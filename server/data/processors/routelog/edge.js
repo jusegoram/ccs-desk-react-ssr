@@ -5,7 +5,7 @@ import { transaction } from 'objection'
 import * as rawModels from 'server/api/models'
 import { streamToArray } from 'server/util'
 import Timer from 'server/util/Timer'
-import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
+import handleStandardRows from 'server/data/processors/routelog/handleStandardRows'
 
 const booleanYNMap = { Y: 'TRUE', N: 'FALSE' }
 
