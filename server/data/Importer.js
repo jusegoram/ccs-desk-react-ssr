@@ -1,9 +1,6 @@
 import path from 'path'
 import csv from 'csv'
 import moment from 'moment-timezone'
-import _ from 'lodash'
-import { transaction } from 'objection'
-import * as rawModels from 'server/api/models'
 import techProfileProcessor from 'server/data/processors/techProfile'
 import siebelRoutelogProcessor from 'server/data/processors/routelog/siebel'
 import edgeRoutelogProcessor from 'server/data/processors/routelog/edge'
@@ -14,27 +11,24 @@ const SanitizeStringStream = require('./download/siebel/SanitizeStringStream')
 
 export default class Importer {
   static async importAll() {
-    await transaction(..._.values(rawModels), async (...modelsArray) => {
-      const models = _.keyBy(modelsArray, 'name')
-      const goodmanImporter = new Importer({ models, companyName: 'Goodman' })
-      // const directSatImporter = new Importer({ models, companyName: 'DirectSat' })
-      await Promise.all([
-        goodmanImporter.importReport({ reportName: 'Tech Profile' }),
-        // directSatImporter.importReport({ reportName: 'Tech Profile' }),
-      ])
-      await Promise.all([
-        goodmanImporter.importReport({ reportName: 'Routelog' }),
-        // directSatImporter.importReport({ reportName: 'Routelog' }),
-        // goodmanImporter.importReport({ reportName: 'MW Routelog' }),
-        // directSatImporter.importReport({ reportName: 'MW Routelog' }),
-        // goodmanImporter.importReport({ reportName: 'SE Routelog' }),
-        // directSatImporter.importReport({ reportName: 'SE Routelog' }),
-        // goodmanImporter.importReport({ reportName: 'SW Routelog' }),
-        // directSatImporter.importReport({ reportName: 'SW Routelog' }),
-        // goodmanImporter.importReport({ reportName: 'W Routelog' }),
-        // directSatImporter.importReport({ reportName: 'W Routelog' }),
-      ])
-    })
+    const goodmanImporter = new Importer({ companyName: 'Goodman' })
+    // const directSatImporter = new Importer({ models, companyName: 'DirectSat' })
+    await Promise.all([
+      // goodmanImporter.importReport({ reportName: 'Tech Profile' }),
+      // directSatImporter.importReport({ reportName: 'Tech Profile' }),
+    ])
+    await Promise.all([
+      goodmanImporter.importReport({ reportName: 'Routelog' }),
+      // directSatImporter.importReport({ reportName: 'Routelog' }),
+      // goodmanImporter.importReport({ reportName: 'MW Routelog' }),
+      // directSatImporter.importReport({ reportName: 'MW Routelog' }),
+      // goodmanImporter.importReport({ reportName: 'SE Routelog' }),
+      // directSatImporter.importReport({ reportName: 'SE Routelog' }),
+      // goodmanImporter.importReport({ reportName: 'SW Routelog' }),
+      // directSatImporter.importReport({ reportName: 'SW Routelog' }),
+      // goodmanImporter.importReport({ reportName: 'W Routelog' }),
+      // directSatImporter.importReport({ reportName: 'W Routelog' }),
+    ])
   }
 
   static dataSourceForReport({ reportName }) {
@@ -42,8 +36,7 @@ export default class Importer {
     return Importer.reportDataSourceMap[reportName]
   }
 
-  constructor({ models, companyName }) {
-    this.models = models
+  constructor({ companyName }) {
     this.companyName = companyName
     this.credentials = Importer.credentials[companyName]
   }
