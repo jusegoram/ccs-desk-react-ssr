@@ -108,7 +108,6 @@ export default class Importer {
       await dataImport.$query().patch({ status: 'Complete', completedAt: moment().format() })
     } catch (e) {
       await dataImport.$query().patch({ status: 'Errored' })
-      throw e
     }
   }
 
