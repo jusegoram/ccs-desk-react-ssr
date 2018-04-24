@@ -28,10 +28,10 @@ export default {
       url: '/data/work-orders',
       icon: 'fa fa-tasks',
     },
-    {
-      name: 'Tech Data',
-      url: '/data/techs',
-      icon: 'fa fa-users',
-    },
+    // {
+    //   name: 'Tech Data',
+    //   url: '/data/techs',
+    //   icon: 'fa fa-users',
+    // },
   ],
 }
