@@ -131,6 +131,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
     await dataImport.$query().patch({ status: 'Processing', downloadedAt: moment().format() })
     await processors[dataSourceName][reportName]({ csvObjStream, dataSource, w2Company })
     await dataImport.$query().patch({ status: 'Complete', completedAt: moment().format() })
+    process.exit(0)
   } catch (e) {
     await dataImport.$query().patch({ status: 'Errored' })
     throw e
