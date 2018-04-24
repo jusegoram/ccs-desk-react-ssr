@@ -45,7 +45,15 @@ export default class DataImport extends APIModel {
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
-        return super._contextFilter()
+        const { session } = super._contextFilter()
+        if (!session) return this
+        const dataSourceIds = this.clone()
+        .distinct('DataSource.id')
+        .joinRelation('dataSource')
+        .joinRelation('fedCompanies')
+        .where('fedCompanies.id', session.account.company.id)
+        this.whereIn('dataSourceId', dataSourceIds)
+        return this
       }
     }
   }
