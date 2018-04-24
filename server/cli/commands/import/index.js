@@ -112,15 +112,11 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
 
     const credentials = analyticsCredentials[companyName]
     await dataImport.$query().patch({ status: 'Downloading' })
-    const analyticsReportName = analyticsReportNames[dataSourceName][reportName]
-    const csvString = await new SiebelReportFetcher(credentials).fetchReport(analyticsReportName, {
-      loggingPrefix: 'CCS CLI',
-      // screenshotsDirectory,
-      // screenshotsPrefix: `${dataSource.service}_${dataSource.report}`,
-      horsemanConfig: {
-        cookiesFile: path.join(__dirname, `${companyName}_cookies.txt`),
-      },
-    })
+    const reportFetcher = new SiebelReportFetcher(credentials, companyName)
+    const csvString = await reportFetcher.fetchReport(reportName)
+    console.log('closing browser')
+    await reportFetcher.close()
+    console.log('browser closed')
     // const mockFile = mockFiles[companyName][dataSourceName][reportName]
     // const csvString = fs.readFileSync(path.resolve(__dirname, 'mock_csvs', mockFile)) + ''
     const csvObjStream = convertStringToStream(csvString)
