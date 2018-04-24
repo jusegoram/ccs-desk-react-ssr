@@ -3,7 +3,6 @@
 const path = require('path')
 
 const Promise = require('bluebird')
-const moment = require('moment-timezone')
 const puppeteer = require('puppeteer')
 const fs = require('fs')
 
@@ -12,7 +11,7 @@ Promise.promisifyAll(fs)
 const timeout = 20 * 60 * 1000
 
 const availableReports = {
-  TechProfile: 'Tech Profile',
+  'Tech Profile': 'Tech Profile',
   Routelog: 'routelog',
   'MW Routelog': 'EDGEMW Bll',
   'SE Routelog': 'EDGESE Bll',
