@@ -13,7 +13,7 @@ const knex = Knex({
 Model.knex(knex)
 
 const prog = require('caporal')
-const importFromAnalytics = require('../data/importReport').default
+const importFromSiebel = require('./commands/import')
 const crontab = require('./commands/crontab')
 
 const runFunction = fn => async (args = {}, options = {}) => {
@@ -32,7 +32,7 @@ prog
 .argument('<companyName>')
 .argument('<dataSourceName>')
 .argument('<reportName>')
-.action(runFunction(importFromAnalytics))
+.action(runFunction(importFromSiebel))
 .command('crontab', 'synchronize crontab config with computer')
 .argument('<action>', 'what you want to do: test, update', /^(test|update)$/)
 .action(runFunction(crontab))
