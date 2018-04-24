@@ -22,7 +22,9 @@ class HeaderDropdown extends Component {
   async logout() {
     document.cookie = cookie.serialize('token', '', { maxAge: -1 })
     this.props.client.cache.reset().then(() => {
-      window.location = '/'
+      setTimeout(() => {
+        window.location = '/'
+      }, 2000)
     })
   }
 
