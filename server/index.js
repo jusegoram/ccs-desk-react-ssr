@@ -164,25 +164,25 @@ export default async app => {
         })
         const stringifier = stringify({ header: true })
         await models.WorkOrder.query()
-        .mergeContext({ session, moment })
-        ._contextFilter()
-        .eager('appointments')
+        // .mergeContext({ session, moment })
+        // ._contextFilter()
+        // .eager('appointments')
         .select('row')
-        .where({ date: moment().format('YYYY-MM-DD') })
-        .map(async workOrder => {
-          if (!workOrder.appointments || workOrder.appointments.length < 2) {
-            return workOrder
-          }
-          const sortedAppointments = _.sortBy(workOrder.appointments, 'createdAt')
-          const currentAppointment = sortedAppointments.slice(-1)[0]
-          const prevAppointment = sortedAppointments.slice(-2)[0]
-          if (prevAppointment.date > currentAppointment.date) workOrder.row['Status'] = 'Rescheduled'
-          return workOrder
-        })
-        .map(async workOrder => {
-          workOrder.row = _.mapValues(workOrder.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
-          return workOrder
-        })
+        // .where({ date: moment().format('YYYY-MM-DD') })
+        // .map(async workOrder => {
+        //   if (!workOrder.appointments || workOrder.appointments.length < 2) {
+        //     return workOrder
+        //   }
+        //   const sortedAppointments = _.sortBy(workOrder.appointments, 'createdAt')
+        //   const currentAppointment = sortedAppointments.slice(-1)[0]
+        //   const prevAppointment = sortedAppointments.slice(-2)[0]
+        //   if (prevAppointment.date > currentAppointment.date) workOrder.row['Status'] = 'Rescheduled'
+        //   return workOrder
+        // })
+        // .map(async workOrder => {
+        //   workOrder.row = _.mapValues(workOrder.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
+        //   return workOrder
+        // })
         .map(workOrder => {
           stringifier.write(workOrder.row)
         })
