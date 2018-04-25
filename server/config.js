@@ -1,4 +1,4 @@
 export default {
-  host: 'https://local.endeavorfleet.com',
+  host: 'https://beta.ccsdesk.com',
   emailSender: 'CCS Desk<info@ccsdesk.com>',
 }
