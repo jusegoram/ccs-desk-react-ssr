@@ -56,7 +56,7 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
     if (!currentAppointment || !_.isEqual(currentAppointment.data, data)) {
       const employee = await Employee.query()
       .first()
-      .where({ dataSourceId, externalId: data['Activity ID'] })
+      .where({ dataSourceId, externalId: data['Tech ID'] })
 
       currentAppointment =
         workOrder.date &&
