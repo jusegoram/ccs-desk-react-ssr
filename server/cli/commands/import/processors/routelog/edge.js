@@ -5,9 +5,7 @@ import { transaction } from 'objection'
 import * as rawModels from 'server/api/models'
 import { streamToArray } from 'server/util'
 import Timer from 'server/util/Timer'
-import handleStandardRows from 'server/data/processors/routelog/handleStandardRows'
-
-const booleanYNMap = { Y: 'TRUE', N: 'FALSE' }
+import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
 
 const convertRowToStandardForm = ({ row, w2Company, employee }) => {
   const getWorkGroup = type => (employee && _.find(employee.workGroups, { type })) || {}
@@ -16,8 +14,7 @@ const convertRowToStandardForm = ({ row, w2Company, employee }) => {
     'Partner Name': w2Company.name || '',
     Subcontractor: (employee && employee.company.name) || '',
     'Activity ID': row['Activity ID'] || '',
-    'Tech Siebel ID': (employee && employee.externalId) || '',
-    'Tech Edge ID': row['Tech ID'] || '',
+    'Tech ID': (employee && employee.alternateExternalId) || '',
     'Tech Name': (employee && employee.name) || '',
     'Tech Team': getWorkGroup('Team').externalId || '',
     'Tech Supervisor': getWorkGroup('Team').name || '',
@@ -38,8 +35,8 @@ const convertRowToStandardForm = ({ row, w2Company, employee }) => {
     'Negative Reschedules': row['Negative Reschedule Count'] || '',
     'Planned Duration': '',
     'Actual Duration': '',
-    'Service in 7 Days': booleanYNMap[row['Service Within 7 Days Flag']] || '',
-    'Repeat Service': booleanYNMap[row['Repeat Service Flag']] || '',
+    'Service in 7 Days': row['Service Within 7 Days Flag'] === 'Y',
+    'Repeat Service': row['Repeat Service Flag'] === 'Y',
     'Internet Connectivity': '',
     'Customer ID': '',
     'Customer Name': '',
@@ -114,16 +111,12 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
       return data
     })
 
-    const rows = await Promise.mapSeries(
-      datas,
-      async data => {
-        const employee = await Employee.query()
-        .eager('[company, workGroups]')
-        .findOne({ alternateExternalId: data['Tech ID'] })
-        return convertRowToStandardForm({ row: data, w2Company, employee })
-      },
-      { concurrency: 40 }
-    )
+    const rows = await Promise.mapSeries(datas, async data => {
+      const employee = await Employee.query()
+      .eager('[company, workGroups]')
+      .findOne({ dataSourceId: dataSource.id, alternateExternalId: data['Tech ID'] })
+      return convertRowToStandardForm({ row: data, w2Company, employee })
+    })
 
     await handleStandardRows({ rows, timer, models, dataSource, w2Company })
   })

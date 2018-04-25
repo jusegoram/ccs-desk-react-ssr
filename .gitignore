@@ -1,6 +1,9 @@
 .next
 server/db/seedData/timezones.csv
 server/data/*_cookies.txt
+server/cli/commands/import/download/siebel/downloaded_reports
+server/cli/commands/import/download/siebel/user_data
+
 
 .template
 
