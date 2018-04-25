@@ -5,6 +5,7 @@ import { transaction } from 'objection'
 import * as rawModels from 'server/api/models'
 import moment from 'moment-timezone'
 import { streamToArray, sanitizeName, Timer } from 'server/util'
+import sanitizeCompanyName from '../sanitizeCompanyName'
 
 /* Sample Row Data:
   // { Region: 'AREA01',
@@ -67,7 +68,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
     const datas = await streamToArray(csvObjStream, data => {
       data = _.mapValues(data, val => (!val || val === 'UNKNOWN' ? null : val))
       if (data['Tech Type'] === 'W2' || !data['Tech Type']) data['Tech Type'] = w2CompanyName
-      if (data['Tech Type'] === 'EMPATH') data['Tech Type'] = 'Empath'
+      data['Tech Type'] = sanitizeCompanyName(data['Tech Type'])
       data.Company = data['Tech Type']
       data.Team = data['Team ID']
       data.Tech = data['Tech User ID']
