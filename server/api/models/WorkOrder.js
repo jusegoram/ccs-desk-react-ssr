@@ -6,7 +6,7 @@ export default class WorkOrder extends APIModel {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     // <custom>
     table.uuid('dataSourceId')
-    table.string('externalId').index()
+    table.string('externalId').unique()
     table.date('date')
     table.string('type')
     table.string('status')
