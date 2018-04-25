@@ -3,9 +3,9 @@ import path from 'path'
 import csv from 'csv'
 import moment from 'moment-timezone'
 import { DataImport, Company } from 'server/api/models'
-import techProfileProcessor from 'server/cli/commands/import/processors/techProfile'
-import siebelRoutelogProcessor from 'server/cli/commands/import/processors/routelog/siebel'
-import edgeRoutelogProcessor from 'server/cli/commands/import/processors/routelog/edge'
+import techProfileProcessor from 'server/data/processors/techProfile'
+import siebelRoutelogProcessor from 'server/data/processors/routelog/siebel'
+import edgeRoutelogProcessor from 'server/data/processors/routelog/edge'
 
 const SiebelReportFetcher = require('./download/siebel/SiebelReportFetcher')
 const convertStringToStream = require('./download/siebel/convertStringToStream')
