@@ -66,6 +66,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
     )
 
     const datas = await streamToArray(csvObjStream, data => {
+      data = _.mapKeys(data, (value, key) => key.replace(/[^a-zA-Z0-9#\s]/, ''))
       data = _.mapValues(data, val => (!val || val === 'UNKNOWN' ? null : val))
       if (data['Tech Type'] === 'W2' || !data['Tech Type']) data['Tech Type'] = w2CompanyName
       data['Tech Type'] = sanitizeCompanyName(data['Tech Type'])
