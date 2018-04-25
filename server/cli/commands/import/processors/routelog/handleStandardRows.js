@@ -12,6 +12,7 @@ const getDateString = timeString => {
 }
 
 export default async ({ rows, timer, models, dataSource, w2Company }) => {
+  throw new Error('disabled')
   const { WorkOrder, WorkGroup, Company, Appointment, Employee } = models
   const knex = WorkOrder.knex()
   const dataSourceId = dataSource.id
