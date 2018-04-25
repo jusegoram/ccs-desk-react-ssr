@@ -179,9 +179,10 @@ export default async app => {
           if (prevAppointment.date > currentAppointment.date) workOrder.row['Status'] = 'Rescheduled'
           return workOrder
         })
-        .map(async workOrder =>
-          _.mapValues(workOrder.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
-        )
+        .map(async workOrder => {
+          workOrder.row = _.mapValues(workOrder.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
+          return workOrder
+        })
         .map(workOrder => {
           stringifier.write(workOrder.row)
         })
