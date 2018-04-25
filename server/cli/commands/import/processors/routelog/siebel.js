@@ -112,6 +112,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
 
     timer.split('Stream to Array')
     const rows = await streamToArray(csvObjStream, data => {
+      data = _.mapKeys(data, (value, key)=> key.replace(/[^a-zA-Z0-9#\s]/, ''))
       const serviceRegion = data.SR
       const groups = srData[serviceRegion]
       if (groups) {
