@@ -47,6 +47,7 @@ export default class DataImport extends APIModel {
       _contextFilter() {
         super._contextFilter()
         const { session } = this.context()
+        if (session.rootAccount && session.account.id === session.rootAccount.id) return this
         const dataSourceIds = DataImport.knex()('DataSource')
         .select('id')
         .join('companyDataSources', 'DataSource.id', 'companyDataSources.dataSourceId')
