@@ -113,7 +113,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
           employee = await Employee.query()
           .eager('[workGroups, startLocation]')
           .upsert({
-            query: { dataSourceId, externalId: data['Tech User ID'] },
+            query: { dataSourceId, externalId: data['Tech User ID'] || 'THIS WILL NOT MATCH ANYTHING' },
             update: {
               companyId: company.id,
               alternateExternalId: data['Tech ATT UID'],
@@ -136,7 +136,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         const supervisor =
           supervisorId &&
           (await Employee.query().upsert({
-            query: { companyId: w2Company.id, externalId: supervisorId },
+            query: { companyId: w2Company.id, externalId: supervisorId || 'THIS WILL NOT MATCH ANYTHING' },
             update: {
               role: 'Manager',
               name: sanitizeName(data['Team Name']),
