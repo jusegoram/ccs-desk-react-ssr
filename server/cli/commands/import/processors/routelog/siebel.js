@@ -4,18 +4,16 @@ import * as rawModels from 'server/api/models'
 import { streamToArray } from 'server/util'
 import sanitizeName from 'server/util/sanitizeName'
 import Timer from 'server/util/Timer'
-import handleStandardRows from 'server/data/processors/routelog/handleStandardRows'
-import Promise from 'bluebird'
-import sanitizeCompanyName from '../sanitizeCompanyName'
+import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
+import sanitizeCompanyName from 'server/cli/commands/import/processors/sanitizeCompanyName'
 
-const convertRowToStandardForm = ({ row, w2Company, employee }) => {
+const convertRowToStandardForm = ({ row, w2Company }) => {
   const standardRow = {
     Source: 'Siebel',
     'Partner Name': w2Company.name || '',
-    Subcontractor: row.companyName || '',
+    Subcontractor: row['Tech Type'] || '',
     'Activity ID': row['Activity #'] || '',
-    'Tech Siebel ID': row['Tech User ID'] || '',
-    'Tech Edge ID': (employee && employee.externalId) || '',
+    'Tech ID': row['Tech User ID'] || '',
     'Tech Name': sanitizeName(row['Tech Full Name']) || '',
     'Tech Team': row['Tech Team'] || '',
     'Tech Supervisor': sanitizeName(row['Team Name']) || '',
@@ -100,7 +98,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
   timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
-    const { WorkOrder, WorkGroup, Employee } = models
+    const { WorkGroup } = models
 
     timer.split('SR Data Load')
     const w2CompanyName = w2Company.name
@@ -113,7 +111,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
     )
 
     timer.split('Stream to Array')
-    const datas = await streamToArray(csvObjStream, data => {
+    const rows = await streamToArray(csvObjStream, data => {
       const serviceRegion = data.SR
       const groups = srData[serviceRegion]
       if (groups) {
@@ -121,40 +119,14 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
         data.Office = groups.Office
         data.Division = groups.Division
       }
-      data['Tech Type'] = sanitizeCompanyName(data['Tech Type'])
       data.companyName = !data['Tech Type'] || data['Tech Type'] === 'W2' ? w2Company.name : data['Tech Type']
+      data['Tech Type'] = sanitizeCompanyName(data['Tech Type'])
       if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
       data.assignedTechId = data['Tech User ID']
-      return data
+      return convertRowToStandardForm({ row: data, w2Company })
     })
 
-    const employeeExternalIds = _.filter(_.map(datas, 'Tech User ID'))
-    const employeesByExternalId = _.keyBy(
-      await Employee.query()
-      .eager('[company, workGroups]')
-      .whereIn('externalId', employeeExternalIds),
-      'externalId'
-    )
-
-    const workOrderExternalIds = _.filter(_.map(datas, 'Activity ID'))
-    const workOrdersByExternalId = _.keyBy(
-      await WorkOrder.query().whereIn('externalId', workOrderExternalIds),
-      'externalId'
-    )
-    console.log('Num CSV Rows', datas.length)
-    const rows = await Promise.map(
-      datas,
-      async data => {
-        const employee = data['Tech User ID'] && employeesByExternalId[data['Tech User ID']]
-        return convertRowToStandardForm({ row: data, w2Company, employee })
-      },
-      { concurrency: 40 }
-    ).filter(
-      row => !workOrdersByExternalId[row['Activity ID']] || !_.isEqual(row, workOrdersByExternalId[row['Activity ID']])
-    )
-    console.log('Num Changed CSV Rows', rows.length)
-
-    // await handleStandardRows({ rows, timer, models, dataSource, w2Company })
+    await handleStandardRows({ rows, timer, models, dataSource, w2Company })
   })
   timer.stop('Total')
   console.log(timer.toString()) // eslint-disable-line no-console

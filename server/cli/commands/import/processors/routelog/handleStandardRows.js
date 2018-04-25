@@ -12,7 +12,6 @@ const getDateString = timeString => {
 }
 
 export default async ({ rows, timer, models, dataSource, w2Company }) => {
-  throw new Error('disabled')
   const { WorkOrder, WorkGroup, Company, Appointment, Employee } = models
   const knex = WorkOrder.knex()
   const dataSourceId = dataSource.id
@@ -57,7 +56,7 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
     if (!currentAppointment || !_.isEqual(currentAppointment.data, data)) {
       const employee = await Employee.query()
       .first()
-      .where({ externalId: data['Tech Siebel ID'] })
+      .where({ dataSourceId, externalId: data['Activity ID'] })
 
       currentAppointment =
         workOrder.date &&
@@ -81,7 +80,7 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
     const ccsCompany = await Company.query().ensure('CCS')
 
     timer.split('Work Group Datas')
-    const employeeId = data['Tech Siebel ID']
+    const employeeId = data['Tech ID']
     const techTeamId = data['Tech Team']
     const getWorkGroupDatas = scopeCompany => [
       ...(employeeId && [
