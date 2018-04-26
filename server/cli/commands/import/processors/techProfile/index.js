@@ -77,11 +77,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
     })
 
     timer.split('Load Existing')
-    const dbEmployees = _.keyBy(
-      await Employee.query()
-      .eager('[workGroups, startLocation]'),
-      'externalId'
-    )
+    const dbEmployees = _.keyBy(await Employee.query().eager('[workGroups, startLocation]'), 'externalId')
 
     const companyNames = _.without(_.map(_.uniqBy(datas, 'Tech Type'), 'Tech Type'), w2CompanyName)
     const subcontractors = _.keyBy(
@@ -109,42 +105,44 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
           const timezone = startLocation && startLocation.timezone
           timer.stop('Create Start Location')
 
-          employee = await Employee.query()
-          .eager('[workGroups, startLocation]')
-          .upsert({
-            query: { dataSourceId, externalId: data['Tech User ID'] || 'THIS WILL NOT MATCH ANYTHING' },
-            update: {
-              companyId: company.id,
-              alternateExternalId: data['Tech ATT UID'],
-              terminatedAt: null,
-              name: sanitizeName(data['Tech Full Name']),
-              phoneNumber: data['Tech Mobile Phone #'],
-              skills: data['Skill Package'],
-              schedule: data['Tech Schedule'],
-              timezone,
-              startLocationId: startLocation && startLocation.id,
-              row: data,
-            },
-          })
+          employee = !data['Tech User ID']
+            ? null
+            : await Employee.query()
+            .eager('[workGroups, startLocation]')
+            .upsert({
+              query: { externalId: data['Tech User ID'] },
+              update: {
+                companyId: company.id,
+                alternateExternalId: data['Tech ATT UID'],
+                terminatedAt: null,
+                name: sanitizeName(data['Tech Full Name']),
+                phoneNumber: data['Tech Mobile Phone #'],
+                skills: data['Skill Package'],
+                schedule: data['Tech Schedule'],
+                timezone,
+                startLocationId: startLocation && startLocation.id,
+                row: data,
+              },
+            })
         }
         allEmployeeExternalIds.push(employee.externalId)
         timer.stop('Employee Upsert')
 
         timer.split('Upsert Supervisor')
         const supervisorId = data['Tech Team Supervisor Login']
-        const supervisor =
-          supervisorId &&
-          (await Employee.query().upsert({
-            query: { companyId: w2Company.id, externalId: supervisorId || 'THIS WILL NOT MATCH ANYTHING' },
+        const supervisor = !supervisorId
+          ? null
+          : await Employee.query().upsert({
+            query: { companyId: w2Company.id, externalId: supervisorId },
             update: {
               role: 'Manager',
               name: sanitizeName(data['Team Name']),
               phoneNumber: data['Tech Team Supervisor Mobile #'],
               dataSourceId: dataSource.id,
               terminatedAt: null,
-              timezone: employee.timezone,
+              timezone: employee && employee.timezone,
             },
-          }))
+          })
 
         timer.split('Ensure Work Groups')
         const techSR = data['Service Region']
