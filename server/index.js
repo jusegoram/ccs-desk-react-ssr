@@ -164,52 +164,34 @@ export default async app => {
           'Content-Disposition': 'attachment; filename=WorkOrders.csv',
         })
         const stringifier = stringify({ header: true })
-        // await models.WorkOrder.query()
-        // .select()
-        // .then(workOrders =>
-        //   Promise.resolve(workOrders).mapSeries(workOrder => {
-        //     if (workOrder.row['Tech Name'] === 'Agent Smith') workOrder.row['Tech Name'] = ''
-        //     if (workOrder.row['Subcontractor'] === 'CCS')
-        //       workOrder.row['Subcontractor'] = workOrder.row['Partner Name']
-        //     return models.WorkOrder.query()
-        //     .patch({ row: workOrder.row })
-        //     .where({ id: workOrder.id })
-        //   })
-        // )
-        // console.log('done updating')
-        // res.sendStatus(200)
-        const workOrderIds = models.WorkOrder.query()
+        const workOrderIdsScheduledTodayAtSomePointToday = models.Appointment.query()
+        .with('livedtoday', qb => {
+          qb.from('Appointment').select(
+            'id',
+            raw(
+              'tstzrange("createdAt", lag("createdAt") over (partition by "workOrderId" order by "createdAt" desc), \'[)\') && tstzrange(?, ?, \'[)\') as livedtoday',
+              [
+                moment()
+                .startOf('day')
+                .format(),
+                moment()
+                .add(1, 'day')
+                .startOf('day')
+                .format(),
+              ]
+            )
+          )
+        })
+        .distinct('workOrderId')
+        .leftJoin('livedtoday', 'livedtoday.id', 'Appointment.id')
+        .where({ date: moment().format('YYYY-MM-DD') })
+        .where({ livedtoday: true })
+
+        await models.WorkOrder.query()
         .mergeContext({ session, moment })
         ._contextFilter()
-        .select('id')
-        const mostRecentAppointmentIds = models.Appointment.query()
-        .select(raw('distinct on ("workOrderId") id'))
-        .whereIn('workOrderId', workOrderIds)
-        .where(
-          'createdAt',
-          '<',
-          moment()
-          .add(1, 'day')
-          .format('YYYY-MM-DD')
-        )
-        .orderBy('workOrderId')
-        .orderBy('createdAt', 'desc')
-
-        await models.Appointment.query()
-        .eager('workOrder.appointments')
-        .whereIn('id', mostRecentAppointmentIds)
-        .where({ date: moment().format('YYYY-MM-DD') })
-        .map(a => a.workOrder)
-        .map(async workOrder => {
-          if (!workOrder.appointments || workOrder.appointments.length < 2) {
-            return workOrder
-          }
-          const sortedAppointments = _.sortBy(workOrder.appointments, 'createdAt')
-          const currentAppointment = sortedAppointments.slice(-1)[0]
-          const prevAppointment = sortedAppointments.slice(-2)[0]
-          if (prevAppointment.date > currentAppointment.date) workOrder.row['Status'] = 'Rescheduled'
-          return workOrder
-        })
+        .eager('appointments')
+        .whereIn('id', workOrderIdsScheduledTodayAtSomePointToday)
         .map(async workOrder => {
           workOrder.row = _.mapValues(workOrder.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
           return workOrder
@@ -218,7 +200,6 @@ export default async app => {
           stringifier.write(workOrder.row)
         })
         stringifier.end()
-
         stringifier.pipe(res)
       } else {
         res.status(401).json({})
