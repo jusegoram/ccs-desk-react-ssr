@@ -163,11 +163,16 @@ export default async app => {
           'Content-Disposition': 'attachment; filename=WorkOrders.csv',
         })
         const stringifier = stringify({ header: true })
+        const workOrderIds = models.WorkOrder.query()
+        .mergeContext({ session, moment })
+        ._contextFilter()
+        .select('id')
         await models.Appointment.query()
         .mergeContext({ session, moment })
         ._contextFilter()
         .eager('workOrder.appointments')
         .select(raw('distinct on ("workOrderId") *'))
+        .whereIn('workOrderId', workOrderIds)
         .where({ date: moment().format('YYYY-MM-DD') })
         .where(
           'createdAt',
