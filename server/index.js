@@ -1,6 +1,6 @@
 import { graphqlExpress } from 'apollo-server-express'
 // import getCreateContext from 'server/api/util/getCreateContext'
-import { Model } from 'objection'
+import { Model, raw } from 'objection'
 import knex from 'server/knex'
 import { builder as graphQlBuilder } from 'objection-graphql'
 import * as models from 'server/api/models'
@@ -163,12 +163,22 @@ export default async app => {
           'Content-Disposition': 'attachment; filename=WorkOrders.csv',
         })
         const stringifier = stringify({ header: true })
-        await models.WorkOrder.query()
+        await models.Appointment.query()
         .mergeContext({ session, moment })
         ._contextFilter()
-        .eager('appointments')
-        .select('row')
+        .eager('workOrder.appointments')
+        .select(raw('distinct on ("workOrderId") *'))
         .where({ date: moment().format('YYYY-MM-DD') })
+        .where(
+          'createdAt',
+          '<',
+          moment()
+          .add(1, 'day')
+          .format('YYYY-MM-DD')
+        )
+        .orderBy('workOrderId')
+        .orderBy('createdAt', 'desc')
+        .map(a => a.workOrder)
         .map(async workOrder => {
           if (!workOrder.appointments || workOrder.appointments.length < 2) {
             return workOrder
