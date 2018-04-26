@@ -112,6 +112,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
             .upsert({
               query: { externalId: data['Tech User ID'] },
               update: {
+                dataSourceId,
                 companyId: company.id,
                 alternateExternalId: data['Tech ATT UID'],
                 terminatedAt: null,
