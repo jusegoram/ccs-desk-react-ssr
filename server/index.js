@@ -14,6 +14,7 @@ import csv from 'csv'
 import stream from 'stream'
 import _ from 'lodash'
 import stringify from 'csv-stringify'
+import Promise from 'bluebird'
 
 const { Readable } = stream
 
@@ -163,17 +164,27 @@ export default async app => {
           'Content-Disposition': 'attachment; filename=WorkOrders.csv',
         })
         const stringifier = stringify({ header: true })
+        // await models.WorkOrder.query()
+        // .select()
+        // .then(workOrders =>
+        //   Promise.resolve(workOrders).mapSeries(workOrder => {
+        //     if (workOrder.row['Tech Name'] === 'Agent Smith') workOrder.row['Tech Name'] = ''
+        //     if (workOrder.row['Subcontractor'] === 'CCS')
+        //       workOrder.row['Subcontractor'] = workOrder.row['Partner Name']
+        //     return models.WorkOrder.query()
+        //     .patch({ row: workOrder.row })
+        //     .where({ id: workOrder.id })
+        //   })
+        // )
+        // console.log('done updating')
+        // res.sendStatus(200)
         const workOrderIds = models.WorkOrder.query()
         .mergeContext({ session, moment })
         ._contextFilter()
         .select('id')
-        await models.Appointment.query()
-        .mergeContext({ session, moment })
-        ._contextFilter()
-        .eager('workOrder.appointments')
-        .select(raw('distinct on ("workOrderId") *'))
+        const mostRecentAppointmentIds = models.Appointment.query()
+        .select(raw('distinct on ("workOrderId") id'))
         .whereIn('workOrderId', workOrderIds)
-        .where({ date: moment().format('YYYY-MM-DD') })
         .where(
           'createdAt',
           '<',
@@ -183,6 +194,11 @@ export default async app => {
         )
         .orderBy('workOrderId')
         .orderBy('createdAt', 'desc')
+
+        await models.Appointment.query()
+        .eager('workOrder.appointments')
+        .whereIn('id', mostRecentAppointmentIds)
+        .where({ date: moment().format('YYYY-MM-DD') })
         .map(a => a.workOrder)
         .map(async workOrder => {
           if (!workOrder.appointments || workOrder.appointments.length < 2) {
