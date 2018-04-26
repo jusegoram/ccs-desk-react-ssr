@@ -134,9 +134,10 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         const supervisor = !supervisorId
           ? null
           : await Employee.query().upsert({
-            query: { companyId: w2Company.id, externalId: supervisorId },
+            query: { externalId: supervisorId },
             update: {
               role: 'Manager',
+              companyId: w2Company.id,
               name: sanitizeName(data['Team Name']),
               phoneNumber: data['Tech Team Supervisor Mobile #'],
               dataSourceId: dataSource.id,
