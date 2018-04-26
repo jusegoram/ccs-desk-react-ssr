@@ -41,8 +41,9 @@ export default async ({ rows, timer, models, dataSource, w2Company }) => {
       workOrder = await WorkOrder.query()
       .eager('[workGroups, appointments]')
       .upsert({
-        query: { dataSourceId, externalId: data['Activity ID'] },
+        query: { externalId: data['Activity ID'] },
         update: {
+          dataSourceId,
           date: getDateString(data['Due Date']),
           type: data['Order Type'],
           status: data['Status'],
