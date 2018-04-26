@@ -1,4 +1,4 @@
 export default {
-  host: 'https://beta.ccsdesk.com',
+  host: 'http://localhost:3000',
   emailSender: 'CCS Desk<info@ccsdesk.com>',
 }
