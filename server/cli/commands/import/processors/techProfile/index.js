@@ -79,8 +79,7 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
     timer.split('Load Existing')
     const dbEmployees = _.keyBy(
       await Employee.query()
-      .eager('[workGroups, startLocation]')
-      .where({ dataSourceId }),
+      .eager('[workGroups, startLocation]'),
       'externalId'
     )
 
