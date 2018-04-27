@@ -124,7 +124,7 @@ export default async app => {
         })
 
         const stringifier = stringify({ header: true })
-        await models.Employee.query()
+        await models.Tech.query()
         .mergeContext({ session, moment })
         ._contextFilter()
         .where({ role: 'Tech' })
