@@ -60,6 +60,26 @@ export default class Company extends APIModel {
           to: 'Tech.subcontractorId',
         },
       },
+      dataSources: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'DataSource',
+        join: {
+          from: 'Company.id',
+          through: {
+            from: 'companyDataSources.companyId',
+            to: 'companyDataSources.dataSourceId',
+          },
+          to: 'DataSource.id',
+        },
+      },
+      accounts: {
+        relation: Model.HasManyRelation,
+        modelClass: 'Account',
+        join: {
+          from: 'Company.id',
+          to: 'Account.companyId',
+        },
+      },
     }
   }
 }

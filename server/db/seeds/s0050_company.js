@@ -7,68 +7,75 @@ exports.seed = async function(knex) {
   await Company.query()
   .insertGraph([
     {
-      '#id': 'directsatCompany',
+      '#id': 'directsat',
       name: 'DirectSat',
       dataSources: [
         {
-          '#id': 'directsatSiebel',
-          company: { '#ref': 'directsatCompany' },
-          name: 'Siebel',
-          reports: JSON.stringify(['Tech Profile', 'Routelog']),
+          company: { '#ref': 'directsat' },
+          name: 'Tech Profile',
         },
         {
-          '#id': 'directsatEdge',
-          company: { '#ref': 'directsatCompany' },
-          name: 'Edge',
-          reports: JSON.stringify(['MW Routelog']),
+          company: { '#ref': 'directsat' },
+          name: 'Siebel Routelog',
+        },
+        {
+          company: { '#ref': 'directsat' },
+          name: 'Edge MW Routelog',
+        },
+        {
+          company: { '#ref': 'directsat' },
+          name: 'Edge SE Routelog',
+        },
+        {
+          company: { '#ref': 'directsat' },
+          name: 'Edge SW Routelog',
+        },
+        {
+          company: { '#ref': 'directsat' },
+          name: 'Edge W Routelog',
         },
       ],
     },
     {
-      '#id': 'goodmanCompany',
+      '#id': 'goodman',
       name: 'Goodman',
       dataSources: [
         {
-          '#id': 'goodmanSiebel',
-          company: { '#ref': 'goodmanCompany' },
-          name: 'Siebel',
-          reports: JSON.stringify(['Tech Profile', 'Routelog']),
+          company: { '#ref': 'goodman' },
+          name: 'Tech Profile',
         },
         {
-          '#id': 'goodmanEdge',
-          company: { '#ref': 'goodmanCompany' },
-          name: 'Edge',
-          reports: JSON.stringify(['MW Routelog']),
+          company: { '#ref': 'goodman' },
+          name: 'Siebel Routelog',
+        },
+        {
+          company: { '#ref': 'goodman' },
+          name: 'Edge MW Routelog',
+        },
+        {
+          company: { '#ref': 'goodman' },
+          name: 'Edge SE Routelog',
+        },
+        {
+          company: { '#ref': 'goodman' },
+          name: 'Edge SW Routelog',
+        },
+        {
+          company: { '#ref': 'goodman' },
+          name: 'Edge W Routelog',
         },
       ],
     },
     {
       '#id': 'ccsCompany',
       name: 'CCS',
-      employees: [
+      accounts: [
         {
-          '#id': 'employee1',
           name: 'Root Account',
           email: 'root@example.com',
-          externalId: 'root@example.com',
-          phoneNumber: '5555555555',
-          timezone: 'America/Chicago',
-          role: 'Tech',
-          workGroup: {
-            externalId: 'root@example.com',
-            name: 'Root Account',
-            type: 'Tech',
-            order: 7,
-            company: { '#ref': 'ccsCompany' },
-            techs: [{ '#ref': 'employee1' }],
-          },
-          account: {
-            name: 'Root Account',
-            email: 'root@example.com',
-            password: 'demo',
-            root: true,
-            company: { '#ref': 'ccsCompany' },
-          },
+          password: 'demo',
+          root: true,
+          company: { '#ref': 'ccsCompany' },
         },
       ],
     },
