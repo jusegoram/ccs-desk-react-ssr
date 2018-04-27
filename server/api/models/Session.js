@@ -49,7 +49,7 @@ export default class Session extends withDeletedAt(APIModel) {
     }
   }
 
-  static defaultEagerRelations = '[rootAccount, account.[employee, company]]'
+  static defaultEagerRelations = '[rootAccount, account.company]'
   static get relationMappings() {
     return {
       account: {
@@ -85,7 +85,7 @@ export default class Session extends withDeletedAt(APIModel) {
           const account = await Account.query()
           .where({ email })
           .first()
-          if (!account || !await account.verifyPassword(password))
+          if (!account || !(await account.verifyPassword(password)))
             throw new ExpectedError('Invalid email and/or password.')
           const session = await account
           .$relatedQuery('sessions')
