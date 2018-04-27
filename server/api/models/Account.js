@@ -19,14 +19,12 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
     table.string('email').notNullable().unique()
     table.string('password').notNullable()
     table.boolean('root').defaultTo(false).notNullable()
-    table.uuid('employeeId')
     table.uuid('companyId')
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
   static knexAlterTable = `
-    table.foreign('employeeId').references('Employee.id')
     table.foreign('companyId').references('Company.id')
   `
 
@@ -47,7 +45,7 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
     },
   }
 
-  static visible = ['id', 'name', 'email', 'token', 'root', 'employee', 'company']
+  static visible = ['id', 'name', 'email', 'token', 'root', 'company']
 
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
@@ -70,14 +68,6 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
         join: {
           from: 'Account.id',
           to: 'Session.accountId',
-        },
-      },
-      employee: {
-        relation: Model.BelongsToOneRelation,
-        modelClass: 'Employee',
-        join: {
-          from: 'Account.employeeId',
-          to: 'Employee.id',
         },
       },
       company: {

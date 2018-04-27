@@ -6,17 +6,17 @@ export default class Appointment extends APIModel {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     // <custom>
     table.uuid('workOrderId').notNullable()
-    table.uuid('employeeId')
+    table.uuid('techId')
     table.date('date')
     table.string('status')
     table.jsonb('row').index()
-    table.unique(['workOrderId', 'employeeId', 'date'])
+    table.unique(['workOrderId', 'techId', 'date'])
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   `
   static knexAlterTable = `
     table.foreign('workOrderId').references('WorkOrder.id')
-    table.foreign('employeeId').references('Employee.id')
+    table.foreign('techId').references('Tech.id')
   `
 
   static jsonSchema = {
@@ -33,7 +33,7 @@ export default class Appointment extends APIModel {
     },
   }
 
-  static visible = ['id', 'workOrderId', 'employeeId', 'workOrder', 'assignedTech', 'date', 'status']
+  static visible = ['id', 'workOrderId', 'techId', 'workOrder', 'assignedTech', 'date', 'status']
 
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
@@ -55,10 +55,10 @@ export default class Appointment extends APIModel {
       },
       assignedTech: {
         relation: Model.BelongsToOneRelation,
-        modelClass: 'Employee',
+        modelClass: 'Tech',
         join: {
-          from: 'Appointment.employeeId',
-          to: 'Employee.id',
+          from: 'Appointment.techId',
+          to: 'Tech.id',
         },
       },
     }
