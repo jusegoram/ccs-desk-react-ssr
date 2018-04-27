@@ -48,7 +48,7 @@ exports.seed = async function(knex) {
       employees: [
         {
           '#id': 'employee1',
-          name: 'Agent Smith',
+          name: 'Root Account',
           email: 'root@example.com',
           externalId: 'root@example.com',
           phoneNumber: '5555555555',
@@ -56,14 +56,14 @@ exports.seed = async function(knex) {
           role: 'Tech',
           workGroup: {
             externalId: 'root@example.com',
-            name: 'Agent Smith',
+            name: 'Root Account',
             type: 'Tech',
             order: 7,
             company: { '#ref': 'ccsCompany' },
             techs: [{ '#ref': 'employee1' }],
           },
           account: {
-            name: 'Agent Smith',
+            name: 'Root Account',
             email: 'root@example.com',
             password: 'demo',
             root: true,
