@@ -44,59 +44,20 @@ export default class Company extends APIModel {
 
   static get relationMappings() {
     return {
-      workGroups: {
+      techs: {
         relation: Model.HasManyRelation,
-        modelClass: 'WorkGroup',
+        modelClass: 'Tech',
         join: {
           from: 'Company.id',
-          to: 'WorkGroup.scopeCompanyId',
+          to: 'Tech.companyId',
         },
       },
-      featureSet: {
+      subcontractedTechs: {
         relation: Model.HasManyRelation,
-        modelClass: 'FeatureSet',
+        modelClass: 'Tech',
         join: {
           from: 'Company.id',
-          to: 'FeatureSet.companyId',
-        },
-      },
-      employees: {
-        relation: Model.HasManyRelation,
-        modelClass: 'Employee',
-        join: {
-          from: 'Company.id',
-          to: 'Employee.companyId',
-        },
-      },
-      vehicles: {
-        relation: Model.HasManyRelation,
-        modelClass: 'Vehicle',
-        join: {
-          from: 'Company.id',
-          to: 'Vehicle.companyId',
-        },
-      },
-      reportTemplates: {
-        relation: Model.HasManyRelation,
-        modelClass: 'Report',
-        join: {
-          from: 'Company.id',
-          to: 'Report.companyId',
-        },
-        modify: qb => {
-          qb.where({ isTemplate: true })
-        },
-      },
-      dataSources: {
-        relation: Model.ManyToManyRelation,
-        modelClass: 'DataSource',
-        join: {
-          from: 'Company.id',
-          through: {
-            from: 'companyDataSources.companyId',
-            to: 'companyDataSources.dataSourceId',
-          },
-          to: 'DataSource.id',
+          to: 'Tech.subcontractorId',
         },
       },
     }
