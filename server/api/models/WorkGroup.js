@@ -10,22 +10,18 @@ export default class WorkGroup extends APIModel {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
     // <custom>
-    table.uuid('scopeCompanyId')
     table.uuid('companyId')
     table.integer('order').notNullable()
     table.string('type').notNullable() // 'Company', 'Office', 'Team', 'DMA', 'Service Region', 'Division'
     table.string('externalId').notNullable()
     table.string('name').notNullable()
-    table.unique(['scopeCompanyId', 'companyId', 'type', 'externalId'])
-    table.uuid('geographyId')
+    table.unique(['companyId', 'type', 'externalId'])
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
   static knexAlterTable = `
-    table.foreign('geographyId').references('Geography.id')
     table.foreign('companyId').references('Company.id')
-    table.foreign('scopeCompanyId').references('Company.id')
   `
   static knexCreateJoinTables = {
     directv_sr_data: `
@@ -55,19 +51,7 @@ export default class WorkGroup extends APIModel {
     },
   }
 
-  static visible = [
-    'id',
-    'company',
-    'externalId',
-    'order',
-    'type',
-    'name',
-    'phoneNumber',
-    'email',
-    'employees',
-    'managers',
-    'workOrders',
-  ]
+  static visible = ['id', 'company', 'externalId', 'order', 'type', 'name']
 
   static orderMap = {
     Company: 0,
@@ -83,7 +67,7 @@ export default class WorkGroup extends APIModel {
     return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = super._contextFilter().context()
-        this.where({ 'WorkGroup.scopeCompanyId': session.account.company.id })
+        this.where({ 'WorkGroup.companyId': session.account.company.id })
         this.orderBy('WorkGroup.order')
         return this
       }
