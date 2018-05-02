@@ -47,32 +47,10 @@ const processors = {
     'W Routelog': edgeRoutelogProcessor,
   },
 }
-company: { '#ref': 'directsat' },
-name: 'Tech Profile',
-},
-{
-company: { '#ref': 'directsat' },
-name: 'Siebel Routelog',
-},
-{
-company: { '#ref': 'directsat' },
-name: 'Edge MW Routelog',
-},
-{
-company: { '#ref': 'directsat' },
-name: 'Edge SE Routelog',
-},
-{
-company: { '#ref': 'directsat' },
-name: 'Edge SW Routelog',
-},
-{
-company: { '#ref': 'directsat' },
-name: 'Edge W Routelog',
-},
+
 const dataSourceNames = {
   'Tech Profile': 'Tech Profile',
-  'Routelog': 'Siebel Routelog',
+  Routelog: 'Siebel Routelog',
   'MW Routelog': 'Edge MW Routelog',
   'SE Routelog': 'Edge SE Routelog',
   'SW Routelog': 'Edge SW Routelog',
