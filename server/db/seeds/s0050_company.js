@@ -7,6 +7,9 @@ exports.seed = async function(knex) {
   await Company.query()
   .insertGraph([
     {
+      name: 'DirecTV',
+    },
+    {
       '#id': 'directsat',
       name: 'DirectSat',
       dataSources: [
