@@ -10,25 +10,21 @@ export default class WorkOrder extends APIModel {
     table.string('type')
     table.string('status')
     table.uuid('companyId')
-    table.uuid('subcontractorId').index()
     table.json('row')
     table.unique(['companyId', 'externalId'])
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   `
-  // static knexAlterTable = `
-  //   table.foreign('dataSourceId').references('DataSource.id')
-  // `
-  // static knexCreateJoinTables = {
-  //   workGroupWorkOrders: `
-  //     table.uuid('workOrderId').notNullable()
-  //     table.uuid('workGroupId').notNullable()
-  //     table.primary(['workOrderId', 'workGroupId'])
-  //     table.unique(['workGroupId', 'workOrderId'])
-  //     table.foreign('workGroupId').references('WorkGroup.id')
-  //     table.foreign('workOrderId').references('WorkOrder.id')
-  //   `,
-  // }
+  static knexCreateJoinTables = {
+    workGroupWorkOrders: `
+      table.uuid('workOrderId').notNullable()
+      table.uuid('workGroupId').notNullable()
+      table.primary(['workOrderId', 'workGroupId'])
+      table.unique(['workGroupId', 'workOrderId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('workOrderId').references('WorkOrder.id')
+    `,
+  }
   static jsonSchema = {
     title: 'WorkOrder',
     description: 'A request from a customer for work',
@@ -54,7 +50,7 @@ export default class WorkOrder extends APIModel {
         const workOrderIds = this.clone()
         .select('WorkOrder.id')
         .joinRelation('workGroups')
-        .where('workGroups.scopeCompanyId', session.account.company.id)
+        .where('workGroups.companyId', session.account.company.id)
         this.whereIn('id', workOrderIds)
         return this
       }
@@ -63,22 +59,6 @@ export default class WorkOrder extends APIModel {
 
   static get relationMappings() {
     return {
-      company: {
-        relation: Model.BelongsToOneRelation,
-        modelClass: 'Company',
-        join: {
-          from: 'WorkOrder.companyId',
-          to: 'Company.id',
-        },
-      },
-      subcontractor: {
-        relation: Model.BelongsToOneRelation,
-        modelClass: 'Company',
-        join: {
-          from: 'WorkOrder.subcontractorId',
-          to: 'Company.id',
-        },
-      },
       appointments: {
         relation: Model.HasManyRelation,
         modelClass: 'Appointment',

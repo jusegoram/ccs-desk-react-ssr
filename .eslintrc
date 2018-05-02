@@ -28,7 +28,7 @@
     }
   },
   "env": {
-    "mocha": true
+    "jest": true
   },
   "globals": {
     "window": true,
