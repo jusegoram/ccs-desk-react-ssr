@@ -94,6 +94,18 @@ export default class Tech extends APIModel {
           to: 'Company.id',
         },
       },
+      workGroups: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'WorkGroup',
+        join: {
+          from: 'Tech.id',
+          through: {
+            from: 'workGroupTechs.techId',
+            to: 'workGroupTechs.workGroupId',
+          },
+          to: 'WorkGroup.id',
+        },
+      },
     }
   }
 }
