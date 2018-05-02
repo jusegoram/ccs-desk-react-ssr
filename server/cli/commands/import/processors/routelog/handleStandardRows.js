@@ -12,7 +12,7 @@ const getDateString = timeString => {
 }
 
 export default async ({ rows, models, w2Company }) => {
-  const { WorkOrder, WorkGroup, Company, Appointment, Employee } = models
+  const { WorkOrder, WorkGroup, Company, Appointment } = models
   const knex = WorkOrder.knex()
   const workGroupCache = {}
 
@@ -27,7 +27,7 @@ export default async ({ rows, models, w2Company }) => {
       .returning('*')
     }
 
-    let workOrder = await WorkOrder.query().findOne({ externalId: row['Activity ID'] })
+    let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
     if (workOrder && !_.isEqual(workOrder.row, row)) return
     if (!workOrder)
       workOrder = await WorkOrder.query().insert({
@@ -35,6 +35,17 @@ export default async ({ rows, models, w2Company }) => {
         externalId: row['Activity ID'],
         date: getDateString(row['Due Date']),
         type: row['Order Type'],
+        status: row['Status'],
+        row: row,
+      })
+    let appointment = await Appointment.query().findOne({
+      workOrderId: workOrder.id,
+      date: getDateString(row['Due Date']),
+    })
+    if (!appointment)
+      appointment = await Appointment.query().insert({
+        workOrderId: workOrder.id,
+        date: getDateString(row['Due Date']),
         status: row['Status'],
         row: row,
       })
