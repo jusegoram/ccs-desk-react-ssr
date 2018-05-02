@@ -28,7 +28,7 @@ export default async ({ rows, models, w2Company }) => {
     }
 
     let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
-    if (workOrder && !_.isEqual(workOrder.row, row)) return
+    if (workOrder && _.isEqual(workOrder.row, row)) return
     if (!workOrder)
       workOrder = await WorkOrder.query().insert({
         companyId: directv.id,
