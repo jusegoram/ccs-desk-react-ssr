@@ -1,0 +1,31 @@
+import * as models from 'server/api/models'
+import knex from 'server/knex'
+import _ from 'lodash'
+import { Model } from 'objection'
+import handleStandardRows from '../routelog/handleStandardRows'
+import processTechProfile from '../techProfile/processTechProfile'
+
+const techProfileInput = require('./techProfile.input.json')
+const routelogInput = require('./routelog.input.json')
+
+Model.knex(knex)
+
+const { Company } = models
+
+describe('handleStandardRows', () => {
+  afterAll(async () => {
+    await knex.destroy()
+  })
+  beforeEach(async () => {
+    await knex.seed.run()
+  })
+  it('should create a work group for each work group in the data', async () => {
+    const w2Company = await Company.query().findOne({ name: 'Goodman' })
+    await handleStandardRows({ rows: routelogInput, models, w2Company })
+  })
+  it('should handle tech data', async () => {
+    const w2Company = await Company.query().findOne({ name: 'Goodman' })
+    const dataSource = await w2Company.$relatedQuery('dataSources').where({ name: 'Tech Profile' })
+    await processTechProfile({ datas: techProfileInput, dataSource, w2Company })
+  })
+})

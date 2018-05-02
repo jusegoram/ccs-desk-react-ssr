@@ -15,7 +15,6 @@ export default class Tech extends APIModel {
     table.string('schedule')
     table.json('row')
     table.uuid('companyId')
-    table.uuid('subcontractorId').index()
     table.uuid('startLocationId')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
@@ -24,20 +23,19 @@ export default class Tech extends APIModel {
   `
   static knexAlterTable = `
     table.foreign('companyId').references('Company.id')
-    table.foreign('subcontractorId').references('Company.id')
     table.foreign('startLocationId').references('Geography.id')
     table.foreign('dataSourceId').references('DataSource.id')
   `
-  // static knexCreateJoinTables = {
-  //   companyTechs: `
-  //     table.uuid('companyId').notNullable()
-  //     table.uuid('techId').notNullable()
-  //     table.unique(['companyId', 'techId'])
-  //     table.primary(['techId', 'companyId'])
-  //     table.foreign('companyId').references('Company.id')
-  //     table.foreign('techId').references('Tech.id')
-  //   `,
-  // }
+  static knexCreateJoinTables = {
+    workGroupTechs: `
+      table.uuid('workGroupId').notNullable()
+      table.uuid('techId').notNullable()
+      table.unique(['workGroupId', 'techId'])
+      table.primary(['techId', 'workGroupId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('techId').references('Tech.id')
+    `,
+  }
   static jsonSchema = {
     title: 'Tech',
     description: 'An employee',
@@ -93,14 +91,6 @@ export default class Tech extends APIModel {
         modelClass: 'Company',
         join: {
           from: 'Tech.companyId',
-          to: 'Company.id',
-        },
-      },
-      subcontractor: {
-        relation: Model.BelongsToOneRelation,
-        modelClass: 'Company',
-        join: {
-          from: 'Tech.subcontractorId',
           to: 'Company.id',
         },
       },
