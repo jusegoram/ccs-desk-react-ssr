@@ -89,7 +89,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
   const w2Company = await Company.query().findOne({ name: companyName })
   const dataSource = await w2Company
   .$relatedQuery('dataSources')
-  .where({ name: dataSourceNames[dataSourceName] }) // confusing, I know
+  .where({ name: dataSourceNames[reportName] }) // confusing, I know
   .first()
   if (!dataSource) throw new Error('Unable to find that data source')
   const dataImport = await DataImport.query()
