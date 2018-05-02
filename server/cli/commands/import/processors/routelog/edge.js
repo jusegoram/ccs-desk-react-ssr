@@ -6,13 +6,14 @@ import * as rawModels from 'server/api/models'
 import { streamToArray } from 'server/util'
 import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
+import sanitizeCompanyName from '../sanitizeCompanyName'
 
 const convertRowToStandardForm = ({ row, w2Company, employee }) => {
   const getWorkGroup = type => (employee && _.find(employee.workGroups, { type })) || {}
   const standardRow = {
     Source: 'Edge',
     'Partner Name': w2Company.name || '',
-    Subcontractor: (employee && employee.company.name) || '',
+    Subcontractor: sanitizeCompanyName(row['Tech Type']) || '',
     'Activity ID': row['Activity ID'] || '',
     'Tech ID': (employee && employee.alternateExternalId) || '',
     'Tech Name': (employee && employee.name) || '',
