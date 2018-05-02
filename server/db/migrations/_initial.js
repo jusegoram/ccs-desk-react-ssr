@@ -94,7 +94,6 @@ export function up(knex) {
     table.string('schedule')
     table.json('row')
     table.uuid('companyId')
-    table.uuid('subcontractorId').index()
     table.uuid('startLocationId')
     table.uuid('dataSourceId')
     table.unique(['companyId', 'externalId'])
@@ -143,7 +142,6 @@ export function up(knex) {
   })
   .alterTable('Tech', table => {
     table.foreign('companyId').references('Company.id')
-    table.foreign('subcontractorId').references('Company.id')
     table.foreign('startLocationId').references('Geography.id')
     table.foreign('dataSourceId').references('DataSource.id')
   })
@@ -157,6 +155,14 @@ export function up(knex) {
       table.unique(['companyId', 'dataSourceId'])
       table.foreign('dataSourceId').references('DataSource.id')
       table.foreign('companyId').references('Company.id')
+  })
+  .createTable('workGroupTechs', table => { 
+      table.uuid('workGroupId').notNullable()
+      table.uuid('techId').notNullable()
+      table.unique(['workGroupId', 'techId'])
+      table.primary(['techId', 'workGroupId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('techId').references('Tech.id')
   })
   .createTable('directv_sr_data', table => { 
       table.string('Service Region').index()
