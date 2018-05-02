@@ -118,7 +118,13 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
         : await Tech.query()
         .eager('workGroups')
         .findOne({ alternateExternalId: data['Tech ID'] })
-      return convertRowToStandardForm({ row: data, w2Company, employee })
+      try {
+        return convertRowToStandardForm({ row: data, w2Company, employee })
+      } catch (e) {
+        console.error(e)
+        console.log(data)
+        throw e
+      }
     })
 
     await handleStandardRows({ rows, timer, models, dataSource, w2Company })
