@@ -48,7 +48,6 @@ export function up(knex) {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.uuid('companyId') // one way
     table.string('name')
-    table.json('reports')
     table.unique(['companyId', 'name'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -106,14 +105,12 @@ export function up(knex) {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
     // <custom>
-    table.uuid('scopeCompanyId')
     table.uuid('companyId')
     table.integer('order').notNullable()
     table.string('type').notNullable() // 'Company', 'Office', 'Team', 'DMA', 'Service Region', 'Division'
     table.string('externalId').notNullable()
     table.string('name').notNullable()
-    table.unique(['scopeCompanyId', 'companyId', 'type', 'externalId'])
-    table.uuid('geographyId')
+    table.unique(['companyId', 'type', 'externalId'])
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
@@ -126,7 +123,6 @@ export function up(knex) {
     table.string('type')
     table.string('status')
     table.uuid('companyId')
-    table.uuid('subcontractorId').index()
     table.json('row')
     table.unique(['companyId', 'externalId'])
     // </custom>
@@ -152,9 +148,7 @@ export function up(knex) {
     table.foreign('dataSourceId').references('DataSource.id')
   })
   .alterTable('WorkGroup', table => {
-    table.foreign('geographyId').references('Geography.id')
     table.foreign('companyId').references('Company.id')
-    table.foreign('scopeCompanyId').references('Company.id')
   })
   .createTable('companyDataSources', table => { 
       table.uuid('dataSourceId').notNullable()
@@ -170,6 +164,14 @@ export function up(knex) {
       table.string('DMA')
       table.string('Division')
       table.string('HSP')
+  })
+  .createTable('workGroupWorkOrders', table => { 
+      table.uuid('workOrderId').notNullable()
+      table.uuid('workGroupId').notNullable()
+      table.primary(['workOrderId', 'workGroupId'])
+      table.unique(['workGroupId', 'workOrderId'])
+      table.foreign('workGroupId').references('WorkGroup.id')
+      table.foreign('workOrderId').references('WorkOrder.id')
   })
 }
 

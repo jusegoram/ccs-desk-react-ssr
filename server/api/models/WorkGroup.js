@@ -55,12 +55,13 @@ export default class WorkGroup extends APIModel {
 
   static orderMap = {
     Company: 0,
-    Division: 1,
-    DMA: 2,
-    Office: 3,
-    'Service Region': 4,
-    Team: 5,
-    Tech: 6,
+    Subcontractor: 1,
+    Division: 2,
+    DMA: 3,
+    Office: 4,
+    'Service Region': 5,
+    Team: 6,
+    Tech: 7,
   }
 
   static get QueryBuilder() {
@@ -72,20 +73,19 @@ export default class WorkGroup extends APIModel {
         return this
       }
 
-      async ensure({ scopeCompanyId, companyId, type, externalId, name }, cache) {
+      async ensure({ companyId, type, externalId, name }, cache) {
+        if (!externalId) return null
         if (cache) {
           cache[companyId] = cache[companyId] || {}
           cache[companyId][type] = cache[companyId][type] || {}
-          cache[companyId][type][externalId] = cache[companyId][type][externalId] || {}
-          if (cache[companyId][type][externalId][scopeCompanyId])
-            return cache[companyId][type][externalId][scopeCompanyId]
+          if (cache[companyId][type][externalId]) return cache[companyId][type][externalId]
         }
         const order = WorkGroup.orderMap[type]
         const workGroup = await this.upsert({
-          query: { scopeCompanyId, companyId, type, externalId },
+          query: { companyId, type, externalId },
           update: { name, order },
         })
-        if (cache) cache[companyId][type][externalId][scopeCompanyId] = workGroup
+        if (cache) cache[companyId][type][externalId] = workGroup
         return workGroup
       }
 

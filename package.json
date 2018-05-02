@@ -12,7 +12,8 @@
     "knex:migrate:rollback": "env-cmd .env babel-node node_modules/.bin/knex migrate:rollback",
     "knex:migrate:generate": "env-cmd .env babel-node server/db/scripts/generateMigration/index.js",
     "cli": "env-cmd .env babel-node server/cli/index.js",
-    "babel": "env-cmd .env babel-node"
+    "babel": "env-cmd .env babel-node",
+    "test": "jest"
   },
   "dependencies": {
     "@babel/preset-env": "^7.0.0-beta.39",
@@ -71,6 +72,7 @@
     "graphql-voyager": "^1.0.0-rc.11",
     "isomorphic-fetch": "^2.2.1",
     "isomorphic-unfetch": "^2.0.0",
+    "jest": "^22.4.3",
     "js-cookie": "^2.2.0",
     "jsonwebtoken": "^8.1.1",
     "knex": "^0.14.2",
@@ -131,6 +133,8 @@
   "devDependencies": {
     "alias-quokka-plugin": "^0.1.0",
     "babel-alias-quokka-plugin": "^1.0.9",
+    "babel-core": "^6.26.3",
+    "babel-jest": "^22.4.3",
     "eslint": "^4.17.0",
     "eslint-config-airbnb": "^16.0.0",
     "eslint-plugin-flowtype": "^2.39.1",
@@ -141,7 +145,8 @@
     "eslint-plugin-prettier": "^2.3.1",
     "eslint-plugin-react": "^7.4.0",
     "flow-bin": "^0.70.0",
-    "jsdom-quokka-plugin": "^1.0.10"
+    "jsdom-quokka-plugin": "^1.0.10",
+    "regenerator-runtime": "^0.11.1"
   },
   "quokka": {
     "babel": true,

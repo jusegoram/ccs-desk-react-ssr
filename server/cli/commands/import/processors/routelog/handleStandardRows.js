@@ -11,175 +11,121 @@ const getDateString = timeString => {
   return date.format('YYYY-MM-DD')
 }
 
-export default async ({ rows, timer, models, dataSource, w2Company }) => {
+export default async ({ rows, models, w2Company }) => {
   const { WorkOrder, WorkGroup, Company, Appointment, Employee } = models
   const knex = WorkOrder.knex()
-  const dataSourceId = dataSource.id
   const workGroupCache = {}
 
-  timer.split('Load Existing')
-  const dbWorkOrders = _.keyBy(
-    await WorkOrder.query()
-    .eager('[workGroups, appointments]')
-    .where({ dataSourceId })
-    .where(
-      'date',
-      '>=',
-      moment
-      .tz('America/Los_Angeles')
-      .add(-1, 'day')
-      .format('YYYY-MM-DD')
-    ),
-    'externalId'
-  )
+  const directv = await Company.query().findOne({ name: 'DirecTV' })
 
-  await Promise.mapSeries(rows, async data => {
-    timer.split('Work Order Upsert')
-    const dbWorkOrder = dbWorkOrders[data['Activity ID']]
-    let workOrder = dbWorkOrder
-    if (!workOrder || !_.isEqual(workOrder.data, data)) {
-      workOrder = await WorkOrder.query()
-      .eager('[workGroups, appointments]')
-      .upsert({
-        query: { externalId: data['Activity ID'] },
-        update: {
-          dataSourceId,
-          date: getDateString(data['Due Date']),
-          type: data['Order Type'],
-          status: data['Status'],
-          row: data,
-        },
+  await Promise.resolve(rows).mapSeries(async row => {
+    if (row['Subcontractor'] === 'W2' || row['Subcontractor'] === row['Partner Name']) delete row['Subcontractor']
+    let subcontractor = row['Subcontractor'] && (await Company.query().findOne({ name: row['Subcontractor'] }))
+    if (row['Subcontractor'] && !subcontractor) {
+      subcontractor = await Company.query()
+      .insert({ name: row['Subcontractor'] })
+      .returning('*')
+    }
+
+    let workOrder = await WorkOrder.query().findOne({ externalId: row['Activity ID'] })
+    if (workOrder && !_.isEqual(workOrder.row, row)) return
+    if (!workOrder)
+      workOrder = await WorkOrder.query().insert({
+        companyId: directv.id,
+        externalId: row['Activity ID'],
+        date: getDateString(row['Due Date']),
+        type: row['Order Type'],
+        status: row['Status'],
+        row: row,
       })
-    }
+    await knex('workGroupWorkOrders')
+    .where({ workOrderId: workOrder.id })
+    .delete()
 
-    timer.split('Appointment Upsert')
-    let currentAppointment = _.find(workOrder.appointments, { date: workOrder.date })
-    if (!currentAppointment || !_.isEqual(currentAppointment.data, data)) {
-      const employee = !data['Tech ID']
-        ? null
-        : await Employee.query()
-        .first()
-        .where({ externalId: data['Tech ID'] })
-        .orWhere({ alternateExternalId: data['Tech ID'] })
-
-      currentAppointment =
-        workOrder.date &&
-        (await Appointment.query().upsert({
-          query: {
-            workOrderId: workOrder.id,
-            ...(employee && { employeeId: employee.id }),
-            date: workOrder.date,
+    const createForCompany = async company => {
+      const workGroupCreations = [
+        WorkGroup.query().ensure(
+          {
+            companyId: company.id,
+            type: 'Company',
+            externalId: w2Company.name,
+            name: w2Company.name,
           },
-          update: {
-            status: workOrder.status,
-            row: data,
+          workGroupCache
+        ),
+        WorkGroup.query().ensure(
+          {
+            companyId: company.id,
+            type: 'Subcontractor',
+            externalId: subcontractor && subcontractor.name,
+            name: subcontractor && subcontractor.name,
           },
-        }))
-      await workOrder.$relatedQuery('appointments').relate(currentAppointment)
-      employee && (await employee.$relatedQuery('appointments').relate(currentAppointment))
+          workGroupCache
+        ),
+        WorkGroup.query().ensure(
+          {
+            companyId: company.id,
+            type: 'Division',
+            externalId: row['Division'],
+            name: row['Division'],
+          },
+          workGroupCache
+        ),
+        WorkGroup.query().ensure(
+          {
+            companyId: company.id,
+            type: 'DMA',
+            externalId: row['DMA'],
+            name: row['DMA'],
+          },
+          workGroupCache
+        ),
+        WorkGroup.query().ensure(
+          {
+            companyId: company.id,
+            type: 'Service Region',
+            externalId: row['Service Region'],
+            name: row['Service Region'],
+          },
+          workGroupCache
+        ),
+        WorkGroup.query().ensure(
+          {
+            companyId: company.id,
+            type: 'Office',
+            externalId: row['Office'],
+            name: row['Office'],
+          },
+          workGroupCache
+        ),
+        WorkGroup.query().ensure(
+          {
+            companyId: company.id,
+            type: 'Team',
+            externalId: row['Tech Team'],
+            name: row['Tech Supervisor'],
+          },
+          workGroupCache
+        ),
+        WorkGroup.query().ensure(
+          {
+            companyId: company.id,
+            type: 'Tech',
+            externalId: row['Tech ID'],
+            name: row['Tech Name'],
+          },
+          workGroupCache
+        ),
+      ]
+      const workGroups = _.filter(await Promise.all(workGroupCreations))
+      await Promise.map(workGroups, workGroup =>
+        knex('workGroupWorkOrders').insert({
+          workGroupId: workGroup.id,
+          workOrderId: workOrder.id,
+        })
+      )
     }
-
-    timer.split('Ensure Company')
-    const company = await Company.query().ensure(data.Subcontractor || data['Partner Name'])
-    const ccsCompany = await Company.query().ensure('CCS')
-
-    timer.split('Work Group Datas')
-    const employeeId = data['Tech ID']
-    const techTeamId = data['Tech Team']
-    const getWorkGroupDatas = scopeCompany => [
-      ...(employeeId && [
-        {
-          scopeCompanyId: scopeCompany.id,
-          companyId: w2Company.id,
-          type: 'Tech',
-          externalId: employeeId,
-          name: data['Tech Name'],
-        },
-      ]),
-      ...(techTeamId && [
-        {
-          scopeCompanyId: scopeCompany.id,
-          companyId: w2Company.id,
-          type: 'Team',
-          externalId: techTeamId,
-          name: data['Tech Supervisor'],
-        },
-      ]),
-      {
-        scopeCompanyId: scopeCompany.id,
-        companyId: w2Company.id,
-        type: 'Company',
-        externalId: w2Company.name,
-        name: w2Company.name,
-      },
-      {
-        scopeCompanyId: scopeCompany.id,
-        companyId: w2Company.id,
-        type: 'Company',
-        externalId: company.name,
-        name: company.name,
-      },
-      ...(!!data['Service Region'] && [
-        {
-          scopeCompanyId: scopeCompany.id,
-          companyId: w2Company.id,
-          type: 'Service Region',
-          externalId: data['Service Region'],
-          name: data['Service Region'],
-        },
-        {
-          scopeCompanyId: scopeCompany.id,
-          companyId: w2Company.id,
-          type: 'Office',
-          externalId: data.Office,
-          name: data.Office,
-        },
-        {
-          scopeCompanyId: scopeCompany.id,
-          companyId: w2Company.id,
-          type: 'DMA',
-          externalId: data.DMA,
-          name: data.DMA,
-        },
-        {
-          scopeCompanyId: scopeCompany.id,
-          companyId: w2Company.id,
-          type: 'Division',
-          externalId: data.Division,
-          name: data.Division,
-        },
-      ]),
-    ]
-
-    const w2WorkGroupDatas = getWorkGroupDatas(ccsCompany).concat(getWorkGroupDatas(w2Company))
-    const subWorkGroupDatas = w2Company.id === company.id ? [] : getWorkGroupDatas(company)
-    const workGroupDatas = w2WorkGroupDatas.concat(subWorkGroupDatas)
-
-    timer.split('Work Groups _.differenceWith')
-    const workGroupPrimaryKey = ['scopeCompanyId', 'companyId', 'type', 'externalId']
-    const hasSamePrimaryKey = (a, b) => _.isEqual(_.pick(a, workGroupPrimaryKey), _.pick(b, workGroupPrimaryKey))
-    const newWorkGroupDatas = _.differenceWith(workGroupDatas, workOrder.workGroups, hasSamePrimaryKey)
-    const obsoleteWorkGroups = _.differenceWith(workOrder.workGroups, workGroupDatas, hasSamePrimaryKey)
-
-    timer.split('Ensure New Work Groups')
-    const newWorkGroups = await Promise.mapSeries(newWorkGroupDatas, workGroupData => {
-      return WorkGroup.query().ensure(workGroupData, workGroupCache)
-    })
-
-    timer.split('Insert New Work Group Relations')
-    await Promise.mapSeries(_.uniqBy(newWorkGroups, 'id'), workGroup =>
-      knex('workGroupWorkOrders').insert({
-        workOrderId: workOrder.id,
-        workGroupId: workGroup.id,
-      })
-    )
-
-    timer.split('Delete Old Work Group Relations')
-    if (obsoleteWorkGroups.length) {
-      await knex('workGroupWorkOrders')
-      .where({ workOrderId: workOrder.id })
-      .whereIn('workGroupId', _.map(obsoleteWorkGroups, 'id'))
-      .delete()
-    }
+    if (subcontractor) await createForCompany(subcontractor)
+    await createForCompany(w2Company)
   })
 }
