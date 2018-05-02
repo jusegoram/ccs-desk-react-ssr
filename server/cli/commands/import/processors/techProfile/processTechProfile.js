@@ -23,9 +23,8 @@ export default async ({ datas, dataSource, w2Company }) => {
       const directv = await Company.query().findOne({ name: 'DirecTV' })
 
       const srData = _.keyBy(
-        await WorkGroup.knex()()
+        await WorkGroup.knex()('directv_sr_data')
         .select('Service Region', 'Office', 'DMA', 'Division')
-        .from('directv_sr_data')
         .where({ HSP: w2CompanyName }),
         'Service Region'
       )
