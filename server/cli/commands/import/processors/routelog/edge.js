@@ -116,13 +116,13 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
       const employee = !data['Tech ID']
         ? null
         : await Tech.query()
-        .eager('workGroups')
+        .eager('[workGroups]')
         .findOne({ alternateExternalId: data['Tech ID'] })
       try {
         return convertRowToStandardForm({ row: data, w2Company, employee })
       } catch (e) {
         console.error(e)
-        console.log(data)
+        console.log(employee)
         throw e
       }
     })
