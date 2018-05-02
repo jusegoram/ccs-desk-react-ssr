@@ -48,5 +48,5 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
     return data
   })
 
-  processTechProfile({ datas, dataSource, w2Company })
+  await processTechProfile({ datas, dataSource, w2Company })
 }
