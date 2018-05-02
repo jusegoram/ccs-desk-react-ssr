@@ -50,7 +50,6 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
     const knex = Employee.knex()
     const dataSourceId = dataSource.id
     const workGroupCache = {}
-    const ccsCompany = await Company.query().findOne({ name: 'CCS' })
 
     let srData = null
 
@@ -149,69 +148,85 @@ export default async ({ csvObjStream, dataSource, w2Company }) => {
         timer.split('Ensure Work Groups')
         const techSR = data['Service Region']
         const techSrData = srData[techSR]
-        const getWorkGroupDatas = scopeCompany =>
-          _.filter([
-            {
-              type: 'Tech',
-              scopeCompanyId: scopeCompany.id,
-              companyId: company.id,
-              externalId: employee.externalId,
-              name: employee.name,
-            },
-            !!data['Team ID'] && {
-              type: 'Team',
-              scopeCompanyId: scopeCompany.id,
-              companyId: company.id,
-              externalId: data['Team ID'],
-              name: sanitizeName(data['Team Name']),
-            },
-            {
-              type: 'Company',
-              scopeCompanyId: scopeCompany.id,
-              companyId: company.id,
-              externalId: w2Company.name,
-              name: w2Company.name,
-            },
-            {
-              type: 'Company',
-              scopeCompanyId: scopeCompany.id,
-              companyId: company.id,
-              externalId: company.name,
-              name: company.name,
-            },
-            ...(!!techSrData && [
-              {
-                type: 'Service Region',
-                scopeCompanyId: scopeCompany.id,
-                companyId: company.id,
-                externalId: techSR,
-                name: techSR,
-              },
-              {
-                type: 'Office',
-                scopeCompanyId: scopeCompany.id,
-                companyId: company.id,
-                externalId: techSrData['Office'],
-                name: techSrData['Office'],
-              },
-              {
-                type: 'DMA',
-                scopeCompanyId: scopeCompany.id,
-                companyId: company.id,
-                externalId: techSrData['DMA'],
-                name: techSrData['DMA'],
-              },
-              {
-                type: 'Division',
-                scopeCompanyId: scopeCompany.id,
-                companyId: company.id,
-                externalId: techSrData['Division'],
-                name: techSrData['Division'],
-              },
-            ]),
-          ])
-        const w2WorkGroupDatas = getWorkGroupDatas(ccsCompany).concat(getWorkGroupDatas(w2Company))
-        const subWorkGroupDatas = w2Company.id === company.id ? [] : getWorkGroupDatas(company)
+        const createWorkGroups = async scopeCompany =>
+          _.filter(
+            await Promise.all([
+              WorkGroup.query().ensure(
+                {
+                  companyId: scopeCompany.id,
+                  type: 'Tech',
+                  externalId: employee.externalId,
+                  name: employee.name,
+                },
+                workGroupCache
+              ),
+              WorkGroup.query().ensure(
+                {
+                  companyId: scopeCompany.id,
+                  type: 'Team',
+                  externalId: data['Team ID'],
+                  name: sanitizeName(data['Team Name']),
+                },
+                workGroupCache
+              ),
+              WorkGroup.query().ensure(
+                {
+                  companyId: scopeCompany.id,
+                  type: 'Company',
+                  externalId: w2Company.name,
+                  name: w2Company.name,
+                },
+                workGroupCache
+              ),
+              WorkGroup.query().ensure(
+                {
+                  companyId: scopeCompany.id,
+                  type: 'Subcontractor',
+                  externalId: company.name,
+                  name: company.name,
+                },
+                workGroupCache
+              ),
+              WorkGroup.query().ensure(
+                {
+                  companyId: scopeCompany.id,
+                  type: 'Service Region',
+                  externalId: techSR,
+                  name: techSR,
+                },
+                workGroupCache
+              ),
+              WorkGroup.query().ensure(
+                {
+                  companyId: scopeCompany.id,
+                  type: 'Office',
+                  externalId: techSrData && techSrData['Office'],
+                  name: techSrData && techSrData['Office'],
+                },
+                workGroupCache
+              ),
+              WorkGroup.query().ensure(
+                {
+                  companyId: scopeCompany.id,
+                  type: 'DMA',
+                  externalId: techSrData && techSrData['DMA'],
+                  name: techSrData && techSrData['DMA'],
+                },
+                workGroupCache
+              ),
+              WorkGroup.query().ensure(
+                {
+                  companyId: scopeCompany.id,
+                  type: 'Division',
+                  externalId: techSrData && techSrData['Division'],
+                  name: techSrData && techSrData['Division'],
+                },
+                workGroupCache
+              ),
+            ])
+          )
+        const w2WorkGroupDatas = createWorkGroups(w2Company)
+        const subWorkGroupDatas = w2Company.id === company.id ? [] : createWorkGroups(company)
         const workGroupDatas = w2WorkGroupDatas.concat(subWorkGroupDatas)
 
         timer.split('Work Groups _.differenceWith')
