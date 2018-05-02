@@ -84,7 +84,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
   timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
-    const { WorkGroup, Employee } = models
+    const { WorkGroup, Tech } = models
 
     timer.split('SR Data Load')
     const w2CompanyName = w2Company.name
@@ -115,7 +115,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
     const rows = await Promise.mapSeries(datas, async data => {
       const employee = !data['Tech ID']
         ? null
-        : await Employee.query()
+        : await Tech.query()
         .eager('[company, workGroups]')
         .findOne({ alternateExternalId: data['Tech ID'] })
       return convertRowToStandardForm({ row: data, w2Company, employee })
