@@ -113,7 +113,11 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
     })
 
     const rows = await Promise.mapSeries(datas, async data => {
-      const employee = !data['Tech ID'] ? null : await Tech.query().findOne({ alternateExternalId: data['Tech ID'] })
+      const employee = !data['Tech ID']
+        ? null
+        : await Tech.query()
+        .eager('workGroups')
+        .findOne({ alternateExternalId: data['Tech ID'] })
       return convertRowToStandardForm({ row: data, w2Company, employee })
     })
 
