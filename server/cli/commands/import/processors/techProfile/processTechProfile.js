@@ -43,11 +43,11 @@ export default async ({ datas, dataSource, w2Company }) => {
       await Promise.mapSeries(datas, async data => {
         try {
           timer.split('Ensure Company')
-          const company = data['Tech Type'] === w2CompanyName ? w2Company : subcontractors[data['Tech Type']]
-          if (company) {
-            const companyDataSource = await company.$relatedQuery('dataSources').findOne({ id: dataSource.id })
+          const subcontractor = data['Tech Type'] === w2CompanyName ? null : subcontractors[data['Tech Type']]
+          if (subcontractor) {
+            const companyDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
             if (!companyDataSource) {
-              await company.$relatedQuery('dataSources').relate(dataSource)
+              await subcontractor.$relatedQuery('dataSources').relate(dataSource)
             }
           }
 
@@ -117,8 +117,8 @@ export default async ({ datas, dataSource, w2Company }) => {
                   {
                     companyId: scopeCompany.id,
                     type: 'Subcontractor',
-                    externalId: company.name,
-                    name: company.name,
+                    externalId: subcontractor.name,
+                    name: subcontractor.name,
                   },
                   workGroupCache
                 ),
@@ -161,7 +161,6 @@ export default async ({ datas, dataSource, w2Company }) => {
               ])
             )
           const w2WorkGroups = await createWorkGroups(w2Company)
-          const subWorkGroups = w2Company.id === company.id ? [] : await createWorkGroups(company)
 
           await knex('workGroupTechs')
           .where({ techId: employee.id })
@@ -172,12 +171,15 @@ export default async ({ datas, dataSource, w2Company }) => {
               techId: employee.id,
             })
           )
-          await Promise.map(subWorkGroups, workGroup =>
-            knex('workGroupTechs').insert({
-              workGroupId: workGroup.id,
-              techId: employee.id,
-            })
-          )
+          if (subcontractor) {
+            const subWorkGroups = await createWorkGroups(subcontractor)
+            await Promise.map(subWorkGroups, workGroup =>
+              knex('workGroupTechs').insert({
+                workGroupId: workGroup.id,
+                techId: employee.id,
+              })
+            )
+          }
         } catch (e) {
           console.error(data) // eslint-disable-line no-console
           throw e

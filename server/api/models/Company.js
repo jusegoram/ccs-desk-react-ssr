@@ -8,9 +8,14 @@ export default class Company extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.string('name').unique()
+    table.uuid('workGroupId')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `
+  static knexAlterTable = `
+    table.foreign('workGroupId').references('WorkGroup.id')
+  `
+
   static jsonSchema = {
     title: 'Company',
     description: 'A company',
@@ -55,16 +60,16 @@ export default class Company extends APIModel {
       workGroup: {
         relation: Model.HasOneRelation,
         modelClass: 'WorkGroup',
+        filter: qb => {
+          qb
+          .where(function() {
+            this.where('WorkGroup.type', '=', 'Company').orWhere('WorkGroup.type', '=', 'Subcontractor')
+          })
+          .whereRaw('"WorkGroup"."externalId" = "Company".name')
+        },
         join: {
           from: 'Company.id',
           to: 'WorkGroup.companyId',
-          filter: qb => {
-            qb
-            .where(function() {
-              this.where({ type: 'Company' }).orWhere({ type: 'Subcontractor' })
-            })
-            .where('WorkGroup.externalId', '=', 'Company.name')
-          },
         },
       },
       dataSources: {
