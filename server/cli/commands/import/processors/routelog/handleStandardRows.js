@@ -35,7 +35,7 @@ export default async ({ rows, models, w2Company, dataSource }) => {
 
     let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
     if (workOrder && _.isEqual(workOrder.row, row)) return
-    if (!workOrder)
+    if (!workOrder) {
       workOrder = await WorkOrder.query().insert({
         companyId: directv.id,
         externalId: row['Activity ID'],
@@ -44,17 +44,31 @@ export default async ({ rows, models, w2Company, dataSource }) => {
         status: row['Status'],
         row: row,
       })
+    } else {
+      workOrder.$patch({
+        date: getDateString(row['Due Date']),
+        type: row['Order Type'],
+        status: row['Status'],
+        row: row,
+      })
+    }
     let appointment = await Appointment.query().findOne({
       workOrderId: workOrder.id,
       date: getDateString(row['Due Date']),
     })
-    if (!appointment)
+    if (!appointment) {
       appointment = await Appointment.query().insert({
         workOrderId: workOrder.id,
         date: getDateString(row['Due Date']),
         status: row['Status'],
         row: row,
       })
+    } else {
+      appointment.$patch({
+        status: row['Status'],
+        row: row,
+      })
+    }
     await knex('workGroupWorkOrders')
     .where({ workOrderId: workOrder.id })
     .delete()
