@@ -28,6 +28,16 @@ export default async ({ rows, models, w2Company, dataSource }) => {
       subcontractor = await Company.query()
       .insert({ name: row['Subcontractor'] })
       .returning('*')
+      const subworkgroup = await WorkGroup.query().ensure(
+        {
+          companyId: company.id,
+          type: 'Subcontractor',
+          externalId: subcontractor && subcontractor.name,
+          name: subcontractor && subcontractor.name,
+        },
+        {}
+      )
+      await subcontractor.$relatedQuery('workGroup').relate(subworkgroup)
     }
     if (subcontractor) {
       const subcontractorDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
