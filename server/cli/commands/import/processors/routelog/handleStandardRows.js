@@ -19,6 +19,9 @@ export default async ({ rows, models, w2Company, dataSource }) => {
   const directv = await Company.query().findOne({ name: 'DirecTV' })
 
   await Promise.resolve(rows).mapSeries(async row => {
+    let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
+    if (workOrder && _.isEqual(workOrder.row, row)) return
+
     if (row['Subcontractor'] === 'W2' || row['Subcontractor'] === row['Partner Name']) delete row['Subcontractor']
     let subcontractor = row['Subcontractor'] && (await Company.query().findOne({ name: row['Subcontractor'] }))
     if (row['Subcontractor'] && !subcontractor) {
@@ -33,8 +36,6 @@ export default async ({ rows, models, w2Company, dataSource }) => {
       }
     }
 
-    let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
-    if (workOrder && _.isEqual(workOrder.row, row)) return
     if (!workOrder) {
       workOrder = await WorkOrder.query().insert({
         companyId: directv.id,
