@@ -60,16 +60,9 @@ export default class Company extends APIModel {
       workGroup: {
         relation: Model.HasOneRelation,
         modelClass: 'WorkGroup',
-        filter: qb => {
-          qb
-          .where(function() {
-            this.where('WorkGroup.type', '=', 'Company').orWhere('WorkGroup.type', '=', 'Subcontractor')
-          })
-          .whereRaw('"WorkGroup"."externalId" = "Company".name')
-        },
         join: {
-          from: 'Company.id',
-          to: 'WorkGroup.companyId',
+          from: 'Company.workGroupId',
+          to: 'WorkGroup.id',
         },
       },
       dataSources: {
