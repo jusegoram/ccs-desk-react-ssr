@@ -27,10 +27,9 @@ export default async ({ rows, models, w2Company, dataSource }) => {
       .returning('*')
     }
     if (subcontractor) {
-      console.log('subcontractor job:', subcontractor.name)
       const subcontractorDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
       if (!subcontractorDataSource) {
-        subcontractor.$relatedQuery('dataSources').relate(dataSource)
+        await subcontractor.$relatedQuery('dataSources').relate(dataSource)
       }
     }
 
