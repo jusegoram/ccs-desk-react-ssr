@@ -18,6 +18,9 @@ describe('handleStandardRows', () => {
     await knex.destroy()
   })
   beforeAll(async () => {
+    if ((process.env.KNEX_ENV || process.env.NODE_ENV) === 'production') {
+      throw new Error('You were about to delete the production database. Do not run tests against production.')
+    }
     await knex.seed.run()
   })
   it('should create a work group for each work group in the data', async () => {
