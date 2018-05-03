@@ -44,6 +44,12 @@ export default async ({ datas, dataSource, w2Company }) => {
         try {
           timer.split('Ensure Company')
           const company = data['Tech Type'] === w2CompanyName ? w2Company : subcontractors[data['Tech Type']]
+          if (company) {
+            const companyDataSource = await company.$relatedQuery('dataSources').findOne({ id: dataSource.id })
+            if (!companyDataSource) {
+              await company.$relatedQuery('dataSources').relate(dataSource)
+            }
+          }
 
           timer.start('Employee Upsert')
           const dbEmployee = dbEmployees[data['Tech User ID']]
