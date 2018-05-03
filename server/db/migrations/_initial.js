@@ -30,6 +30,7 @@ export function up(knex) {
   .createTable('Company', table => {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.string('name').unique()
+    table.uuid('workGroupId')
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   })
@@ -133,6 +134,9 @@ export function up(knex) {
   .alterTable('Appointment', table => {
     table.foreign('workOrderId').references('WorkOrder.id')
     table.foreign('techId').references('Tech.id')
+  })
+  .alterTable('Company', table => {
+    table.foreign('workGroupId').references('WorkGroup.id')
   })
   .alterTable('DataImport', table => {
     table.foreign('dataSourceId').references('DataSource.id')
