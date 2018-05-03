@@ -138,6 +138,19 @@ export default class WorkGroup extends APIModel {
   }
 
   static get relationMappings() {
-    return {}
+    return {
+      workOrders: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'WorkOrder',
+        join: {
+          from: 'WorkGroup.id',
+          through: {
+            from: 'workGroupWorkOrders.workGroupId',
+            to: 'workGroupWorkOrders.workOrderId',
+          },
+          to: 'WorkOrder.id',
+        },
+      },
+    }
   }
 }

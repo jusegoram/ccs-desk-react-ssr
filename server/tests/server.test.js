@@ -42,13 +42,25 @@ describe('Server', () => {
       await knex.seed.run()
       const w2Company = await Company.query().findOne({ name: 'Goodman' })
       const rlDataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Routelog' })
-      const tpDataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Tech Profile' })
       expect(rlDataSource).toBeDefined()
       await handleStandardRows({ rows: routelogInput, models, w2Company, dataSource: rlDataSource })
     })
     describe('models', () => {
-      describe('WorkOrder', () => {
-        it('should show work orders that exist in the users companys group', () => {})
+      describe('Company', () => {
+        it('should be able to get its primary work group', async () => {
+          const company = await Company.query().findOne({ name: 'Next Solutions LLC' })
+          expect(company).toBeDefined()
+          await company.$loadRelated('workGroup')
+          expect(company.workGroup).toBeDefined()
+        })
+        it('should be able to get work orders from its primary work group', async () => {
+          const company = await Company.query().findOne({ name: 'Next Solutions LLC' })
+          expect(company).toBeDefined()
+          await company.$loadRelated('workGroup')
+          expect(company.workGroup).toBeDefined()
+          const workOrders = await company.workGroup.$relatedQuery('workOrders')
+          expect(workOrders.length).toBe(1)
+        })
       })
     })
   })

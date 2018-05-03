@@ -187,27 +187,30 @@ export default async app => {
         .where({ date: moment().format('YYYY-MM-DD') })
         .where({ livedtoday: true })
 
-        await models.WorkOrder.query()
+        const workOrders = await models.WorkOrder.query()
         .mergeContext({ session, moment })
         ._contextFilter()
-        .eager('appointments')
-        .whereIn('id', workOrderIdsScheduledTodayAtSomePointToday)
-        .map(async workOrder => {
-          if (!workOrder.appointments || workOrder.appointments.length < 2) {
-            return workOrder
-          }
-          const sortedAppointments = _.sortBy(workOrder.appointments, 'createdAt')
-          const currentAppointment = sortedAppointments.slice(-1)[0]
-          if (currentAppointment.date !== moment().format('YYYY-MM-DD')) workOrder.row['Status'] = 'Rescheduled'
-          return workOrder
-        })
-        .map(async workOrder => {
-          workOrder.row = _.mapValues(workOrder.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
-          return workOrder
-        })
-        .map(workOrder => {
-          stringifier.write(workOrder.row)
-        })
+
+        const wos = await session.account.company.workGroup.$relatedQuery('workOrders')
+        console.log(wos)
+        // .eager('appointments')
+        // .whereIn('id', workOrderIdsScheduledTodayAtSomePointToday)
+        // .map(async workOrder => {
+        //   if (!workOrder.appointments || workOrder.appointments.length < 2) {
+        //     return workOrder
+        //   }
+        //   const sortedAppointments = _.sortBy(workOrder.appointments, 'createdAt')
+        //   const currentAppointment = sortedAppointments.slice(-1)[0]
+        //   if (currentAppointment.date !== moment().format('YYYY-MM-DD')) workOrder.row['Status'] = 'Rescheduled'
+        //   return workOrder
+        // })
+        // .map(async workOrder => {
+        //   workOrder.row = _.mapValues(workOrder.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
+        //   return workOrder
+        // })
+        // .map(workOrder => {
+        //   stringifier.write(workOrder.row)
+        // })
         stringifier.end()
         stringifier.pipe(res)
       } else {
