@@ -117,8 +117,8 @@ export default async ({ datas, dataSource, w2Company }) => {
                   {
                     companyId: scopeCompany.id,
                     type: 'Subcontractor',
-                    externalId: subcontractor.name,
-                    name: subcontractor.name,
+                    externalId: subcontractor && subcontractor.name,
+                    name: subcontractor && subcontractor.name,
                   },
                   workGroupCache
                 ),
