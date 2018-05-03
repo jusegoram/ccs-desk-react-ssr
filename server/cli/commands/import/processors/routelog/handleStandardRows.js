@@ -40,9 +40,11 @@ export default async ({ rows, models, w2Company, dataSource }) => {
           externalId: subcontractor.name,
           name: subcontractor.name,
         },
-        {}
+        workGroupCache
       )
-      await subcontractor.$query().patch({ workGroupId: subworkgroup.id })
+      if (subworkgroup) {
+        await subcontractor.$query().patch({ workGroupId: subworkgroup.id })
+      }
       const companyDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
       if (!companyDataSource) {
         await subcontractor.$relatedQuery('dataSources').relate(dataSource)
