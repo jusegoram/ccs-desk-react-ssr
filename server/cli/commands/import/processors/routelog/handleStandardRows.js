@@ -18,7 +18,7 @@ export default async ({ rows, models, w2Company, dataSource }) => {
 
   const directv = await Company.query().findOne({ name: 'DirecTV' })
 
-  const companyNames = _.without(_.map(_.uniqBy(datas, 'Subcontractor'), 'Subcontractor'), w2Company.name)
+  const companyNames = _.without(_.map(_.uniqBy(rows, 'Subcontractor'), 'Subcontractor'), w2Company.name)
   const subcontractors = _.keyBy(
     await Promise.map(companyNames, name => {
       return Company.query().ensure(name)
@@ -30,7 +30,7 @@ export default async ({ rows, models, w2Company, dataSource }) => {
     let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
     if (workOrder && _.isEqual(workOrder.row, row)) return
 
-    const subcontractorName = data['Subcontractor'] === w2Company.name ? null : data['Subcontractor']
+    const subcontractorName = row['Subcontractor'] === w2Company.name ? null : row['Subcontractor']
     let subcontractor = subcontractors[subcontractorName]
     if (subcontractor) {
       const subworkgroup = await WorkGroup.query().ensure(
