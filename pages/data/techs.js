@@ -75,7 +75,7 @@ export default asNextJSPage(
               .format(),
             }}
             fetchPolicy="cache-and-network"
-            pollInterval={5000}
+            pollInterval={15000}
           >
             {({ loading, data }) => {
               return (
