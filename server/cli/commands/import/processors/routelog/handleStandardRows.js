@@ -25,19 +25,18 @@ export default async ({ rows, models, w2Company, dataSource }) => {
     if (row['Subcontractor'] === 'W2' || row['Subcontractor'] === row['Partner Name']) delete row['Subcontractor']
     let subcontractor = row['Subcontractor'] && (await Company.query().findOne({ name: row['Subcontractor'] }))
     if (row['Subcontractor'] && !subcontractor) {
-      subcontractor = await Company.query()
-      .insert({ name: row['Subcontractor'] })
-      .returning('*')
       const subworkgroup = await WorkGroup.query().ensure(
         {
           companyId: company.id,
           type: 'Subcontractor',
-          externalId: subcontractor && subcontractor.name,
-          name: subcontractor && subcontractor.name,
+          externalId: row['Subcontractor'],
+          name: row['Subcontractor'],
         },
         {}
       )
-      await subcontractor.$relatedQuery('workGroup').relate(subworkgroup)
+      subcontractor = await Company.query()
+      .insert({ name: row['Subcontractor'], workGroupId: subworkgroup.id })
+      .returning('*')
     }
     if (subcontractor) {
       const subcontractorDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
