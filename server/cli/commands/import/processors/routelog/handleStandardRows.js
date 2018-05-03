@@ -11,7 +11,7 @@ const getDateString = timeString => {
   return date.format('YYYY-MM-DD')
 }
 
-export default async ({ rows, models, w2Company, dataSource }) => {
+export default async ({ rows, models, w2Company, dataSource, now }) => {
   const { WorkOrder, WorkGroup, Company, Appointment } = models
   const knex = WorkOrder.knex()
   const workGroupCache = {}
@@ -39,6 +39,8 @@ export default async ({ rows, models, w2Company, dataSource }) => {
           type: 'Subcontractor',
           externalId: subcontractor.name,
           name: subcontractor.name,
+          createdAt: now,
+          updatedAt: now,
         },
         workGroupCache
       )
@@ -59,6 +61,8 @@ export default async ({ rows, models, w2Company, dataSource }) => {
         type: row['Order Type'],
         status: row['Status'],
         row: row,
+        createdAt: now,
+        updatedAt: now,
       })
     } else {
       workOrder.$query().patch({
@@ -66,6 +70,7 @@ export default async ({ rows, models, w2Company, dataSource }) => {
         type: row['Order Type'],
         status: row['Status'],
         row: row,
+        updatedAt: now,
       })
     }
     let appointment = await Appointment.query().findOne({
@@ -78,11 +83,14 @@ export default async ({ rows, models, w2Company, dataSource }) => {
         date: getDateString(row['Due Date']),
         status: row['Status'],
         row: row,
+        createdAt: now,
+        updatedAt: now,
       })
     } else {
       appointment.$query().patch({
         status: row['Status'],
         row: row,
+        updatedAt: now,
       })
     }
     await knex('workGroupWorkOrders')
