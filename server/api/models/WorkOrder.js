@@ -47,12 +47,7 @@ export default class WorkOrder extends APIModel {
       _contextFilter() {
         const { session } = super._contextFilter().context()
         if (!session) return this
-        const workOrderIds = this.clone()
-        .select('WorkOrder.id')
-        .joinRelation('workGroups')
-        .where('workGroups.companyId', session.account.company.id)
-        this.whereIn('id', workOrderIds)
-        return this
+        return session.account.company.workGroup.$relatedQuery('workOrders')
       }
     }
   }
