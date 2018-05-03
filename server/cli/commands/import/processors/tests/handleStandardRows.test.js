@@ -28,7 +28,7 @@ describe('handleStandardRows', () => {
   })
   it('should handle tech data', async () => {
     const w2Company = await Company.query().findOne({ name: 'Goodman' })
-    const dataSource = await w2Company.$relatedQuery('dataSources').where({ name: 'Tech Profile' })
+    const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Tech Profile' })
     await processTechProfile({ datas: techProfileInput, dataSource, w2Company })
   })
 })
