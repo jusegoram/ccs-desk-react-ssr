@@ -45,20 +45,17 @@ export default async ({ datas, dataSource, w2Company }) => {
           timer.split('Ensure Company')
           const subcontractorName = data['Tech Type'] === w2CompanyName ? null : data['Tech Type']
           let subcontractor = subcontractors[subcontractorName]
-          if (subcontractorName && !subcontractor) {
+          if (subcontractor) {
             const subworkgroup = await WorkGroup.query().ensure(
               {
-                companyId: company.id,
+                companyId: subcontractor.id,
                 type: 'Subcontractor',
-                externalId: subcontractorName,
-                name: subcontractorName,
+                externalId: subcontractor.name,
+                name: subcontractor.name,
               },
               {}
             )
-            subcontractor = await Company.query()
-            .insert({ name: subcontractorName, workGroupId: subworkgroup.id })
-            .returning('*')
-            subcontractors[subcontractorName] = subcontractor
+            await subcontractor.$query().patch({ workGroupId: subworkgroup.id })
           }
           if (subcontractor) {
             const companyDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
