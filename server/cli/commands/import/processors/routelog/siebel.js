@@ -92,7 +92,7 @@ const convertRowToStandardForm = ({ row, w2Company }) => {
   Timezone: '(GMT-06:00) Central Time (US & Canada)' }
 */
 
-export default async ({ csvObjStream, w2Company, dataSource }) => {
+export default async ({ csvObjStream, w2Company, dataSource, now }) => {
   const timer = new Timer()
   timer.start('Total')
   timer.start('Initialization')
@@ -112,7 +112,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
 
     timer.split('Stream to Array')
     const rows = await streamToArray(csvObjStream, data => {
-      data = _.mapKeys(data, (value, key)=> key.replace(/[^a-zA-Z0-9#\s]/, ''))
+      data = _.mapKeys(data, (value, key) => key.replace(/[^a-zA-Z0-9#\s]/, ''))
       const serviceRegion = data.SR
       const groups = srData[serviceRegion]
       if (groups) {
@@ -127,7 +127,7 @@ export default async ({ csvObjStream, w2Company, dataSource }) => {
       return convertRowToStandardForm({ row: data, w2Company })
     })
 
-    await handleStandardRows({ rows, timer, models, dataSource, w2Company })
+    await handleStandardRows({ rows, timer, models, dataSource, w2Company, now })
   })
   timer.stop('Total')
   console.log(timer.toString()) // eslint-disable-line no-console
