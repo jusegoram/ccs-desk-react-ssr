@@ -4,6 +4,7 @@ import _ from 'lodash'
 import { Model } from 'objection'
 import handleStandardRows from '../routelog/handleStandardRows'
 import processTechProfile from '../techProfile/processTechProfile'
+import DataSource from 'server/api/models/DataSource'
 
 const techProfileInput = require('./techProfile.input.json')
 const routelogInput = require('./routelog.input.json')
@@ -19,9 +20,11 @@ describe('handleStandardRows', () => {
   beforeEach(async () => {
     await knex.seed.run()
   })
-  it('should create a work group for each work group in the data', async () => {
+  it.only('should create a work group for each work group in the data', async () => {
     const w2Company = await Company.query().findOne({ name: 'Goodman' })
-    await handleStandardRows({ rows: routelogInput, models, w2Company })
+    const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Routelog' })
+    expect(dataSource).toBeDefined()
+    await handleStandardRows({ rows: routelogInput, models, w2Company, dataSource })
   })
   it('should handle tech data', async () => {
     const w2Company = await Company.query().findOne({ name: 'Goodman' })
