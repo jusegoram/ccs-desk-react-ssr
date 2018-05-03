@@ -18,29 +18,33 @@ export default async ({ rows, models, w2Company, dataSource }) => {
 
   const directv = await Company.query().findOne({ name: 'DirecTV' })
 
+  const companyNames = _.without(_.map(_.uniqBy(datas, 'Subcontractor'), 'Subcontractor'), w2Company.name)
+  const subcontractors = _.keyBy(
+    await Promise.map(companyNames, name => {
+      return Company.query().ensure(name)
+    }),
+    'name'
+  )
+
   await Promise.resolve(rows).mapSeries(async row => {
     let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
     if (workOrder && _.isEqual(workOrder.row, row)) return
 
-    if (row['Subcontractor'] === 'W2' || row['Subcontractor'] === row['Partner Name']) delete row['Subcontractor']
-    let subcontractor = row['Subcontractor'] && (await Company.query().findOne({ name: row['Subcontractor'] }))
-    if (row['Subcontractor'] && !subcontractor) {
+    const subcontractorName = data['Subcontractor'] === w2Company.name ? null : data['Subcontractor']
+    let subcontractor = subcontractors[subcontractorName]
+    if (subcontractor) {
       const subworkgroup = await WorkGroup.query().ensure(
         {
-          companyId: company.id,
+          companyId: subcontractor.id,
           type: 'Subcontractor',
-          externalId: row['Subcontractor'],
-          name: row['Subcontractor'],
+          externalId: subcontractor.name,
+          name: subcontractor.name,
         },
         {}
       )
-      subcontractor = await Company.query()
-      .insert({ name: row['Subcontractor'], workGroupId: subworkgroup.id })
-      .returning('*')
-    }
-    if (subcontractor) {
-      const subcontractorDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
-      if (!subcontractorDataSource) {
+      await subcontractor.$query().patch({ workGroupId: subworkgroup.id })
+      const companyDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
+      if (!companyDataSource) {
         await subcontractor.$relatedQuery('dataSources').relate(dataSource)
       }
     }
