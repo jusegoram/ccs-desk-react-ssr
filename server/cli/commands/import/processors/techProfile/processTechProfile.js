@@ -43,7 +43,24 @@ export default async ({ datas, dataSource, w2Company }) => {
       await Promise.mapSeries(datas, async data => {
         try {
           timer.split('Ensure Company')
-          const subcontractor = data['Tech Type'] === w2CompanyName ? null : subcontractors[data['Tech Type']]
+          const subcontractorName = data['Tech Type'] === w2CompanyName ? null : data['Tech Type']
+          let subcontractor = subcontractors[subcontractorName]
+          if (subcontractorName && !subcontractor) {
+            subcontractor = await Company.query()
+            .insert({ name: subcontractorName })
+            .returning('*')
+            subcontractors[subcontractorName] = subcontractor
+            const subworkgroup = await WorkGroup.query().ensure(
+              {
+                companyId: company.id,
+                type: 'Subcontractor',
+                externalId: subcontractor && subcontractor.name,
+                name: subcontractor && subcontractor.name,
+              },
+              {}
+            )
+            await subcontractor.$relatedQuery('workGroup').relate(subworkgroup)
+          }
           if (subcontractor) {
             const companyDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
             if (!companyDataSource) {
