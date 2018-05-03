@@ -67,6 +67,18 @@ export default class WorkOrder extends APIModel {
           to: 'Appointment.workOrderId',
         },
       },
+      workGroups: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'WorkGroup',
+        join: {
+          from: 'WorkOrder.id',
+          through: {
+            from: 'workGroupWorkOrders.workOrderId',
+            to: 'workGroupWorkOrders.workGroupId',
+          },
+          to: 'WorkGroup.id',
+        },
+      },
     }
   }
 }

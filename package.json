@@ -13,7 +13,7 @@
     "knex:migrate:generate": "env-cmd .env babel-node server/db/scripts/generateMigration/index.js",
     "cli": "env-cmd .env babel-node server/cli/index.js",
     "babel": "env-cmd .env babel-node",
-    "test": "jest"
+    "test": "jest --notify --runInBand"
   },
   "dependencies": {
     "@babel/preset-env": "^7.0.0-beta.39",
@@ -94,7 +94,8 @@
     "objection-graphql": "https://github.com/timhuff/objection-graphql.git#582659e192cd04aed59f979caeb52805e41e93e9",
     "objection-guid": "https://github.com/timhuff/objection-guid.git#519b29b985ea19604a5d1df0b928f634f6ccc583",
     "objection-password": "https://github.com/timhuff/objection-password.git#913bedb6518b2a3e7e3b7b0ff5eb14a307cd14f1",
-    "objection-soft-delete": "https://github.com/timhuff/objection-soft-delete.git#674ea10576b9637a466ce1d9bfa849909eeaa52c",
+    "objection-soft-delete":
+      "https://github.com/timhuff/objection-soft-delete.git#674ea10576b9637a466ce1d9bfa849909eeaa52c",
     "objection-visibility": "^0.2.0",
     "parse-full-name": "^1.2.3",
     "passport": "^0.4.0",
@@ -150,9 +151,7 @@
   },
   "quokka": {
     "babel": true,
-    "plugins": [
-      "babel-alias-quokka-plugin"
-    ],
+    "plugins": ["babel-alias-quokka-plugin"],
     "env": {
       "params": {
         "env": "BABEL_ENV=server;DB_CONNECT=true"

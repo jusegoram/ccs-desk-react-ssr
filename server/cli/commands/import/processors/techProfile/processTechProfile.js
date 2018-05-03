@@ -160,8 +160,8 @@ export default async ({ datas, dataSource, w2Company }) => {
                 ),
               ])
             )
-          const w2WorkGroups = createWorkGroups(w2Company)
-          const subWorkGroups = w2Company.id === company.id ? [] : createWorkGroups(company)
+          const w2WorkGroups = await createWorkGroups(w2Company)
+          const subWorkGroups = w2Company.id === company.id ? [] : await createWorkGroups(company)
 
           await knex('workGroupTechs')
           .where({ techId: employee.id })

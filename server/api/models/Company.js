@@ -52,12 +52,19 @@ export default class Company extends APIModel {
           to: 'Tech.companyId',
         },
       },
-      subcontractedTechs: {
-        relation: Model.HasManyRelation,
-        modelClass: 'Tech',
+      workGroup: {
+        relation: Model.HasOneRelation,
+        modelClass: 'WorkGroup',
         join: {
           from: 'Company.id',
-          to: 'Tech.subcontractorId',
+          to: 'WorkGroup.companyId',
+          filter: qb => {
+            qb
+            .where(function() {
+              this.where({ type: 'Company' }).orWhere({ type: 'Subcontractor' })
+            })
+            .where('WorkGroup.externalId', '=', 'Company.name')
+          },
         },
       },
       dataSources: {
