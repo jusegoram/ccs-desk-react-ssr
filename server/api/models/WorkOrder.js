@@ -47,6 +47,7 @@ export default class WorkOrder extends APIModel {
       _contextFilter() {
         const { session } = super._contextFilter().context()
         if (!session) return this
+        if (session.account.company.name === 'CCS') return this
         return session.account.company.workGroup.$relatedQuery('workOrders')
       }
     }
