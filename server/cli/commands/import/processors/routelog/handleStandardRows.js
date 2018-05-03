@@ -45,7 +45,7 @@ export default async ({ rows, models, w2Company, dataSource }) => {
         row: row,
       })
     } else {
-      workOrder.$patch({
+      workOrder.$query().patch({
         date: getDateString(row['Due Date']),
         type: row['Order Type'],
         status: row['Status'],
@@ -64,7 +64,7 @@ export default async ({ rows, models, w2Company, dataSource }) => {
         row: row,
       })
     } else {
-      appointment.$patch({
+      appointment.$query().patch({
         status: row['Status'],
         row: row,
       })
