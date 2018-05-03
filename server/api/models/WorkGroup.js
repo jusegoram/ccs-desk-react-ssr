@@ -151,6 +151,18 @@ export default class WorkGroup extends APIModel {
           to: 'WorkOrder.id',
         },
       },
+      techs: {
+        relation: Model.ManyToManyRelation,
+        modelClass: 'Tech',
+        join: {
+          from: 'WorkGroup.id',
+          through: {
+            from: 'workGroupTechs.workGroupId',
+            to: 'workGroupTechs.techId',
+          },
+          to: 'Tech.id',
+        },
+      },
     }
   }
 }
