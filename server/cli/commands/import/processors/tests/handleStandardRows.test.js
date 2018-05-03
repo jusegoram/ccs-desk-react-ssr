@@ -17,10 +17,10 @@ describe('handleStandardRows', () => {
   afterAll(async () => {
     await knex.destroy()
   })
-  beforeEach(async () => {
+  beforeAll(async () => {
     await knex.seed.run()
   })
-  it.only('should create a work group for each work group in the data', async () => {
+  it('should create a work group for each work group in the data', async () => {
     const w2Company = await Company.query().findOne({ name: 'Goodman' })
     const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Routelog' })
     expect(dataSource).toBeDefined()
