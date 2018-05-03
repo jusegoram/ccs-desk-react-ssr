@@ -11,7 +11,7 @@ const getDateString = timeString => {
   return date.format('YYYY-MM-DD')
 }
 
-export default async ({ rows, models, w2Company }) => {
+export default async ({ rows, models, w2Company, dataSource }) => {
   const { WorkOrder, WorkGroup, Company, Appointment } = models
   const knex = WorkOrder.knex()
   const workGroupCache = {}
@@ -25,6 +25,12 @@ export default async ({ rows, models, w2Company }) => {
       subcontractor = await Company.query()
       .insert({ name: row['Subcontractor'] })
       .returning('*')
+    }
+    if (subcontractor) {
+      const subcontractorDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
+      if (!subcontractorDataSource) {
+        subcontractor.$relatedQuery('dataSources').relate(dataSource)
+      }
     }
 
     let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
