@@ -24,7 +24,6 @@ const run = async () => {
     .where({ saturate_status: 'Complete' })
     .where({ report_name: 'Routelog' })
     .orderBy('started_at')
-    .limit(40)
     .offset(20)
     .tap(csvs => {
       console.log(`Processing ${csvs.length} routelogs`)
