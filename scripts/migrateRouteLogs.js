@@ -19,8 +19,8 @@ const run = async () => {
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
     await legacyKnex('downloaded_csvs')
-    .where('started_at', '>=', '2018-05-01T00:00:00-500')
-    .where('started_at', '<=', '2018-05-03T00:00:00-500')
+    .where('started_at', '>=', '2018-05-01T04:00:00-500')
+    .where('started_at', '<=', '2018-05-03T20:00:00-500')
     .where({ saturate_status: 'Complete' })
     .where({ report_name: 'Routelog' })
     .orderBy('started_at')
