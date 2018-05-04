@@ -207,7 +207,7 @@ export default async app => {
         })
         .filter(workOrder => {
           if (!workOrder.row['Cancelled Date']) return true
-          return !moment(workOrder.row['Cancelled Date'].split(' ')[0], 'M/D/YY').isBefore(moment(workOrder.date))
+          return !moment(workOrder.row['Cancelled Date'].split(' ')[0], 'YYYY-MM-DD').isBefore(moment(workOrder.date))
         })
         .map(workOrder => {
           stringifier.write(workOrder.row)
