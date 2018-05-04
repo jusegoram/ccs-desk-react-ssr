@@ -45,4 +45,19 @@ module.exports = {
       directory: './server/db/seeds',
     },
   },
+  legacy: {
+    client: 'postgresql',
+    connection: {
+      host: 'ccsdesk.cljr4tpdvim0.us-east-1.rds.amazonaws.com',
+      user: 'master',
+      password: process.env.LEGACY_DB_PASSWORD,
+      database: 'ccsdesk',
+      multipleStatements: true,
+      charset: 'utf8',
+    },
+    pool: {
+      min: 4,
+      max: 1024,
+    },
+  },
 }

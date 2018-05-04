@@ -13,6 +13,7 @@
     "knex:migrate:generate": "env-cmd .env babel-node server/db/scripts/generateMigration/index.js",
     "cli": "env-cmd .env babel-node server/cli/index.js",
     "babel": "env-cmd .env babel-node",
+    "migrateRouteLogs": "env-cmd .env babel-node scripts/migrateRouteLogs.js",
     "test": "jest --notify --runInBand"
   },
   "dependencies": {

@@ -62,7 +62,6 @@ export default async ({ rows, models, w2Company, dataSource, now }) => {
         status: row['Status'],
         row: row,
         createdAt: now,
-        updatedAt: now,
       })
     } else {
       workOrder.$query().patch({
@@ -70,7 +69,6 @@ export default async ({ rows, models, w2Company, dataSource, now }) => {
         type: row['Order Type'],
         status: row['Status'],
         row: row,
-        updatedAt: now,
       })
     }
     let appointment = await Appointment.query().findOne({
@@ -84,13 +82,11 @@ export default async ({ rows, models, w2Company, dataSource, now }) => {
         status: row['Status'],
         row: row,
         createdAt: now,
-        updatedAt: now,
       })
     } else {
       appointment.$query().patch({
         status: row['Status'],
         row: row,
-        updatedAt: now,
       })
     }
     await knex('workGroupWorkOrders')
