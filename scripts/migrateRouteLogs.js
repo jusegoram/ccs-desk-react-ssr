@@ -53,7 +53,6 @@ const run = async () => {
       const rows = await legacyKnex('downloaded_csv_rows')
       .where({ csv_cid: csv.cid })
       .map(csvRow => {
-        console.log(csvRow)
         const data = {}
         csv.header_order.forEach(header => {
           data[header] = csvRow[header]
