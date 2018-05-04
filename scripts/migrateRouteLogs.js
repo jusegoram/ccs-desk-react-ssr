@@ -54,7 +54,7 @@ const run = async () => {
       .map(csvRow => {
         const data = {}
         csv.header_order.forEach(header => {
-          data[header] = csvRow[header]
+          data[header] = csvRow.data[header]
         })
         const serviceRegion = data.SR
         const groups = srData[serviceRegion]
