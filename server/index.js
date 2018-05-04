@@ -205,6 +205,10 @@ export default async app => {
           workOrder.row = _.mapValues(workOrder.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
           return workOrder
         })
+        .filter(workOrder => {
+          if (!workOrder.row['Cancelled Date']) return true
+          return !moment(workOrder.row['Cancelled Date'].split(' ')[0], 'M/D/YY').isBefore(moment(workOrder.date))
+        })
         .map(workOrder => {
           stringifier.write(workOrder.row)
         })
