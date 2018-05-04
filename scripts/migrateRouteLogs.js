@@ -24,6 +24,7 @@ const run = async () => {
     .where({ saturate_status: 'Complete' })
     .where({ report_name: 'Routelog' })
     .limit(1)
+    .offset(1)
     .mapSeries(async csv => {
       const now = moment(csv.started_at).format()
       const startedAt = moment()
