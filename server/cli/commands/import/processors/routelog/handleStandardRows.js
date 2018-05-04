@@ -64,7 +64,7 @@ export default async ({ rows, models, w2Company, dataSource, now }) => {
         createdAt: now,
       })
     } else {
-      workOrder.$query().patch({
+      await workOrder.$query().patch({
         date: getDateString(row['Due Date']),
         type: row['Order Type'],
         status: row['Status'],
