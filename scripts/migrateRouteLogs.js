@@ -25,7 +25,6 @@ const run = async () => {
     .where({ report_name: 'Routelog' })
     .orderBy('started_at')
     .limit(20)
-    .offset(6)
     .mapSeries(async csv => {
       const now = moment.tz(csv.started_at, 'America/Chicago').format()
       const startedAt = moment()
