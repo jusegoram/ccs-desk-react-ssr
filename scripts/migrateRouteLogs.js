@@ -24,11 +24,11 @@ const run = async () => {
     .where({ saturate_status: 'Complete' })
     .where({ report_name: 'Routelog' })
     .limit(1)
-    .offset(1)
+    .offset(2)
     .mapSeries(async csv => {
       const now = moment(csv.started_at).format()
       const startedAt = moment()
-      console.log(`Processing the ${csv.source} routelog started at ${now}`)
+      console.log(`Processing the ${csv.source} routelog started at ${now} (actual time: ${moment().format()})`)
       const timer = new Timer()
       timer.start('Total')
       timer.start('Initialization')
