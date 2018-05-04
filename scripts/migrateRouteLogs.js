@@ -6,9 +6,8 @@ import sanitizeName from 'server/util/sanitizeName'
 import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
 import sanitizeCompanyName from 'server/cli/commands/import/processors/sanitizeCompanyName'
+import moment from 'moment-timezone'
 import knexfile from '../knexfile'
-import Promise from 'bluebird'
-import moment from 'moment'
 
 const legacyKnex = Knex(knexfile['legacy'])
 const knex = Knex(knexfile['production'])
@@ -17,20 +16,20 @@ Model.knex(knex)
 
 const run = async () => {
   // .where('started_at', '<=', '2018-05-03T17:00:00-500')
-  const csvs = await legacyKnex('downloaded_csvs')
-  .where('started_at', '>=', '2018-05-01T00:00:00-500')
-  .where('started_at', '<=', '2018-05-01T9:00:00-500')
-  .where({ saturate_status: 'Complete' })
-  .where({ report_name: 'Routelog' })
-  .mapSeries(async csv => {
-    const now = moment(csv.started_at).format()
-    const startedAt = moment()
-    console.log(`Processing the ${csv.source} routelog started at ${now}`)
-    const timer = new Timer()
-    timer.start('Total')
-    timer.start('Initialization')
-    await transaction(..._.values(rawModels), async (...modelsArray) => {
-      const models = _.keyBy(modelsArray, 'name')
+  await transaction(..._.values(rawModels), async (...modelsArray) => {
+    const models = _.keyBy(modelsArray, 'name')
+    await legacyKnex('downloaded_csvs')
+    .where('started_at', '>=', '2018-05-01T00:00:00-500')
+    .where('started_at', '<=', '2018-05-01T9:00:00-500')
+    .where({ saturate_status: 'Complete' })
+    .where({ report_name: 'Routelog' })
+    .mapSeries(async csv => {
+      const now = moment(csv.started_at).format()
+      const startedAt = moment()
+      console.log(`Processing the ${csv.source} routelog started at ${now}`)
+      const timer = new Timer()
+      timer.start('Total')
+      timer.start('Initialization')
       const { WorkGroup, Company, DataImport } = models
       const w2Company = await Company.query().findOne({ name: csv.source })
       const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Routelog' })
@@ -84,9 +83,9 @@ const run = async () => {
         .add(moment().diff(startedAt))
         .format(),
       })
+      timer.stop('Total')
+      console.log(timer.toString()) //
     })
-    timer.stop('Total')
-    console.log(timer.toString()) //
   })
 }
 
