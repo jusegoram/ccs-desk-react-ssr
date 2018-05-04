@@ -21,6 +21,7 @@ const run = async () => {
   .where('started_at', '>=', '2018-05-01T00:00:00-500')
   .where('started_at', '<=', '2018-05-01T9:00:00-500')
   .where({ saturate_status: 'Complete' })
+  .where({ report_name: 'Routelog' })
   .mapSeries(async csv => {
     const now = moment(csv.started_at).format()
     const startedAt = moment()
@@ -52,6 +53,7 @@ const run = async () => {
       const rows = await legacyKnex('downloaded_csv_rows')
       .where({ csv_cid: csv.cid })
       .map(csvRow => {
+        console.log(csvRow)
         const data = {}
         csv.header_order.forEach(header => {
           data[header] = csvRow[header]
