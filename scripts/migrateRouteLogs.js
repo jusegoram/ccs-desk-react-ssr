@@ -24,7 +24,11 @@ const run = async () => {
     .where({ saturate_status: 'Complete' })
     .where({ report_name: 'Routelog' })
     .orderBy('started_at')
-    .limit(20)
+    .limit(40)
+    .offset(20)
+    .tap(csvs => {
+      console.log(`Processing ${csvs.length} routelogs`)
+    })
     .mapSeries(async csv => {
       const now = moment.tz(csv.started_at, 'America/Chicago').format()
       const startedAt = moment()
