@@ -20,11 +20,11 @@ const run = async () => {
     const models = _.keyBy(modelsArray, 'name')
     await legacyKnex('downloaded_csvs')
     .where('started_at', '>=', '2018-05-01T00:00:00-500')
-    .where('started_at', '<=', '2018-05-01T9:00:00-500')
+    .where('started_at', '<=', '2018-05-03T00:00:00-500')
     .where({ saturate_status: 'Complete' })
     .where({ report_name: 'Routelog' })
     .limit(20)
-    .offset(7)
+    .offset(6)
     .mapSeries(async csv => {
       const now = moment(csv.started_at).format()
       const startedAt = moment()
