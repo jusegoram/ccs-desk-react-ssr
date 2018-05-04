@@ -23,12 +23,17 @@ const run = async () => {
     .where('started_at', '<=', '2018-05-03T00:00:00-500')
     .where({ saturate_status: 'Complete' })
     .where({ report_name: 'Routelog' })
+    .orderBy('started_at')
     .limit(20)
     .offset(6)
     .mapSeries(async csv => {
-      const now = moment(csv.started_at).format()
+      const now = moment.tz(csv.started_at, 'America/Chicago').format()
       const startedAt = moment()
-      console.log(`Processing the ${csv.source} routelog started at ${now} (actual time: ${moment().format()})`)
+      console.log(
+        `Processing the ${csv.source} routelog started at ${now} (actual time: ${moment
+        .tz('America/Chicago')
+        .format()})`
+      )
       const timer = new Timer()
       timer.start('Total')
       timer.start('Initialization')
