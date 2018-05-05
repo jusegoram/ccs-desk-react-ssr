@@ -68,12 +68,11 @@ export default async ({ csvObjStream }) => {
         workOrderGroups = await tech
         .$relatedQuery('workGroups')
         .whereIn('type', ['Company', 'Subcontractor'])
-        .$relatedQuery('company')
-        .$relatedQuery('workGroups')
-        .where({ type: 'Service Region', name: serviceRegionWorkGroupNames['Service Region'] })
-        .orWhere({ type: 'Office', name: serviceRegionWorkGroupNames['Office'] })
-        .orWhere({ type: 'DMA', name: serviceRegionWorkGroupNames['DMA'] })
-        .orWhere({ type: 'Division', name: serviceRegionWorkGroupNames['Division'] })
+        .joinRelation('company.workGroups')
+        .where({'company:workGroups.type': 'Service Region', 'company:workGroups.name': serviceRegionWorkGroupNames['Service Region'] })
+        .orWhere({ 'company:workGroups.type': 'Office', 'company:workGroups.name': serviceRegionWorkGroupNames['Office'] })
+        .orWhere({ 'company:workGroups.type': 'DMA', 'company:workGroups.name': serviceRegionWorkGroupNames['DMA'] })
+        .orWhere({ 'company:workGroups.type': 'Division', 'company:workGroups.name': serviceRegionWorkGroupNames['Division'] })
       }
       const sdcrWorkGroups = techGroups.concat(workOrderGroups)
       sdcrWorkGroups.forEach(workGroup => {
