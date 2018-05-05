@@ -11,7 +11,7 @@ Promise.promisifyAll(fs)
 const timeout = 20 * 60 * 1000
 
 const availableReports = {
-  'Tech Profile': 'Tech Profile',
+  'Tech Profile': 'Tech_Profile_Delete',
   Routelog: 'routelog',
   'MW Routelog': 'EDGEMW Bll',
   'SE Routelog': 'EDGESE Bll',
