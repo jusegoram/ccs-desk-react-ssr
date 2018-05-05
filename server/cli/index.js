@@ -19,10 +19,12 @@ const crontab = require('./commands/crontab')
 const runFunction = fn => async (args = {}, options = {}) => {
   try {
     await fn({ knex, ...args, ...options })
+    process.exit(0)
   } catch (e) {
     console.error(e) //eslint-disable-line no-console
+    process.exit(1)
   } finally {
-    knex.destroy()
+    await knex.destroy()
   }
 }
 
