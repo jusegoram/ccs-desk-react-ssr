@@ -98,7 +98,7 @@ export default async ({ csvObjStream }) => {
       })
     })
 
-    const workOrdersIdsInQuestion = _.uniq(_.map(sdcrData, 'workOrderId'))
+    const workOrdersIdsInQuestion = _.filter(_.uniq(_.map(sdcrData, 'workOrderId')))
     await SdcrDataPoint.query()
     .whereIn('workOrderId', workOrdersIdsInQuestion)
     .delete()
