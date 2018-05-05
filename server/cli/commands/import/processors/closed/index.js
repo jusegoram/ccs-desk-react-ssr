@@ -60,28 +60,18 @@ export default async ({ csvObjStream }) => {
       if (workOrder) {
         workOrderGroups = await workOrder.$relatedQuery('workGroups').whereIn('type', serviceRegionWorkGroups)
       } else {
-        const techCompanyWorkGroups = tech
-        .$relatedQuery('workGroups')
-        .select('id')
-        .whereIn('type', ['Company', 'Subcontractor'])
-        const techCompanies = await Company.query().whereIn('workGroupId', techCompanyWorkGroups)
         const serviceRegionWorkGroupNames = await WorkGroup.knex()('directv_sr_data').findOne({
           'Service Region': row['Service Region'],
         })
-        if (!serviceRegionWorkGroups) {
-          invalidRowsDetected.push(row)
-          return
-        }
-        workOrderGroups = _.flatten(
-          await Promise(techCompanies, company =>
-            company
-            .$relatedQuery('workGroups')
-            .where({ type: 'Service Region', name: serviceRegionWorkGroupNames['Service Region'] })
-            .orWhere({ type: 'Office', name: serviceRegionWorkGroupNames['Office'] })
-            .orWhere({ type: 'DMA', name: serviceRegionWorkGroupNames['DMA'] })
-            .orWhere({ type: 'Division', name: serviceRegionWorkGroupNames['Division'] })
-          )
-        )
+        workOrderGroups = await tech
+        .$relatedQuery('workGroups')
+        .whereIn('type', ['Company', 'Subcontractor'])
+        .$relatedQuery('company')
+        .$relatedQuery('workGroups')
+        .where({ type: 'Service Region', name: serviceRegionWorkGroupNames['Service Region'] })
+        .orWhere({ type: 'Office', name: serviceRegionWorkGroupNames['Office'] })
+        .orWhere({ type: 'DMA', name: serviceRegionWorkGroupNames['DMA'] })
+        .orWhere({ type: 'Division', name: serviceRegionWorkGroupNames['Division'] })
       }
       const sdcrWorkGroups = techGroups.concat(workOrderGroups)
       sdcrWorkGroups.forEach(workGroup => {
