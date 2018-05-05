@@ -21,6 +21,7 @@ export default async ({ rows, models, w2Company, dataSource, now }) => {
   const companyNames = _.without(_.map(_.uniqBy(rows, 'Subcontractor'), 'Subcontractor'), [w2Company.name, 'W2', ''])
   const subcontractors = _.keyBy(
     await Promise.map(companyNames, name => {
+      if (name === 'W2' || name === w2Company.name || !name) return
       return Company.query().ensure(name)
     }),
     'name'
