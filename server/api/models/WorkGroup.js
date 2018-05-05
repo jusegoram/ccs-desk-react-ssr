@@ -10,7 +10,7 @@ export default class WorkGroup extends APIModel {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.timestamp('deletedAt').index()
     // <custom>
-    table.uuid('companyId')
+    table.uuid('companyId').index()
     table.integer('order').notNullable()
     table.string('type').notNullable() // 'Company', 'Office', 'Team', 'DMA', 'Service Region', 'Division'
     table.string('externalId').notNullable()

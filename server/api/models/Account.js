@@ -19,7 +19,7 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
     table.string('email').notNullable().unique()
     table.string('password').notNullable()
     table.boolean('root').defaultTo(false).notNullable()
-    table.uuid('companyId')
+    table.uuid('companyId').index()
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
