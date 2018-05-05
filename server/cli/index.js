@@ -7,7 +7,7 @@ if (process.env.NODE_ENV === 'development') Promise.longStackTraces()
 
 const knex = Knex({
   debug: process.env.DEBUG,
-  ...knexfile[process.env.NODE_ENV],
+  ...knexfile[process.env.KNEX_ENV || process.env.NODE_ENV],
 })
 
 Model.knex(knex)

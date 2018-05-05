@@ -6,6 +6,7 @@ import { DataImport, Company } from 'server/api/models'
 import techProfileProcessor from './processors/techProfile'
 import siebelRoutelogProcessor from './processors/routelog/siebel'
 import edgeRoutelogProcessor from './processors/routelog/edge'
+import closedProcessor from './processors/closed'
 
 const SiebelReportFetcher = require('./download/siebel/SiebelReportFetcher')
 const convertStringToStream = require('./download/siebel/convertStringToStream')
@@ -26,6 +27,7 @@ const analyticsReportNames = {
   Siebel: {
     'Tech Profile': 'Tech Profile',
     Routelog: 'routelog',
+    Sclosed: 'Sclosed',
   },
   Edge: {
     'MW Routelog': 'EDGEMW Bll',
@@ -39,6 +41,7 @@ const processors = {
   Siebel: {
     'Tech Profile': techProfileProcessor,
     Routelog: siebelRoutelogProcessor,
+    Sclosed: closedProcessor,
   },
   Edge: {
     'MW Routelog': edgeRoutelogProcessor,
@@ -55,6 +58,7 @@ const dataSourceNames = {
   'SE Routelog': 'Edge SE Routelog',
   'SW Routelog': 'Edge SW Routelog',
   'W Routelog': 'Edge W Routelog',
+  Sclosed: 'SDCR',
 }
 // const mockFiles = {
 //   Goodman: {
@@ -92,7 +96,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
   .$relatedQuery('dataSources')
   .where({ name: dataSourceNames[reportName] }) // confusing, I know
   .first()
-  if (!dataSource) throw new Error('Unable to find that data source')
+  if (!dataSource) throw new Error(`Unable to find data source named ${dataSourceNames[reportName]}`)
   const dataImport = await DataImport.query()
   .insert({ dataSourceId: dataSource.id, reportName })
   .returning('*')
