@@ -53,9 +53,9 @@ export default async ({ csvObjStream }) => {
       }
 
       const serviceRegionWorkGroups = ['Service Region', 'DMA', 'Office', 'Division']
-      await tech.$loadRelated('workGroups').whereNotIn('type', serviceRegionWorkGroups)
-      await workOrder.$loadRelated('workGroups').whereIn('type', serviceRegionWorkGroups)
-      const sdcrWorkGroups = tech.workGroups.concat(workOrder.workGroups)
+      const techGroups = await tech.$relatedQuery('workGroups').whereNotIn('type', serviceRegionWorkGroups)
+      const workOrderGroups = await workOrder.$relatedQuery('workGroups').whereIn('type', serviceRegionWorkGroups)
+      const sdcrWorkGroups = techGroups.concat(workOrderGroups)
       sdcrWorkGroups.forEach(workGroup => {
         sdcrData.push({
           workGroupId: workGroup.id,
