@@ -15,7 +15,7 @@ export default async ({ csvObjStream }) => {
     const { Tech, WorkOrder, SdcrDataPoint } = models
 
     const rows = await streamToArray(csvObjStream)
-    let invalidRowDetected = false
+    let invalidRowsDetected = []
     const sdcrData = []
     console.log(`${rows.length} rows to process`)
     let index = 0
@@ -31,7 +31,13 @@ export default async ({ csvObjStream }) => {
           workOrder &&
           (await workOrder
           .$relatedQuery('appointments')
-          .where('createdAt', '<=', row['BGO Snapshot Date'])
+          .where(
+            'createdAt',
+            '<=',
+            moment(row['BGO Snapshot Date'], 'YYYY-MM-DD')
+            .endOf('day')
+            .format()
+          )
           .orderBy('createdAt', 'desc')
           .first())
         const techId = appointment && appointment.row['Tech ID']
@@ -42,9 +48,7 @@ export default async ({ csvObjStream }) => {
       }
 
       if (!tech || !workOrder) {
-        invalidRowDetected = row
-        console.log('invalid row:')
-        console.log(row)
+        invalidRowsDetected.push(row)
         return
       }
 
@@ -56,26 +60,28 @@ export default async ({ csvObjStream }) => {
         sdcrData.push({
           workGroupId: workGroup.id,
           value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
-          date: moment(row['BGO Snapshot Date']).format(),
+          date: row['BGO Snapshot Date'],
           workOrderId: workOrder.id,
           techId: tech.id,
         })
       })
     })
 
-    await Promise.mapSeries(_.values(sdcrData), async sdcrDatum => {
-      await SdcrDataPoint.query().upsert({
-        query: { workGroupId: sdcrDatum.workGroupId, date: sdcrDatum.date },
-        update: {
-          value: sdcrDatum.value,
-          workOrderId: sdcrDatum.workOrderId,
-          techId: sdcrDatum.techId,
-        },
-      })
-    })
-    if (invalidRowDetected) {
+    const workOrdersIdsInQuestion = _.map(sdcrData, 'workOrderId')
+    await SdcrDataPoint.query()
+    .whereIn('workOrderId', workOrdersIdsInQuestion)
+    .delete()
+
+    await Promise.map(
+      sdcrData,
+      async sdcrDatum => {
+        await SdcrDataPoint.query().insert(sdcrDatum)
+      },
+      { concurrency: 100 }
+    )
+    if (invalidRowsDetected.length) {
       console.log('invalid row detected')
-      console.log(invalidRowDetected)
+      console.log(invalidRowsDetected)
       // TODO: Email Tim - attach Sclosed csv
     }
   })

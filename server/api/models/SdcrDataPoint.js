@@ -24,7 +24,7 @@ export default class SdcrDataPoint extends APIModel {
       id: { type: 'string' },
       // <custom>
       type: { type: 'string' },
-      date: { type: 'string', format: 'date-time' },
+      date: { type: 'string', format: 'date' },
       value: { type: 'number' },
     },
   }
