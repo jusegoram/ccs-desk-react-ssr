@@ -108,6 +108,7 @@ export default async ({ csvObjStream, w2Company, dataSource, now }) => {
         data.Office = groups.Office
         data.Division = groups.Division
       }
+      if (data['Tech Type'] === 'W2' || !data['Tech Type']) delete data['Tech Type']
       if (!data['Tech ID'] || data['Tech ID'] === 'UNKNOWN') data['Tech ID'] = null
       data.assignedTechId = data['Tech ID']
       return data
