@@ -66,13 +66,18 @@ export default async ({ csvObjStream }) => {
         })
         .first()
         workOrderGroups = await tech
-        .$relatedQuery('workGroups')
-        .whereIn('type', ['Company', 'Subcontractor'])
-        .joinRelation('company.workGroups')
-        .where({'company:workGroups.type': 'Service Region', 'company:workGroups.name': serviceRegionWorkGroupNames['Service Region'] })
-        .orWhere({ 'company:workGroups.type': 'Office', 'company:workGroups.name': serviceRegionWorkGroupNames['Office'] })
-        .orWhere({ 'company:workGroups.type': 'DMA', 'company:workGroups.name': serviceRegionWorkGroupNames['DMA'] })
-        .orWhere({ 'company:workGroups.type': 'Division', 'company:workGroups.name': serviceRegionWorkGroupNames['Division'] })
+        .$query()
+        .joinRelation('workGroups.company.workGroups', {
+          aliases: {
+            company: 'c',
+            workGroups: 'wg',
+          },
+        })
+        .whereIn('wg.type', ['Company', 'Subcontractor'])
+        .where({ 'wg:c:wg.type': 'Service Region', 'wg:c:wg.name': serviceRegionWorkGroupNames['Service Region'] })
+        .orWhere({ 'wg:c:wg.type': 'Office', 'wg:c:wg.name': serviceRegionWorkGroupNames['Office'] })
+        .orWhere({ 'wg:c:wg.type': 'DMA', 'wg:c:wg.name': serviceRegionWorkGroupNames['DMA'] })
+        .orWhere({ 'wg:c:wg.type': 'Division', 'wg:c:wg.name': serviceRegionWorkGroupNames['Division'] })
       }
       const sdcrWorkGroups = techGroups.concat(workOrderGroups)
       sdcrWorkGroups.forEach(workGroup => {
