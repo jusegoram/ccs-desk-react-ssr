@@ -67,6 +67,7 @@ export default async ({ csvObjStream }) => {
         .first()
         workOrderGroups = await tech
         .$query()
+        .select('workGroups:company:workGroups.id')
         .joinRelation('workGroups.company.workGroups')
         .whereIn('workGroups.type', ['Company', 'Subcontractor'])
         .where({
