@@ -55,7 +55,7 @@ export default async ({ csvObjStream }) => {
       sdcrWorkGroups.forEach(workGroup => {
         sdcrData.push({
           workGroupId: workGroup.id,
-          value: row['# of Same Day Activity Closed Count'],
+          value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
           date: moment(row['BGO Snapshot Date']).format(),
           workOrderId: workOrder.id,
           techId: tech.id,
