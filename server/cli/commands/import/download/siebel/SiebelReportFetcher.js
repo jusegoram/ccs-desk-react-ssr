@@ -11,14 +11,13 @@ Promise.promisifyAll(fs)
 const timeout = 20 * 60 * 1000
 
 const availableReports = {
-  'Tech Profile': 'Tech_Profile_Delete',
+  'Tech Profile': 'Tech Profile',
   Routelog: 'routelog',
   'MW Routelog': 'EDGEMW Bll',
   'SE Routelog': 'EDGESE Bll',
   'SW Routelog': 'EDGESW Bll',
   'W Routelog': 'EDGEW Bll',
   Sclosed: 'Sclosed',
-  Tech_Profile_Delete: 'Tech_Profile_Delete',
 }
 
 class SiebelReportFetcher {
