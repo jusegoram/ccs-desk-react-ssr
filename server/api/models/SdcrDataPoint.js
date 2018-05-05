@@ -7,7 +7,7 @@ export default class SdcrDataPoint extends APIModel {
     table.date('date').notNullable()
     table.integer('value').notNullable()
     table.uuid('workGroupId').notNullable().index()
-    table.uuid('workOrderId').notNullable().index()
+    table.uuid('workOrderId').index()
     table.uuid('techId').notNullable().index()
   `
   static knexAlterTable = `
