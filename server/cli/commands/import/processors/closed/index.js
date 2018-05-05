@@ -5,6 +5,8 @@ import { streamToArray } from 'server/util'
 import Timer from 'server/util/Timer'
 import Promise from 'bluebird'
 import moment from 'moment-timezone'
+import Company from 'server/api/models/Company'
+import WorkGroup from 'server/api/models/WorkGroup'
 
 export default async ({ csvObjStream }) => {
   const timer = new Timer()
@@ -47,21 +49,47 @@ export default async ({ csvObjStream }) => {
         }
       }
 
-      if (!tech || !workOrder) {
+      if (!tech) {
         invalidRowsDetected.push(row)
         return
       }
 
       const serviceRegionWorkGroups = ['Service Region', 'DMA', 'Office', 'Division']
       const techGroups = await tech.$relatedQuery('workGroups').whereNotIn('type', serviceRegionWorkGroups)
-      const workOrderGroups = await workOrder.$relatedQuery('workGroups').whereIn('type', serviceRegionWorkGroups)
+      let workOrderGroups = null
+      if (workOrder) {
+        workOrderGroups = await workOrder.$relatedQuery('workGroups').whereIn('type', serviceRegionWorkGroups)
+      } else {
+        const techCompanyWorkGroups = tech
+        .$relatedQuery('workGroups')
+        .select('id')
+        .whereIn('type', ['Company', 'Subcontractor'])
+        const techCompanies = await Company.query().whereIn('workGroupId', techCompanyWorkGroups)
+        const serviceRegionWorkGroupNames = await WorkGroup.knex()('directv_sr_data').findOne({
+          'Service Region': row['Service Region'],
+        })
+        if (!serviceRegionWorkGroups) {
+          invalidRowsDetected.push(row)
+          return
+        }
+        workOrderGroups = _.flatten(
+          await Promise(techCompanies, company =>
+            company
+            .$relatedQuery('workGroups')
+            .where({ type: 'Service Region', name: serviceRegionWorkGroupNames['Service Region'] })
+            .orWhere({ type: 'Office', name: serviceRegionWorkGroupNames['Office'] })
+            .orWhere({ type: 'DMA', name: serviceRegionWorkGroupNames['DMA'] })
+            .orWhere({ type: 'Division', name: serviceRegionWorkGroupNames['Division'] })
+          )
+        )
+      }
       const sdcrWorkGroups = techGroups.concat(workOrderGroups)
       sdcrWorkGroups.forEach(workGroup => {
         sdcrData.push({
           workGroupId: workGroup.id,
           value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
           date: row['BGO Snapshot Date'],
-          workOrderId: workOrder.id,
+          workOrderId: workOrder && workOrder.id,
           techId: tech.id,
         })
       })
