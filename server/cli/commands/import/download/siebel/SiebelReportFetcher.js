@@ -18,6 +18,7 @@ const availableReports = {
   'SW Routelog': 'EDGESW Bll',
   'W Routelog': 'EDGEW Bll',
   Sclosed: 'Sclosed',
+  Tech_Profile_Delete: 'Tech_Profile_Delete',
 }
 
 class SiebelReportFetcher {

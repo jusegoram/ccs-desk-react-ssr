@@ -25,7 +25,7 @@ const analyticsCredentials = {
 
 const analyticsReportNames = {
   Siebel: {
-    'Tech Profile': 'Tech Profile',
+    'Tech Profile': 'Tech_Profile_Delete',
     Routelog: 'routelog',
     Sclosed: 'Sclosed',
   },
