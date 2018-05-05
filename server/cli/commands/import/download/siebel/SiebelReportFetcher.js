@@ -17,6 +17,7 @@ const availableReports = {
   'SE Routelog': 'EDGESE Bll',
   'SW Routelog': 'EDGESW Bll',
   'W Routelog': 'EDGEW Bll',
+  Sclosed: 'Sclosed',
 }
 
 class SiebelReportFetcher {
