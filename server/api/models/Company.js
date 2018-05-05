@@ -65,6 +65,14 @@ export default class Company extends APIModel {
           to: 'WorkGroup.id',
         },
       },
+      workGroups: {
+        relation: Model.HasManyRelation,
+        modelClass: 'WorkGroup',
+        join: {
+          from: 'Company.id',
+          to: 'WorkGroup.companyId',
+        },
+      },
       dataSources: {
         relation: Model.ManyToManyRelation,
         modelClass: 'DataSource',
