@@ -60,9 +60,11 @@ export default async ({ csvObjStream }) => {
       if (workOrder) {
         workOrderGroups = await workOrder.$relatedQuery('workGroups').whereIn('type', serviceRegionWorkGroups)
       } else {
-        const serviceRegionWorkGroupNames = await WorkGroup.knex()('directv_sr_data').findOne({
+        const serviceRegionWorkGroupNames = await WorkGroup.knex()('directv_sr_data')
+        .where({
           'Service Region': row['Service Region'],
         })
+        .first()
         workOrderGroups = await tech
         .$relatedQuery('workGroups')
         .whereIn('type', ['Company', 'Subcontractor'])
