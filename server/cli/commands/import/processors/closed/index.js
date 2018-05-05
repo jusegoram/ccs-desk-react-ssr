@@ -65,26 +65,33 @@ export default async ({ csvObjStream }) => {
           'Service Region': row['Service Region'],
         })
         .first()
-        workOrderGroups = await tech
-        .$query()
-        .select('workGroups:company:workGroups.id')
-        .joinRelation('workGroups.company.workGroups')
-        .whereIn('workGroups.type', ['Company', 'Subcontractor'])
-        .where({
-          'workGroups:company:workGroups.type': 'Service Region',
-          'workGroups:company:workGroups.name': serviceRegionWorkGroupNames['Service Region'],
-        })
-        .orWhere({
-          'workGroups:company:workGroups.type': 'Office',
-          'workGroups:company:workGroups.name': serviceRegionWorkGroupNames['Office'],
-        })
-        .orWhere({
-          'workGroups:company:workGroups.type': 'DMA',
-          'workGroups:company:workGroups.name': serviceRegionWorkGroupNames['DMA'],
-        })
-        .orWhere({
-          'workGroups:company:workGroups.type': 'Division',
-          'workGroups:company:workGroups.name': serviceRegionWorkGroupNames['Division'],
+        const techCompanyWorkGroupIds = await tech
+        .$relatedQuery('workGroups')
+        .select('id')
+        .whereIn('type', ['Company', 'Subcontractor'])
+        const techCompanyIds = await WorkGroup.knex()('Company')
+        .select('id')
+        .whereIn('workGroupId', _.map(techCompanyWorkGroupIds, 'id'))
+        workOrderGroups = await WorkGroup.query()
+        .whereIn('companyId', _.map(techCompanyIds, 'id'))
+        .where(qb => {
+          qb
+          .where({
+            type: 'Service Region',
+            name: serviceRegionWorkGroupNames['Service Region'],
+          })
+          .orWhere({
+            type: 'Office',
+            name: serviceRegionWorkGroupNames['Office'],
+          })
+          .orWhere({
+            type: 'DMA',
+            name: serviceRegionWorkGroupNames['DMA'],
+          })
+          .orWhere({
+            type: 'Division',
+            name: serviceRegionWorkGroupNames['Division'],
+          })
         })
       }
       const sdcrWorkGroups = techGroups.concat(workOrderGroups)
