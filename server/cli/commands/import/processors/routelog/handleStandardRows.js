@@ -30,7 +30,8 @@ export default async ({ rows, models, w2Company, dataSource, now }) => {
     let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
     if (workOrder && _.isEqual(workOrder.row, row)) return
 
-    const subcontractorName = row['Subcontractor'] === w2Company.name ? null : row['Subcontractor']
+    const subcontractorName =
+      !row['Subcontractor'] || row['Subcontractor'] === w2Company.name ? null : row['Subcontractor']
     let subcontractor = subcontractors[subcontractorName]
     if (subcontractor) {
       const subworkgroup = await WorkGroup.query().ensure(
