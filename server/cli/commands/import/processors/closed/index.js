@@ -4,6 +4,7 @@ import * as rawModels from 'server/api/models'
 import { streamToArray } from 'server/util'
 import Timer from 'server/util/Timer'
 import Promise from 'bluebird'
+import moment from 'moment-timezone'
 
 export default async ({ csvObjStream }) => {
   const timer = new Timer()
@@ -55,7 +56,7 @@ export default async ({ csvObjStream }) => {
         sdcrData.push({
           workGroupId: workGroup.id,
           value: row['# of Same Day Activity Closed Count'],
-          date: row['BGO Snapshot Date'],
+          date: moment(row['BGO Snapshot Date']).format(),
           workOrderId: workOrder.id,
           techId: tech.id,
         })
