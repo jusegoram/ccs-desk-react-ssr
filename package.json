@@ -12,6 +12,7 @@
     "knex:migrate:rollback": "env-cmd .env babel-node node_modules/.bin/knex migrate:rollback",
     "knex:migrate:generate": "env-cmd .env babel-node server/db/scripts/generateMigration/index.js",
     "cli": "env-cmd .env babel-node server/cli/index.js",
+    "cli-debug": "env-cmd .env babel-node --inspect-brk server/cli/index.js",
     "babel": "env-cmd .env babel-node",
     "migrateRouteLogs": "env-cmd .env babel-node scripts/migrateRouteLogs.js",
     "test": "jest --notify --runInBand"
