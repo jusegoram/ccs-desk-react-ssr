@@ -9,7 +9,7 @@ export default class WorkOrder extends APIModel {
     table.date('date')
     table.string('type')
     table.string('status')
-    table.uuid('companyId')
+    table.uuid('companyId').index()
     table.json('row')
     table.unique(['companyId', 'externalId'])
     // </custom>

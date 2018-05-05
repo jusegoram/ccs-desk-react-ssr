@@ -4,11 +4,14 @@ import { Model } from 'objection'
 export default class DataSource extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    table.uuid('companyId') // one way
+    table.uuid('companyId').index() // one way
     table.string('name')
     table.unique(['companyId', 'name'])
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
+  `
+  static knexAlterTable = `
+    table.foreign('companyId').references('Company.id')
   `
   static knexCreateJoinTables = {
     companyDataSources: `

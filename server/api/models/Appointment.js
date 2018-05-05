@@ -5,8 +5,8 @@ export default class Appointment extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     // <custom>
-    table.uuid('workOrderId').notNullable()
-    table.uuid('techId')
+    table.uuid('workOrderId').notNullable().index()
+    table.uuid('techId').index()
     table.date('date')
     table.string('status')
     table.jsonb('row').index()
