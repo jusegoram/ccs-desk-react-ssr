@@ -18,7 +18,7 @@ export default async ({ rows, models, w2Company, dataSource, now }) => {
 
   const directv = await Company.query().findOne({ name: 'DirecTV' })
 
-  const companyNames = _.without(_.map(_.uniqBy(rows, 'Subcontractor'), 'Subcontractor'), w2Company.name)
+  const companyNames = _.without(_.map(_.uniqBy(rows, 'Subcontractor'), 'Subcontractor'), [w2Company.name, 'W2', ''])
   const subcontractors = _.keyBy(
     await Promise.map(companyNames, name => {
       return Company.query().ensure(name)

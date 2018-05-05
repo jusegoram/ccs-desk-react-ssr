@@ -11,8 +11,8 @@ export default class Session extends withDeletedAt(APIModel) {
     table.timestamp('deletedAt').index()
     // <custom>
     table.timestamp('expiresAt').defaultTo(knex.fn.now())
-    table.uuid('rootAccountId')
-    table.uuid('accountId')
+    table.uuid('rootAccountId').index()
+    table.uuid('accountId').index()
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()

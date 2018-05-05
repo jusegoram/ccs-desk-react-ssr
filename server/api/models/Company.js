@@ -8,7 +8,7 @@ export default class Company extends APIModel {
   static knexCreateTable = `
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.string('name').unique()
-    table.uuid('workGroupId')
+    table.uuid('workGroupId').index()
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
     table.timestamp('updatedAt').defaultTo(knex.fn.now()).notNullable()
   `

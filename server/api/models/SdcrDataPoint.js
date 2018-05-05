@@ -6,9 +6,9 @@ export default class SdcrDataPoint extends APIModel {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.date('date').notNullable()
     table.integer('value').notNullable()
-    table.uuid('workGroupId').notNullable()
-    table.uuid('workOrderId').notNullable()
-    table.uuid('techId').notNullable()
+    table.uuid('workGroupId').notNullable().index()
+    table.uuid('workOrderId').notNullable().index()
+    table.uuid('techId').notNullable().index()
   `
   static knexAlterTable = `
     table.foreign('workGroupId').references('WorkGroup.id')
