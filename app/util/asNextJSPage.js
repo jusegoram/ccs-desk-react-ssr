@@ -70,6 +70,7 @@ export default Component => {
             <link rel="shortcut icon" type="image/x-icon" href="/static/favicon.ico" />
             <link rel="stylesheet" href="/static/index.fonts.css" />
             <link rel="stylesheet" href="/static/index.styles.css" />
+            <link rel="stylesheet" href="https://unpkg.com/react-vis/dist/style.css" />
             <style dangerouslySetInnerHTML={{ __html: stylesheet }} />
           </Head>
           <ApolloProvider client={apollo}>
