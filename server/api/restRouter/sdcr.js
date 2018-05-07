@@ -62,7 +62,10 @@ router.get('/', async (req, res) => {
     const size = dataPointsGroup.length
     const value = _.sum(_.map(dataPointsGroup, 'value'))
     const color = colorMap({ value: 100 * value / (size || 1) })
-    const workGroupName = dataPointsGroup[0].workGroups[0] ? dataPointsGroup[0].workGroups[0].name : 'N/A'
+    const undefinedWorkgroupName = groupType === 'Subcontractor' ? 'W2' : 'N/A'
+    const workGroupName = dataPointsGroup[0].workGroups[0]
+      ? dataPointsGroup[0].workGroups[0].name
+      : undefinedWorkgroupName
     const name = workGroupName + ' (' + (100 * value / (size || 1)).toFixed(2) + '%)'
     return { size, value, color, name }
   })
