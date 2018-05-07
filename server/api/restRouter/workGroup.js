@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
     .$relatedQuery('workGroups')
     .distinct('name')
     .where('type', type)
+    .where('companyId', session.account.company.id)
   )
 })
 
