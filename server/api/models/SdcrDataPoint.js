@@ -54,7 +54,11 @@ export default class SdcrDataPoint extends APIModel {
         relation: Model.BelongsToOneRelation,
         modelClass: 'WorkGroup',
         join: {
-          from: 'SdcrDataPoint.workGroupId',
+          from: 'SdcrDataPoint.id',
+          through: {
+            from: 'sdcrDataPointWorkGroups.sdcrDataPointId',
+            to: 'sdcrDataPointWorkGroups.workGropupId',
+          },
           to: 'WorkGroup.id',
         },
       },
