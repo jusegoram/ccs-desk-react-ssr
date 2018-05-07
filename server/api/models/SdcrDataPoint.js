@@ -51,7 +51,7 @@ export default class SdcrDataPoint extends APIModel {
   static get relationMappings() {
     return {
       workGroups: {
-        relation: Model.BelongsToOneRelation,
+        relation: Model.ManyToManyRelation,
         modelClass: 'WorkGroup',
         join: {
           from: 'SdcrDataPoint.id',

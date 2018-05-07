@@ -172,11 +172,15 @@ export default class WorkGroup extends APIModel {
         },
       },
       sdcrDataPoints: {
-        relation: Model.HasManyRelation,
-        modelClass: 'SdcrDataPoint',
+        relation: Model.ManyToManyRelation,
+        modelClass: 'WorkGroup',
         join: {
           from: 'WorkGroup.id',
-          to: 'SdcrDataPoint.workGroupId',
+          through: {
+            from: 'sdcrDataPointWorkGroups.workGropupId',
+            to: 'sdcrDataPointWorkGroups.sdcrDataPointId',
+          },
+          to: 'SdcrDataPoint.id',
         },
       },
     }
