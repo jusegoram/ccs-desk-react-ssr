@@ -1,5 +1,6 @@
 import { Model } from 'objection'
 import knex from 'server/knex'
+import { WorkGroup } from 'server/api/models'
 import _ from 'lodash'
 import Promise from 'bluebird'
 
@@ -43,15 +44,29 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   const { session } = req
   if (!session) return res.sendStatus(401)
-  console.log(session.account.company)
   req.query.dateRange = JSON.parse(req.query.dateRange)
+  const { dateRange, scopeType, scopeName, groupType } = req.query
   const sdcr = await Promise.mapSeries(
-    await session.account.company.$relatedQuery('workGroups').where('type', 'DMA'),
+    await session.account.company.$relatedQuery('workGroups').where('type', groupType),
     async workGroup => {
+      console.log('WORK GORU', workGroup)
+      console.log(
+        'sdcrs',
+        await WorkGroup.query()
+        .where('WorkGroup.id', workGroup.id)
+        .joinRelation('sdcrDataPoints.workGroups.sdcrDataPoints')
+        .select('sdcrDataPoints:workGroups:sdcrDataPoints.*')
+        .where('sdcrDataPoints:workGroups.type', scopeType)
+        .where('sdcrDataPoints:workGroups.name', scopeName)
+      )
       const sdcrDataPoints = await workGroup
       .$relatedQuery('sdcrDataPoints')
-      .where('date', '>=', req.query.dateRange.start)
-      .where('date', '<=', req.query.dateRange.end)
+      .select('SdcrDataPoint.*')
+      .joinRelation('workGroups')
+      .where('workGroups.type', scopeType)
+      .where('workGroups.name', scopeName)
+      .where('date', '>=', dateRange.start)
+      .where('date', '<=', dateRange.end)
       const size = sdcrDataPoints.length
       const value = _.sum(_.map(sdcrDataPoints, 'value'))
       const color = colorMap({ value })
@@ -59,7 +74,10 @@ router.get('/', async (req, res) => {
       return { size, value, color, name }
     }
   )
-  console.log(sdcr)
+  console.log('scopeType', scopeType)
+  console.log('scopeName', scopeName)
+  // console.log(await session.account.company.$relatedQuery('workGroups').where('type', groupType))
+  // console.log(sdcr)
   res.json({
     children: sdcr,
   })

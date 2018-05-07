@@ -29,20 +29,17 @@ class SdcrTreemap extends React.Component {
   //     treemapData.meta.value += child.size / treemapData.meta.size * child.value
   //   })
   // }
-  async componentDidMount() {
-    const { dateRange } = this.props
-    const { data } = await axios.get('/api/sdcr', {
-      params: { dateRange },
-    })
-    this.setState({ treemapData: data })
+  componentDidMount() {
+    this.getData(this.props)
   }
-  async componentWillReceiveProps(newProps) {
-    console.log('newProps', newProps)
-    const { dateRange } = newProps
+  componentWillReceiveProps(newProps) {
+    this.getData(newProps)
+  }
+  async getData(props) {
+    const { dateRange, scopeType, scopeName, groupType } = props
     const { data } = await axios.get('/api/sdcr', {
-      params: { dateRange },
+      params: { dateRange, scopeType, scopeName, groupType },
     })
-    debugger
     this.setState({ treemapData: data })
   }
   render() {

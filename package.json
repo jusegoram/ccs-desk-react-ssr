@@ -3,7 +3,8 @@
   "private": true,
   "version": "2.0.0",
   "scripts": {
-    "dev": "nodemon -w index.js -w server -w package.json -x env-cmd .env babel-node --inspect index.js",
+    "dev-inspect": "nodemon -w index.js -w server -w package.json -x env-cmd .env babel-node --inspect index.js",
+    "dev": "nodemon -w index.js -w server -w package.json -x env-cmd .env babel-node index.js",
     "start-dev": "env-cmd .env babel-node index.js",
     "build": "env-cmd .env next build",
     "start": "env-cmd .env babel-node index.js",
