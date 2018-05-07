@@ -7,6 +7,7 @@ import techProfileProcessor from './processors/techProfile'
 import siebelRoutelogProcessor from './processors/routelog/siebel'
 import edgeRoutelogProcessor from './processors/routelog/edge'
 import closedProcessor from './processors/closed'
+import DataSource from 'server/api/models/DataSource'
 
 const SiebelReportFetcher = require('./download/siebel/SiebelReportFetcher')
 const convertStringToStream = require('./download/siebel/convertStringToStream')
@@ -92,9 +93,9 @@ const dataSourceNames = {
 module.exports = async ({ companyName, dataSourceName, reportName }) => {
   if (moment.tz('America/Chicago').hour() < 4) return
   const w2Company = await Company.query().findOne({ name: companyName })
-  const dataSource = await w2Company
-  .$relatedQuery('dataSources')
+  const dataSource = await DataSource.query()
   .where({ name: dataSourceNames[reportName] }) // confusing, I know
+  .where('companyId', w2Company.id)
   .first()
   if (!dataSource) throw new Error(`Unable to find data source named ${dataSourceNames[reportName]}`)
   const dataImport = await DataImport.query()
