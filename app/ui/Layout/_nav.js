@@ -1,3 +1,6 @@
+import React from 'react'
+import * as Icons from 'react-feather'
+
 export default {
   items: [
     // {
@@ -17,7 +20,20 @@ export default {
     // },
     {
       title: true,
-      name: 'Data',
+      name: 'Analytics',
+      wrapper: {
+        element: 'span',
+      },
+      class: 'text-center',
+    },
+    {
+      name: 'SDCR',
+      url: '/sdcr',
+      icon: Icons.Activity,
+    },
+    {
+      title: true,
+      name: 'Data Import Logs',
       wrapper: {
         element: 'span',
       },
@@ -26,17 +42,12 @@ export default {
     {
       name: 'Tech Data',
       url: '/data/techs',
-      icon: 'fa fa-users',
+      icon: Icons.Users,
     },
     {
       name: 'Work Order Data',
       url: '/data/work-orders',
-      icon: 'fa fa-tasks',
-    },
-    {
-      name: 'SDCR',
-      url: '/sdcr',
-      icon: 'fas fa-chart-pie',
+      icon: Icons.Clipboard,
     },
   ],
 }
