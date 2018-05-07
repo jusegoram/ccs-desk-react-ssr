@@ -43,7 +43,7 @@ class SdcrTreemap extends React.Component {
     if (showProblems) {
       data.children = data.children.map(el => ({
         ...el,
-        value: el.size - el.value,
+        size: el.size - el.value,
         color: '#ff0000',
         name:
           el.name
