@@ -82,11 +82,6 @@ class Sidebar extends React.Component {
       const classes = {
         item: classNames('hidden-cn', item.class),
         link: classNames('nav-label', item.class ? item.class : ''),
-        icon: classNames(
-          !item.icon ? 'fa fa-circle' : item.icon,
-          item.label.variant ? `text-${item.label.variant}` : '',
-          item.label.class ? item.label.class : ''
-        ),
       }
       return navLink(item, key, classes)
     }
@@ -96,7 +91,6 @@ class Sidebar extends React.Component {
       const classes = {
         item: classNames(item.class),
         link: classNames('nav-link', item.variant ? `nav-link-${item.variant}` : ''),
-        icon: classNames(item.icon),
       }
       return navLink(item, key, classes)
     }
@@ -108,14 +102,14 @@ class Sidebar extends React.Component {
         <NavItem key={key} className={classes.item}>
           {isExternal(url) ? (
             <RsNavLink href={url} className={classes.link} active>
-              <i className={classes.icon} />
+              {item.icon && <item.icon size={14} style={{ margin: '0 0.5rem 0 0' }} />}
               {item.name}
               {badge(item.badge)}
             </RsNavLink>
           ) : (
             <Link shallow href={url}>
               <a className={classes.link} onClick={this.hideMobile}>
-                <i className={classes.icon} />
+                {item.icon && <item.icon size={14} style={{ margin: '0 0.5rem 0 0' }} />}
                 {item.name}
                 {badge(item.badge)}
               </a>
@@ -130,7 +124,7 @@ class Sidebar extends React.Component {
       return (
         <li key={key} className={this.activeRoute(item.url, props)}>
           <a className="nav-link nav-dropdown-toggle" href="#" onClick={this.handleClick}>
-            <i className={item.icon} />
+            {item.icon && <item.icon size={14} style={{ margin: '0 0.5rem 0 0' }} />}
             {item.name}
           </a>
           <ul className="nav-dropdown-items">{navList(item.children)}</ul>
@@ -144,7 +138,11 @@ class Sidebar extends React.Component {
         ? title(item, idx)
         : item.divider
           ? divider(item, idx)
-          : item.label ? navLabel(item, idx) : item.children ? navDropdown(item, idx) : navItem(item, idx)
+          : item.label
+            ? navLabel(item, idx)
+            : item.children
+              ? navDropdown(item, idx)
+              : navItem(item, idx)
     }
 
     // nav list

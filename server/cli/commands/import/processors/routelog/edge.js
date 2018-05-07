@@ -13,7 +13,7 @@ const convertRowToStandardForm = ({ row, w2Company, employee }) => {
   const standardRow = {
     Source: 'Edge',
     'Partner Name': w2Company.name || '',
-    Subcontractor: sanitizeCompanyName(row['Tech Type']) || '',
+    Subcontractor: getWorkGroup('Subcontractor').externalId || '',
     'Activity ID': row['Activity ID'] || '',
     'Tech ID': (employee && employee.alternateExternalId) || '',
     'Tech Name': (employee && employee.name) || '',

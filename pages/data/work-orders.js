@@ -10,6 +10,7 @@ import moment from 'moment-timezone'
 import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
 
+import DownloadButton from 'app/ui/widgets/DownloadButton'
 import Layout from 'app/ui/Layout'
 import config from 'server/config'
 
@@ -83,24 +84,9 @@ export default asNextJSPage(
                   <CardHeader style={{ position: 'relative' }}>
                     {/*relative because card-actions is absolute*/}
                     <i className="icon-menu" /> Today&apos;s Work Order Imports
-                    <Button
-                      className="card-actions mt-0 h-100"
-                      color="primary"
-                      onClick={() => {
-                        const token = encodeURIComponent(cookie.parse(document.cookie).token)
-                        const timezone = encodeURIComponent(moment.tz.guess())
-                        const downloadUrl =
-                          config.host + '/download/work-orders' + `?token=${token}&timezone=${timezone}`
-                        this.setState({ downloadUrl }, () => {
-                          alert(
-                            'The download should be starting.' +
-                              " If it hasn't, verify that your popup blocker isn't preventing it from opening."
-                          )
-                        })
-                      }}
-                    >
-                      <i className="fa fa-download fa-lg mr-1" /> Download Work Order Data
-                    </Button>
+                    <DownloadButton endpoint="work-orders" className="card-actions mt-0 h-100" color="primary">
+                      Download Work Order Data
+                    </DownloadButton>
                   </CardHeader>
                   <CardBody className="p-0">
                     <ReactTable
@@ -113,7 +99,6 @@ export default asNextJSPage(
                       columns={columns}
                     />
                   </CardBody>
-                  {downloadUrl && <iframe style={{ display: 'none' }} src={downloadUrl} />}
                 </Card>
               )
             }}
