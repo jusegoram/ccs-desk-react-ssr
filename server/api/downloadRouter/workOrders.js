@@ -17,12 +17,6 @@ router.get('/', async (req, res) => {
   res.writeHead(200, {
     'Content-Type': 'text/csv',
     'Access-Control-Allow-Origin': '*',
-    'Content-Disposition': 'attachment; filename=Techs.csv',
-  })
-
-  res.writeHead(200, {
-    'Content-Type': 'text/csv',
-    'Access-Control-Allow-Origin': '*',
     'Content-Disposition': 'attachment; filename=WorkOrders.csv',
   })
   const stringifier = stringify({ header: true })
