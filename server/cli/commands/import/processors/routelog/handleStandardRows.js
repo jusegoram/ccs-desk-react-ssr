@@ -29,7 +29,7 @@ export default async ({ rows, models, w2Company, dataSource, now }) => {
 
   await Promise.resolve(rows).mapSeries(async row => {
     let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
-    if (workOrder && _.isEqual(workOrder.row, row)) return
+    // if (workOrder && _.isEqual(workOrder.row, row)) return
 
     const subcontractorName =
       !row['Subcontractor'] || row['Subcontractor'] === w2Company.name ? null : row['Subcontractor']
