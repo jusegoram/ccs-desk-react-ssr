@@ -177,7 +177,7 @@ export default class WorkGroup extends APIModel {
         join: {
           from: 'WorkGroup.id',
           through: {
-            from: 'sdcrDataPointWorkGroups.workGropupId',
+            from: 'sdcrDataPointWorkGroups.workGroupId',
             to: 'sdcrDataPointWorkGroups.sdcrDataPointId',
           },
           to: 'SdcrDataPoint.id',
