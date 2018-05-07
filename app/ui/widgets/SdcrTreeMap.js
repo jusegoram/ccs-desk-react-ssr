@@ -36,10 +36,22 @@ class SdcrTreemap extends React.Component {
     this.getData(newProps)
   }
   async getData(props) {
-    const { dateRange, scopeType, scopeName, groupType } = props
+    const { dateRange, scopeType, scopeName, groupType, showProblems } = props
     const { data } = await axios.get('/api/sdcr', {
       params: { dateRange, scopeType, scopeName, groupType },
     })
+    if (showProblems) {
+      data.children = data.children.map(el => ({
+        ...el,
+        value: el.size - el.value,
+        color: '#ff0000',
+        name:
+          el.name
+          .split(' ')
+          .slice(0, -1)
+          .join(' ') + ` (${el.size - el.value})`,
+      }))
+    }
     this.setState({ treemapData: data })
   }
   _onMouseMove(e) {

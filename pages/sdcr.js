@@ -1,6 +1,6 @@
 import React from 'react'
 import moment from 'moment-timezone'
-import { Card, CardHeader, CardBody, Input, Form, FormGroup, Label } from 'reactstrap'
+import { Card, CardHeader, CardBody, Input, Form, FormGroup, Label, Button } from 'reactstrap'
 import asNextJSPage from 'app/util/asNextJSPage'
 import axios from 'axios'
 import _ from 'lodash'
@@ -49,7 +49,7 @@ class SDCR extends React.Component {
     this.populateScopeNameList()
   }
   render() {
-    const { dateRange, scopeType, scopeName, groupType, scopeNameOptions } = this.state
+    const { dateRange, scopeType, scopeName, groupType, scopeNameOptions, showProblems } = this.state
     return (
       <Layout>
         <Card style={{ height: 'calc(100vh - 100px)' }}>
@@ -146,6 +146,13 @@ class SDCR extends React.Component {
                       this.setState({ dateRange })
                     }}
                   />
+                  <Button
+                    color="danger"
+                    onClick={() => this.setState({ showProblems: !this.state.showProblems })}
+                    active={this.state.showProblems}
+                  >
+                    Show Problems
+                  </Button>
                 </Form>
               </CardBody>
             </Card>
@@ -156,7 +163,7 @@ class SDCR extends React.Component {
               <SdcrTreeMap
                 className="bg-primary"
                 style={{ flex: 1 }}
-                {...{ scopeType, scopeName, dateRange, groupType }}
+                {...{ scopeType, scopeName, dateRange, groupType, showProblems }}
               />
             )}
           </CardBody>
