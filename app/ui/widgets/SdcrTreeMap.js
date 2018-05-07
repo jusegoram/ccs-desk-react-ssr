@@ -66,7 +66,7 @@ class SdcrTreemap extends React.Component {
       getLabel: x => x.name,
       getColor: x => x.color,
       colorType: 'literal',
-      mode: 'resquarify',
+      mode: 'binary',
     }
     // const tooltipTransformX = hoveredNode && cursor && cursor.x + 100 > size.width ? '-100%' : '100px'
     // const tooltipTransformY = hoveredNode && cursor && cursor.y + 50 > size.height ? '-100%' : '100px'
