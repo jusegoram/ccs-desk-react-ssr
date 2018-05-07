@@ -42,6 +42,10 @@ class SdcrTreemap extends React.Component {
     })
     this.setState({ treemapData: data })
   }
+  _onMouseMove(e) {
+    this.setState({ cursor: { x: e.clientX, y: e.clientY } })
+  }
+
   render() {
     const { onClick, size } = this.props
     const { hoveredNode, treemapData, cursor } = this.state
@@ -62,6 +66,7 @@ class SdcrTreemap extends React.Component {
       getLabel: x => x.name,
       getColor: x => x.color,
       colorType: 'literal',
+      mode: 'resquarify',
     }
     // const tooltipTransformX = hoveredNode && cursor && cursor.x + 100 > size.width ? '-100%' : '100px'
     // const tooltipTransformY = hoveredNode && cursor && cursor.y + 50 > size.height ? '-100%' : '100px'
