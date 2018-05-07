@@ -25,17 +25,27 @@ class DateRangePicker extends React.Component {
 
   render() {
     const { start, end } = this.state
-    return (
-      <Form inline>
+    return React.Children.only(
+      <div>
         <FormGroup>
+          <Label for="dateRangeStart" className="mr-sm-2" style={{ width: '80px' }}>
+            Starting On
+          </Label>
           <Input
+            id="dateRangeStart"
             type="date"
             placeholder="date placeholder"
             value={start}
             onChange={this.onChange('start')}
             style={{ width: 170 }}
           />
+        </FormGroup>
+        <FormGroup>
+          <Label for="dateRangeEnd" className="mr-sm-2" style={{ width: '80px' }}>
+            Up Until
+          </Label>
           <Input
+            id="dateRangeEnd"
             type="date"
             placeholder="date placeholder"
             value={end}
@@ -43,7 +53,7 @@ class DateRangePicker extends React.Component {
             style={{ width: 170 }}
           />
         </FormGroup>
-      </Form>
+      </div>
     )
   }
 }

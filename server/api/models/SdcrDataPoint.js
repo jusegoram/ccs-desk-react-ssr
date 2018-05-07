@@ -6,15 +6,23 @@ export default class SdcrDataPoint extends APIModel {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.date('date').notNullable()
     table.integer('value').notNullable()
-    table.uuid('workGroupId').notNullable().index()
     table.uuid('workOrderId').index()
     table.uuid('techId').notNullable().index()
   `
   static knexAlterTable = `
-    table.foreign('workGroupId').references('WorkGroup.id')
     table.foreign('workOrderId').references('WorkOrder.id')
     table.foreign('techId').references('Tech.id')
   `
+  static knexCreateJoinTables = {
+    sdcrDataPointWorkGroups: `
+      table.uuid('sdcrDataPointId').notNullable()
+      table.uuid('workGroupId').notNullable()
+      table.primary(['sdcrDataPointId', 'workGroupId'])
+      table.unique(['workGroupId', 'sdcrDataPointId'])
+      table.foreign('sdcrDataPointId').references('SdcrDataPoint.id')
+      table.foreign('workGroupId').references('WorkGroup.id')
+    `,
+  }
   static jsonSchema = {
     title: 'WorkGroupMetric',
     description: 'A person or group of people that fulfills work orders',
