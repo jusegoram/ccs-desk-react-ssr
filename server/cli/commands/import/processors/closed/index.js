@@ -95,15 +95,13 @@ export default async ({ csvObjStream }) => {
         })
       }
       const sdcrWorkGroups = techGroups.concat(workOrderGroups)
-      sdcrWorkGroups.forEach(workGroup => {
-        sdcrData.push({
-          workGroupId: workGroup.id,
-          value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
-          date: row['BGO Snapshot Date'],
-          workOrderId: workOrder && workOrder.id,
-          techId: tech.id,
-        })
+      const sdcrDataPoint = await SdcrDataPoint.query().insert({
+        value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
+        date: row['BGO Snapshot Date'],
+        workOrderId: workOrder && workOrder.id,
+        techId: tech.id,
       })
+      await sdcrDataPoint.$relatedQuery('workGroups').relate(sdcrWorkGroups)
     })
 
     const workOrdersIdsInQuestion = _.filter(_.uniq(_.map(sdcrData, 'workOrderId')))
@@ -111,13 +109,6 @@ export default async ({ csvObjStream }) => {
     .whereIn('workOrderId', workOrdersIdsInQuestion)
     .delete()
 
-    await Promise.map(
-      sdcrData,
-      async sdcrDatum => {
-        await SdcrDataPoint.query().insert(sdcrDatum)
-      },
-      { concurrency: 100 }
-    )
     if (invalidRowsDetected.length) {
       console.log('invalid row detected')
       console.log(invalidRowsDetected)
