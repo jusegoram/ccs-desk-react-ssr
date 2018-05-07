@@ -1,14 +1,7 @@
 import React from 'react'
-import { Treemap } from 'react-vis'
-import { Query } from 'react-apollo'
 import moment from 'moment-timezone'
-import { Card, CardHeader, CardBody, Button, Container, Row, Col } from 'reactstrap'
-import alert from 'sweetalert'
-import axios from 'axios'
-import componentQueries from 'react-component-queries'
-
+import { Card, CardHeader, CardBody, Input, Form, FormGroup, Label } from 'reactstrap'
 import asNextJSPage from 'app/util/asNextJSPage'
-import data from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'
 import DateRangePicker from 'app/ui/widgets/DateRangePIcker'
@@ -18,6 +11,9 @@ class SDCR extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      scopeType: 'Company',
+      scopeName: 'EMPATH',
+      groupType: 'DMA',
       dateRange: {
         start: moment()
         .add(-1, 'day')
@@ -30,7 +26,7 @@ class SDCR extends React.Component {
     }
   }
   render() {
-    const { dateRange } = this.state
+    const { dateRange, scopeType, scopeName, groupType } = this.state
     return (
       <Layout>
         <Card style={{ height: 'calc(100vh - 100px)' }}>
@@ -56,17 +52,83 @@ class SDCR extends React.Component {
                     </Button> */}
           </CardHeader>
           <CardBody className="p-0 d-flex flex-column">
-            <Card className="m-0" style={{ backgroundColor: '#2d3446' }}>
+            <Card className="m-0 bg-primary">
               <CardBody>
-                <DateRangePicker
-                  defaultRange={dateRange}
-                  onChange={dateRange => {
-                    this.setState({ dateRange })
-                  }}
-                />
+                <Form inline>
+                  <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
+                    <Label for="scopeType" className="mr-sm-2">
+                      Scope By
+                    </Label>
+                    <Input
+                      id="scopeType"
+                      type="select"
+                      defaultValue={scopeType}
+                      onChange={e => {
+                        this.setState({ scopeType: e.target.value })
+                      }}
+                    >
+                      <option>Company</option>
+                      <option>Subcontractor</option>
+                      <option>Division</option>
+                      <option>DMA</option>
+                      <option>Office</option>
+                      <option>Service Region</option>
+                      <option>Team</option>
+                      <option>Tech</option>
+                    </Input>{' '}
+                  </FormGroup>
+                  <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
+                    <Label for="scopeName" className="mr-sm-2">
+                      Named
+                    </Label>
+                    <Input
+                      id="scopeName"
+                      type="select"
+                      defaultValue={scopeName}
+                      onChange={e => {
+                        this.setState({ scopeName: e.target.value })
+                      }}
+                    >
+                      <option>EMPATH</option>
+                    </Input>
+                  </FormGroup>
+                  <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
+                    <Label for="groupType" className="mr-sm-2">
+                      Grouped By
+                    </Label>
+                    <Input
+                      id="groupType"
+                      type="select"
+                      defaultValue={groupType}
+                      onChange={e => {
+                        this.setState({ groupType: e.target.value })
+                      }}
+                    >
+                      <option>Company</option>
+                      <option>Subcontractor</option>
+                      <option>Division</option>
+                      <option>DMA</option>
+                      <option>Office</option>
+                      <option>Service Region</option>
+                      <option>Team</option>
+                      <option>Tech</option>
+                    </Input>{' '}
+                  </FormGroup>
+                  <DateRangePicker
+                    id="dateRange"
+                    defaultRange={dateRange}
+                    onChange={dateRange => {
+                      this.setState({ dateRange })
+                    }}
+                  />
+                </Form>
               </CardBody>
             </Card>
-            <SdcrTreeMap style={{ flex: 1 }} dateRange={dateRange} />
+            <SdcrTreeMap
+              className="bg-primary"
+              style={{ flex: 1 }}
+              {...{ scopeType, scopeName, dateRange, groupType }}
+            />
           </CardBody>
         </Card>
       </Layout>
