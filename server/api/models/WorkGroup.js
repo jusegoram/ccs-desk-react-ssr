@@ -173,7 +173,7 @@ export default class WorkGroup extends APIModel {
       },
       sdcrDataPoints: {
         relation: Model.ManyToManyRelation,
-        modelClass: 'WorkGroup',
+        modelClass: 'SdcrDataPoint',
         join: {
           from: 'WorkGroup.id',
           through: {
