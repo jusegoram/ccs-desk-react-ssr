@@ -1,6 +1,6 @@
 import { Model } from 'objection'
 import knex from 'server/knex'
-import { WorkGroup } from 'server/api/models'
+import { SdcrDataPoint } from 'server/api/models'
 import _ from 'lodash'
 import Promise from 'bluebird'
 
@@ -45,37 +45,31 @@ router.get('/', async (req, res) => {
   const { session } = req
   if (!session) return res.sendStatus(401)
   req.query.dateRange = JSON.parse(req.query.dateRange)
-  const { dateRange, scopeType, scopeName, groupType } = req.query
+  let { dateRange, scopeType, scopeName, groupType } = req.query
+  if (!scopeType || !scopeName || !groupType || !dateRange) return res.json([])
   const sdcr = await Promise.mapSeries(
-    await session.account.company.$relatedQuery('workGroups').where('type', groupType),
+    await session.account.company
+    .$relatedQuery('workGroups')
+    .where('type', groupType)
+    .eager('sdcrDataPoints.workGroups')
+    .modifyEager('sdcrDataPoints', builder => {
+      builder.where('date', '>=', dateRange.start).where('date', '<=', dateRange.end)
+    })
+    .modifyEager('sdcrDataPoints.workGroups', builder => {
+      builder
+      .where('type', scopeType)
+      .where('name', scopeName)
+      .where('companyId', session.account.company.id)
+    }),
     async workGroup => {
-      console.log('WORK GORU', workGroup)
-      console.log(
-        'sdcrs',
-        await WorkGroup.query()
-        .where('WorkGroup.id', workGroup.id)
-        .joinRelation('sdcrDataPoints.workGroups.sdcrDataPoints')
-        .select('sdcrDataPoints:workGroups:sdcrDataPoints.*')
-        .where('sdcrDataPoints:workGroups.type', scopeType)
-        .where('sdcrDataPoints:workGroups.name', scopeName)
-      )
-      const sdcrDataPoints = await workGroup
-      .$relatedQuery('sdcrDataPoints')
-      .select('SdcrDataPoint.*')
-      .joinRelation('workGroups')
-      .where('workGroups.type', scopeType)
-      .where('workGroups.name', scopeName)
-      .where('date', '>=', dateRange.start)
-      .where('date', '<=', dateRange.end)
+      const sdcrDataPoints = _.filter(workGroup.sdcrDataPoints, point => point.workGroups.length)
       const size = sdcrDataPoints.length
       const value = _.sum(_.map(sdcrDataPoints, 'value'))
-      const color = colorMap({ value })
-      const name = workGroup.name
+      const color = colorMap({ value: 100 * value / size })
+      const name = workGroup.name + ' (' + (100 * value / size).toFixed(2) + '%)'
       return { size, value, color, name }
     }
   )
-  console.log('scopeType', scopeType)
-  console.log('scopeName', scopeName)
   // console.log(await session.account.company.$relatedQuery('workGroups').where('type', groupType))
   // console.log(sdcr)
   res.json({

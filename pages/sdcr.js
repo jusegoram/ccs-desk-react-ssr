@@ -2,6 +2,8 @@ import React from 'react'
 import moment from 'moment-timezone'
 import { Card, CardHeader, CardBody, Input, Form, FormGroup, Label } from 'reactstrap'
 import asNextJSPage from 'app/util/asNextJSPage'
+import axios from 'axios'
+import _ from 'lodash'
 
 import Layout from 'app/ui/Layout'
 import DateRangePicker from 'app/ui/widgets/DateRangePIcker'
@@ -12,7 +14,9 @@ class SDCR extends React.Component {
     super(props)
     this.state = {
       scopeType: 'Company',
-      scopeName: 'EMPATH',
+      scopeName: null,
+      scopeNameOptions: null,
+      scopeNameOptionsLoading: false,
       groupType: 'DMA',
       dateRange: {
         start: moment()
@@ -25,8 +29,27 @@ class SDCR extends React.Component {
       },
     }
   }
+  populateScopeNameList() {
+    const { scopeType, scopeNameOptionsLoading } = this.state
+    if (!scopeNameOptionsLoading) {
+      axios
+      .get('/api/workGroup', { params: { type: scopeType } })
+      .then(res => {
+        const scopeNameOptions = _.map(res.data, 'name')
+        this.setState({ scopeNameOptionsLoading: false, scopeName: scopeNameOptions[0], scopeNameOptions })
+      })
+      .catch(console.error)
+      this.setState({ scopeNameOptionsLoading: true })
+    }
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.scopeType !== this.state.scopeType) this.populateScopeNameList()
+  }
+  componentDidMount() {
+    this.populateScopeNameList()
+  }
   render() {
-    const { dateRange, scopeType, scopeName, groupType } = this.state
+    const { dateRange, scopeType, scopeName, groupType, scopeNameOptions } = this.state
     return (
       <Layout>
         <Card style={{ height: 'calc(100vh - 100px)' }}>
@@ -81,16 +104,18 @@ class SDCR extends React.Component {
                     <Label for="scopeName" className="mr-sm-2">
                       Named
                     </Label>
-                    <Input
-                      id="scopeName"
-                      type="select"
-                      defaultValue={scopeName}
-                      onChange={e => {
-                        this.setState({ scopeName: e.target.value })
-                      }}
-                    >
-                      <option>EMPATH</option>
-                    </Input>
+                    {(scopeNameOptions && (
+                      <Input
+                        id="scopeName"
+                        type="select"
+                        defaultValue={scopeName}
+                        onChange={e => {
+                          this.setState({ scopeName: e.target.value })
+                        }}
+                      >
+                        {scopeNameOptions.map(name => <option id={name}>{name}</option>)}
+                      </Input>
+                    )) || <Input type="text" placeholder="Loading..." disabled />}
                   </FormGroup>
                   <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
                     <Label for="groupType" className="mr-sm-2">
@@ -124,11 +149,16 @@ class SDCR extends React.Component {
                 </Form>
               </CardBody>
             </Card>
-            <SdcrTreeMap
-              className="bg-primary"
-              style={{ flex: 1 }}
-              {...{ scopeType, scopeName, dateRange, groupType }}
-            />
+            {scopeType &&
+              scopeName &&
+              dateRange &&
+              groupType && (
+              <SdcrTreeMap
+                className="bg-primary"
+                style={{ flex: 1 }}
+                {...{ scopeType, scopeName, dateRange, groupType }}
+              />
+            )}
           </CardBody>
         </Card>
       </Layout>

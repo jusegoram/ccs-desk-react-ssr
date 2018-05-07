@@ -24,14 +24,19 @@ export default {
       class: 'text-center',
     },
     {
+      name: 'Tech Data',
+      url: '/data/techs',
+      icon: 'fa fa-users',
+    },
+    {
       name: 'Work Order Data',
       url: '/data/work-orders',
       icon: 'fa fa-tasks',
     },
-    // {
-    //   name: 'Tech Data',
-    //   url: '/data/techs',
-    //   icon: 'fa fa-users',
-    // },
+    {
+      name: 'SDCR',
+      url: '/sdcr',
+      icon: 'fas fa-chart-pie',
+    },
   ],
 }
