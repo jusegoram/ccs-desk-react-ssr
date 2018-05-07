@@ -47,29 +47,48 @@ router.get('/', async (req, res) => {
   req.query.dateRange = JSON.parse(req.query.dateRange)
   let { dateRange, scopeType, scopeName, groupType } = req.query
   if (!scopeType || !scopeName || !groupType || !dateRange) return res.json([])
-  const sdcr = await Promise.mapSeries(
-    await session.account.company
-    .$relatedQuery('workGroups')
-    .where('type', groupType)
-    .eager('sdcrDataPoints.workGroups')
-    .modifyEager('sdcrDataPoints', builder => {
-      builder.where('date', '>=', dateRange.start).where('date', '<=', dateRange.end)
-    })
-    .modifyEager('sdcrDataPoints.workGroups', builder => {
-      builder
-      .where('type', scopeType)
-      .where('name', scopeName)
-      .where('companyId', session.account.company.id)
-    }),
-    async workGroup => {
-      const sdcrDataPoints = _.filter(workGroup.sdcrDataPoints, point => point.workGroups.length)
-      const size = sdcrDataPoints.length
-      const value = _.sum(_.map(sdcrDataPoints, 'value'))
-      const color = colorMap({ value: 100 * value / (size || 1) })
-      const name = workGroup.name + ' (' + (100 * value / (size || 1)).toFixed(2) + '%)'
-      return { size, value, color, name }
-    }
-  )
+  const sdcrDataPoints = await SdcrDataPoint.query()
+  .joinRelation('workGroups')
+  .where('date', '>=', dateRange.start)
+  .where('date', '<=', dateRange.end)
+  .where('workGroups.type', scopeType)
+  .where('workGroups.name', scopeName)
+  .where('workGroups.companyId', session.account.company.id)
+  .eager('workGroups')
+  .modifyEager('workGroups', builder => {
+    builder.where('type', groupType).where('companyId', session.account.company.id)
+  })
+  const sdcr = _.map(_.values(_.groupBy(sdcrDataPoints, 'workGroups[0].externalId')), dataPointsGroup => {
+    const size = dataPointsGroup.length
+    const value = _.sum(_.map(dataPointsGroup, 'value'))
+    const color = colorMap({ value: 100 * value / (size || 1) })
+    const workGroupName = dataPointsGroup[0].workGroups[0] ? dataPointsGroup[0].workGroups[0].name : 'N/A'
+    const name = workGroupName + ' (' + (100 * value / (size || 1)).toFixed(2) + '%)'
+    return { size, value, color, name }
+  })
+  // const sdcr = await Promise.mapSeries(
+  //   await session.account.company
+  //   .$relatedQuery('workGroups')
+  //   .where('type', groupType)
+  //   .eager('sdcrDataPoints.workGroups')
+  //   .modifyEager('sdcrDataPoints', builder => {
+  //     builder.where('date', '>=', dateRange.start).where('date', '<=', dateRange.end)
+  //   })
+  //   .modifyEager('sdcrDataPoints.workGroups', builder => {
+  //     builder
+  //     .where('type', scopeType)
+  //     .where('name', scopeName)
+  //     .where('companyId', session.account.company.id)
+  //   }),
+  //   async workGroup => {
+  //     const sdcrDataPoints = _.filter(workGroup.sdcrDataPoints, point => point.workGroups.length)
+  //     const size = sdcrDataPoints.length
+  //     const value = _.sum(_.map(sdcrDataPoints, 'value'))
+  //     const color = colorMap({ value: 100 * value / (size || 1) })
+  //     const name = workGroup.name + ' (' + (100 * value / (size || 1)).toFixed(2) + '%)'
+  //     return { size, value, color, name }
+  //   }
+  // )
   // console.log(await session.account.company.$relatedQuery('workGroups').where('type', groupType))
   // console.log(sdcr)
   res.json({
