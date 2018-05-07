@@ -65,8 +65,8 @@ router.get('/', async (req, res) => {
       const sdcrDataPoints = _.filter(workGroup.sdcrDataPoints, point => point.workGroups.length)
       const size = sdcrDataPoints.length
       const value = _.sum(_.map(sdcrDataPoints, 'value'))
-      const color = colorMap({ value: 100 * value / size })
-      const name = workGroup.name + ' (' + (100 * value / size).toFixed(2) + '%)'
+      const color = colorMap({ value: 100 * value / (size || 1) })
+      const name = workGroup.name + ' (' + (100 * value / (size || 1)).toFixed(2) + '%)'
       return { size, value, color, name }
     }
   )
