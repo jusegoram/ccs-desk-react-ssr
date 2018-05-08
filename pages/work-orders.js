@@ -81,6 +81,7 @@ class WorkOrderDonutChart extends React.Component {
             height={500}
             getSize={d => d.value}
             getColor={d => d.hex}
+            padding={5}
             colorType="literal"
             hideRootNode
             animation={{
