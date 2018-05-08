@@ -100,6 +100,8 @@ export default async ({ csvObjStream }) => {
         date: row['BGO Snapshot Date'],
         workOrderId: workOrder && workOrder.id,
         techId: tech.id,
+        type: row['Activity Sub Type (Snapshot)'],
+        dwellingType: row['Dwelling Type'],
       })
       await sdcrDataPoint.$relatedQuery('workGroups').relate(sdcrWorkGroups)
     })
