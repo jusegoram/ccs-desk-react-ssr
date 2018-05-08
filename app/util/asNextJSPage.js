@@ -11,7 +11,9 @@ import ApolloFactory from 'app/apollo/ApolloFactory'
 import data from 'app/apollo/data'
 
 import Loader from 'app/ui/Loader'
-
+import cookie from 'cookie'
+import moment from 'moment-timezone'
+import axios from 'axios'
 import stylesheet from 'app/styles/index.scss'
 import 'react-select/dist/react-select.css'
 
@@ -63,6 +65,15 @@ export default Component => {
     }
 
     static getReactNode({ location, apollo }) {
+      if (process.browser) {
+        const token = encodeURIComponent(cookie.parse(document.cookie).token)
+        const timezone = encodeURIComponent(moment.tz.guess())
+        axios.interceptors.request.use(config => {
+          config.headers.authorization = `Bearer ${token}`
+          config.headers.timezone = timezone
+          return config
+        })
+      }
       return (
         <div>
           <Head>

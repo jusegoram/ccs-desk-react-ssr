@@ -56,8 +56,8 @@ class SdcrTreemap extends React.Component {
         damping: 18,
         stiffness: 300,
       },
-      // onLeafMouseOver: x => this.setState({ hoveredNode: x }),
-      // onLeafMouseOut: () => this.setState({ hoveredNode: null }),
+      onLeafMouseOver: x => this.setState({ hoveredNode: x }),
+      onLeafMouseOut: () => this.setState({ hoveredNode: null }),
       onLeafClick: x => {
         onClick && onClick(x.data)
       },
@@ -69,7 +69,12 @@ class SdcrTreemap extends React.Component {
     // const tooltipTransformX = hoveredNode && cursor && cursor.x + 100 > size.width ? '-100%' : '100px'
     // const tooltipTransformY = hoveredNode && cursor && cursor.y + 50 > size.height ? '-100%' : '100px'
     // this.getOverallData()
-    return <Treemap data={treemapData} {...treeProps} />
+    return (
+      <div>
+        <Treemap data={treemapData} {...treeProps} />
+        {hoveredNode && <Hint value={hoveredNode} />}
+      </div>
+    )
   }
 }
 

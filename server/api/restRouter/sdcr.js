@@ -2,7 +2,6 @@ import { Model } from 'objection'
 import knex from 'server/knex'
 import { SdcrDataPoint } from 'server/api/models'
 import _ from 'lodash'
-import Promise from 'bluebird'
 
 import express from 'express'
 
