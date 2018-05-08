@@ -32,6 +32,11 @@ export default {
       icon: Icons.Activity,
     },
     {
+      name: 'Work Orders',
+      url: '/work-orders',
+      icon: Icons.Clipboard,
+    },
+    {
       title: true,
       name: 'Data Import Logs',
       wrapper: {
