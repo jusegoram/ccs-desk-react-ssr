@@ -61,9 +61,11 @@ class NetworkProgressBar extends React.Component {
     this.requestId = 0
     this.numActiveRequests = 0
     this.axiosInterceptor = config => {
+      CONSOLE.LOG('REQUEST')
       const request = new Promise(resolve => {
         config.transformResponse = config.transformResponse.concat([
           data => {
+            CONSOLE.LOG('RESPONSE')
             resolve()
             return data
           },
