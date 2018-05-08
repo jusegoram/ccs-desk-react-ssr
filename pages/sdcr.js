@@ -1,6 +1,6 @@
 import React from 'react'
 import moment from 'moment-timezone'
-import { Card, CardHeader, CardBody, Input, Form, FormGroup, Label, Button } from 'reactstrap'
+import { Card, CardHeader, CardBody, Input, Form, FormGroup, Label, Button, Container, Row, Col } from 'reactstrap'
 import asNextJSPage from 'app/util/asNextJSPage'
 import axios from 'axios'
 import _ from 'lodash'
@@ -87,82 +87,99 @@ class SDCR extends React.Component {
             <Card className="m-0 bg-primary">
               <CardBody>
                 <Form inline>
-                  <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
-                    <Label for="scopeType" className="mr-sm-2">
-                      Scope By
-                    </Label>
-                    <Input
-                      id="scopeType"
-                      type="select"
-                      value={scopeType}
-                      onChange={e => {
-                        this.setState({ scopeType: e.target.value })
-                      }}
-                    >
-                      <option>Company</option>
-                      <option>Subcontractor</option>
-                      <option>Division</option>
-                      <option>DMA</option>
-                      <option>Office</option>
-                      <option>Service Region</option>
-                      <option>Team</option>
-                      <option>Tech</option>
-                    </Input>{' '}
-                  </FormGroup>
-                  <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
-                    <Label for="scopeName" className="mr-sm-2">
-                      Named
-                    </Label>
-                    {(scopeNameOptions && (
-                      <Input
-                        id="scopeName"
-                        type="select"
-                        value={scopeName}
-                        onChange={e => {
-                          this.setState({ scopeName: e.target.value })
-                        }}
-                      >
-                        {scopeNameOptions.map(name => <option key={name}>{name}</option>)}
-                      </Input>
-                    )) || <Input type="text" placeholder="Loading..." disabled />}
-                  </FormGroup>
-                  <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
-                    <Label for="groupType" className="mr-sm-2">
-                      Grouped By
-                    </Label>
-                    <Input
-                      id="groupType"
-                      type="select"
-                      defaultValue={groupType}
-                      onChange={e => {
-                        this.setState({ groupType: e.target.value })
-                      }}
-                    >
-                      <option>Company</option>
-                      <option>Subcontractor</option>
-                      <option>Division</option>
-                      <option>DMA</option>
-                      <option>Office</option>
-                      <option>Service Region</option>
-                      <option>Team</option>
-                      <option>Tech</option>
-                    </Input>{' '}
-                  </FormGroup>
-                  <DateRangePicker
-                    id="dateRange"
-                    defaultRange={dateRange}
-                    onChange={dateRange => {
-                      this.setState({ dateRange })
-                    }}
-                  />
-                  <Toggle
-                    options={workOrderTypeOptions}
-                    selected={workOrderType}
-                    onChange={workOrderType => {
-                      console.log('workOrderType', workOrderType)
-                      this.setState({ workOrderType })
-                    }}
-                  />
+                  <Container fluid>
+                    <Row>
+                      <Col xs="6" lg="4">
+                        <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
+                          <Label for="scopeType" className="mr-sm-2" style={{ width: '100px' }}>
+                            Scope By
+                          </Label>
+                          <Input
+                            id="scopeType"
+                            type="select"
+                            value={scopeType}
+                            onChange={e => {
+                              this.setState({ scopeType: e.target.value })
+                            }}
+                            style={{ width: '170px' }}
+                          >
+                            <option>Company</option>
+                            <option>Subcontractor</option>
+                            <option>Division</option>
+                            <option>DMA</option>
+                            <option>Office</option>
+                            <option>Service Region</option>
+                            <option>Team</option>
+                            <option>Tech</option>
+                          </Input>
+                        </FormGroup>
+                        <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
+                          <Label for="scopeName" className="mr-sm-2" style={{ width: '100px' }}>
+                            Scope Name
+                          </Label>
+                          {(scopeNameOptions && (
+                            <Input
+                              id="scopeName"
+                              type="select"
+                              value={scopeName}
+                              onChange={e => {
+                                this.setState({ scopeName: e.target.value })
+                              }}
+                              style={{ width: '170px' }}
+                            >
+                              {scopeNameOptions.map(name => <option key={name}>{name}</option>)}
+                            </Input>
+                          )) || <Input type="text" placeholder="Loading..." disabled style={{ width: '170px' }} />}
+                        </FormGroup>
+                      </Col>
+                      <Col xs="6" lg="4">
+                        <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
+                          <Label for="groupType" className="mr-sm-2" style={{ width: '100px' }}>
+                            Grouped By
+                          </Label>
+                          <Input
+                            id="groupType"
+                            type="select"
+                            defaultValue={groupType}
+                            onChange={e => {
+                              this.setState({ groupType: e.target.value })
+                            }}
+                            style={{ width: '170px' }}
+                          >
+                            <option>Company</option>
+                            <option>Subcontractor</option>
+                            <option>Division</option>
+                            <option>DMA</option>
+                            <option>Office</option>
+                            <option>Service Region</option>
+                            <option>Team</option>
+                            <option>Tech</option>
+                          </Input>{' '}
+                        </FormGroup>
+                        <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
+                          <Label className="mr-sm-2" style={{ width: '100px' }}>
+                            Order Type
+                          </Label>
+                          <Toggle
+                            options={workOrderTypeOptions}
+                            selected={workOrderType}
+                            onChange={workOrderType => {
+                              this.setState({ workOrderType })
+                            }}
+                          />
+                        </FormGroup>
+                      </Col>
+                      <Col xs="6" lg="4">
+                        <DateRangePicker
+                          id="dateRange"
+                          defaultRange={dateRange}
+                          onChange={dateRange => {
+                            this.setState({ dateRange })
+                          }}
+                        />
+                      </Col>
+                    </Row>
+                  </Container>
                 </Form>
               </CardBody>
             </Card>
