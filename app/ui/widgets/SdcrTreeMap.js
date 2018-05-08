@@ -49,7 +49,6 @@ class SdcrTreemap extends React.Component {
   render() {
     const { onClick, size } = this.props
     const { hoveredNode, treemapData, cursor } = this.state
-    console.log(treemapData)
     const treeProps = {
       height: (size && size.height) || 500,
       width: (size && size.width) || 800,
