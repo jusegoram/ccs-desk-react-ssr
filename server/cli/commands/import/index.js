@@ -53,12 +53,12 @@ const processors = {
 }
 
 const dataSourceNames = {
-  'Tech Profile': 'Tech Profile',
-  Routelog: 'Siebel Routelog',
-  'MW Routelog': 'Edge MW Routelog',
-  'SE Routelog': 'Edge SE Routelog',
-  'SW Routelog': 'Edge SW Routelog',
-  'W Routelog': 'Edge W Routelog',
+  'Tech Profile': 'Tech Report',
+  Routelog: 'Siebel Work Order Report',
+  'MW Routelog': 'Edge MW Work Order Report',
+  'SE Routelog': 'Edge SE Work Order Report',
+  'SW Routelog': 'Edge SW Work Order Report',
+  'W Routelog': 'Edge W Work Order Report',
   Sclosed: 'SDCR',
 }
 // const mockFiles = {
