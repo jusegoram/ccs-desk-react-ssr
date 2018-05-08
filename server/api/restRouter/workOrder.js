@@ -45,6 +45,7 @@ router.get('/meta', async (req, res) => {
   const rawWorkOrderStats = await workOrders
   .select('type', 'status')
   .count()
+  .where('date', req.query.date)
   .groupBy('type', 'status')
   .orderBy('type', 'status')
   .map(data => ({
