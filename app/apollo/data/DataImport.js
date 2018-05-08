@@ -18,8 +18,15 @@ const props = `
   }
 `
 const reports = {
-  techs: 'Tech Profile',
-  workOrders: ['Routelog', 'MW Routelog', 'SE Routelog', 'SW Routelog', 'W Routelog'],
+  techs: 'Tech Report',
+  workOrders: [
+    'SDCR',
+    'Work Order Report',
+    'MW Work Order Report',
+    'SE Work Order Report',
+    'SW Work Order Report',
+    'W Work Order Report',
+  ],
 }
 export default class DataImport {
   static props = props

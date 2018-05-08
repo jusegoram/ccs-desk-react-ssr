@@ -42,10 +42,6 @@ export default asNextJSPage(
         },
         {
           Header: 'Report',
-          accessor: 'reportName',
-        },
-        {
-          Header: 'Source',
           accessor: 'dataSource.name',
         },
         {
