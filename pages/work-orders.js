@@ -63,14 +63,69 @@ function updateData(data, keyPath) {
   return data
 }
 
+class WorkOrderDonutChart extends React.Component {
+  state = {
+    pathValue: false,
+    finalValue: 'Hover For Info',
+    clicked: false,
+  }
+  render() {
+    const { clicked, finalValue, pathValue } = this.state
+    const { data } = this.props
+    return (
+      <div>
+        {data && (
+          <Sunburst
+            data={data}
+            width={500}
+            height={500}
+            getSize={d => d.value}
+            getColor={d => d.hex}
+            colorType="literal"
+            hideRootNode
+            animation={{
+              damping: 18,
+              stiffness: 300,
+            }}
+            onValueMouseOver={node => {
+              if (clicked) {
+                return
+              }
+              const path = getKeyPath(node).reverse()
+              const pathAsMap = path.reduce((res, row) => {
+                res[row] = true
+                return res
+              }, {})
+              this.setState({
+                finalValue: path[path.length - 1],
+                pathValue: ['Work Orders'].concat(path.slice(1)).join(' > '),
+                data: updateData(data, pathAsMap),
+              })
+            }}
+            onValueMouseOut={() =>
+              clicked
+                ? () => {}
+                : this.setState({
+                  pathValue: false,
+                  finalValue: false,
+                  data: updateData(data, false),
+                })
+            }
+          >
+            <LabelSeries data={[{ x: 0, y: 0, label: finalValue || 'Hover For Info', style: LABEL_STYLE }]} />
+          </Sunburst>
+        )}
+        {pathValue}
+      </div>
+    )
+  }
+}
+
 export default asNextJSPage(
   class WorkOrders extends React.Component {
     state = {
       date: moment().format('YYYY-MM-DD'),
       data: null,
-      pathValue: false,
-      finalValue: 'Hover For Info',
-      clicked: false,
     }
     populateData() {
       const { date } = this.state
@@ -82,14 +137,17 @@ export default asNextJSPage(
       })
       .catch(console.error)
     }
+    componentDidUpdate(prevProps, prevState) {
+      if (prevState.date !== this.state.date) this.populateData()
+    }
     componentDidMount() {
       this.populateData()
     }
     render() {
-      const { clicked, date, data, finalValue, pathValue } = this.state
+      const { date, data } = this.state
       return (
         <Layout>
-          <Card>
+          <Card style={{ height: 'calc(100vh - 100px)' }}>
             <CardHeader style={{ position: 'relative' }}>
               {/*relative because card-actions is absolute*/}
               <i className="icon-menu" /> Work Orders for {moment(date).format('MMMM Do')}
@@ -104,47 +162,10 @@ export default asNextJSPage(
               />
             </CardHeader>
             <CardBody className="p-0">
-              <DownloadButton endpoint="work-orders" color="primary">
+              <DownloadButton endpoint="work-orders" params={{ date }} color="primary">
                 Download Work Orders
               </DownloadButton>
-              {data && (
-                <Sunburst
-                  data={data}
-                  width={500}
-                  height={500}
-                  getSize={d => d.value}
-                  getColor={d => d.hex}
-                  colorType="literal"
-                  hideRootNode
-                  onValueMouseOver={node => {
-                    if (clicked) {
-                      return
-                    }
-                    const path = getKeyPath(node).reverse()
-                    const pathAsMap = path.reduce((res, row) => {
-                      res[row] = true
-                      return res
-                    }, {})
-                    this.setState({
-                      finalValue: path[path.length - 1],
-                      pathValue: ['Work Orders'].concat(path.slice(1)).join(' > '),
-                      data: updateData(data, pathAsMap),
-                    })
-                  }}
-                  onValueMouseOut={() =>
-                    clicked
-                      ? () => {}
-                      : this.setState({
-                        pathValue: false,
-                        finalValue: false,
-                        data: updateData(data, false),
-                      })
-                  }
-                >
-                  <LabelSeries data={[{ x: 0, y: 0, label: finalValue || 'Hover For Info', style: LABEL_STYLE }]} />
-                </Sunburst>
-              )}
-              {pathValue}
+              <WorkOrderDonutChart data={data} />
             </CardBody>
           </Card>
         </Layout>
