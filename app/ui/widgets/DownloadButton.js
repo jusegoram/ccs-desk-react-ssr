@@ -5,15 +5,23 @@ import moment from 'moment-timezone'
 import * as Icons from 'react-feather'
 import alert from 'sweetalert'
 import cookie from 'cookie'
+import qs from 'qs'
 
 import config from 'server/config'
 
 class DownloadButton extends React.Component {
   render() {
-    const { endpoint, children, ...props } = this.props
-    const downloadUrl = config.host + `/download/${endpoint}`
+    const { endpoint, children, params, ...props } = this.props
+    const downloadUrl = config.host + `/download/${endpoint}?${qs.stringify(params || {})}`
     return (
-      <Button {...props} download="" href={downloadUrl}>
+      <Button
+        {...props}
+        download=""
+        href={downloadUrl}
+        onClick={() => {
+          alert('Downloading', 'Your requested file should being downloading shortly', 'success')
+        }}
+      >
         <div
           style={{
             display: 'flex',
