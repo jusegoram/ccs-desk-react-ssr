@@ -47,17 +47,24 @@ router.get('/', async (req, res) => {
   req.query.dateRange = JSON.parse(req.query.dateRange)
   let { dateRange, scopeType, scopeName, groupType } = req.query
   if (!scopeType || !scopeName || !groupType || !dateRange) return res.json([])
-  const sdcrDataPoints = await SdcrDataPoint.query()
+
+  const query = SdcrDataPoint.query()
   .joinRelation('workGroups')
   .where('date', '>=', dateRange.start)
   .where('date', '<=', dateRange.end)
   .where('workGroups.type', scopeType)
   .where('workGroups.name', scopeName)
-  .where('workGroups.companyId', session.account.company.id)
-  .eager('workGroups')
-  .modifyEager('workGroups', builder => {
-    builder.where('type', groupType).where('companyId', session.account.company.id)
+  if (session.account.company.name !== 'CCS') {
+    query.where('workGroups.companyId', session.account.company.id)
+  }
+  query.eager('workGroups').modifyEager('workGroups', builder => {
+    builder.where('type', groupType)
+    if (session.account.company.name !== 'CCS') {
+      builder.where('companyId', session.account.company.id)
+    }
   })
+  const sdcrDataPoints = await query
+
   const sdcr = _.map(_.values(_.groupBy(sdcrDataPoints, 'workGroups[0].externalId')), dataPointsGroup => {
     const size = dataPointsGroup.length
     const value = _.sum(_.map(dataPointsGroup, 'value'))

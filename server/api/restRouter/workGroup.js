@@ -1,6 +1,6 @@
 import { Model } from 'objection'
 import knex from 'server/knex'
-import { SdcrDataPoint } from 'server/api/models'
+import { SdcrDataPoint, WorkGroup } from 'server/api/models'
 import _ from 'lodash'
 import Promise from 'bluebird'
 
@@ -14,13 +14,13 @@ router.get('/', async (req, res) => {
   const { session } = req
   if (!session) return res.sendStatus(401)
   const { type } = req.query
-  res.json(
-    await session.account.company
-    .$relatedQuery('workGroups')
-    .distinct('name')
-    .where('type', type)
-    .where('companyId', session.account.company.id)
-  )
+  const query = WorkGroup.query()
+  .distinct('name')
+  .where('type', type)
+  if (session.account.company.name !== 'CCS') {
+    query.where('companyId', session.account.company.id)
+  }
+  res.json(await query)
 })
 
 export default router

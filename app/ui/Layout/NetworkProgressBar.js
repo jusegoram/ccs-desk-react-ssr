@@ -2,6 +2,7 @@ import React from 'react'
 
 import ApolloFactory from 'app/apollo/ApolloFactory'
 import Promise from 'bluebird'
+import axios from 'axios'
 
 class SubBar extends React.Component {
   constructor(props) {
@@ -59,6 +60,19 @@ class NetworkProgressBar extends React.Component {
     this.onRequest = this.onRequest.bind(this)
     this.requestId = 0
     this.numActiveRequests = 0
+    this.axiosInterceptor = config => {
+      this.onRequest(
+        new Promise(resolve => {
+          config.transformRequest = data => {
+            resolve()
+            return data
+          }
+        })
+        .timeout(10000)
+        .catch(() => {})
+      )
+      return config
+    }
   }
   onRequest(request) {
     this.numActiveRequests++
@@ -74,10 +88,12 @@ class NetworkProgressBar extends React.Component {
   componentDidMount() {
     this.ismounted = true
     ApolloFactory.getInstance().addRequestListener(this.onRequest)
+    axios.interceptors.request.use(this.axiosInterceptor)
   }
   componentWillUnmount() {
     this.isunmounted = true
     ApolloFactory.getInstance().removeRequestListener(this.onRequest)
+    axios.interceptors.request.eject(this.axiosInterceptor)
   }
   render() {
     const style = {
@@ -85,6 +101,7 @@ class NetworkProgressBar extends React.Component {
       backgroundColor: 'transparent',
       opacity: this.state.requests.length ? 1 : 0,
       transition: 'opacity 300ms',
+      zIndex: 10000,
     }
     const scale = this.state.requests.length ? 1 / this.state.requests.length : 1
     return (
