@@ -58,10 +58,9 @@ class SdcrTreemap extends React.Component {
       },
       // onLeafMouseOver: x => this.setState({ hoveredNode: x }),
       // onLeafMouseOut: () => this.setState({ hoveredNode: null }),
-      // onLeafClick: x => {
-      //   this.setState({ hoveredNode: null })
-      //   onClick && onClick(x.data)
-      // },
+      onLeafClick: x => {
+        onClick && onClick(x.data)
+      },
       getLabel: x => x.name,
       getColor: x => x.color,
       colorType: 'literal',
