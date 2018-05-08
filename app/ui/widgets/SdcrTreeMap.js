@@ -1,5 +1,5 @@
 import React from 'react'
-import { Treemap } from 'react-vis'
+import { Treemap, Hint } from 'react-vis'
 import componentQueries from 'react-component-queries'
 import axios from 'axios'
 
@@ -72,7 +72,6 @@ class SdcrTreemap extends React.Component {
     return (
       <div>
         <Treemap data={treemapData} {...treeProps} />
-        {hoveredNode && <Hint value={hoveredNode} />}
       </div>
     )
   }
