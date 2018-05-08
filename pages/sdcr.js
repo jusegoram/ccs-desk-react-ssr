@@ -18,6 +18,7 @@ class SDCR extends React.Component {
       scopeName: null,
       scopeNameOptions: null,
       scopeNameOptionsLoading: false,
+      scopeNameAfterLoad: null,
       groupType: 'DMA',
       workOrderType: 'Production',
       dateRange: {
@@ -32,13 +33,18 @@ class SDCR extends React.Component {
     }
   }
   populateScopeNameList() {
-    const { scopeType, scopeNameOptionsLoading } = this.state
+    const { scopeType, scopeNameOptionsLoading, scopeNameAfterLoad } = this.state
     if (!scopeNameOptionsLoading) {
       axios
       .get('/api/workGroup', { params: { type: scopeType } })
       .then(res => {
         const scopeNameOptions = _.map(res.data, 'name')
-        this.setState({ scopeNameOptionsLoading: false, scopeName: scopeNameOptions[0], scopeNameOptions })
+        this.setState({
+          scopeNameOptionsLoading: false,
+          scopeName: scopeNameAfterLoad || scopeNameOptions[0],
+          scopeNameOptions,
+          scopeNameAfterLoad: null,
+        })
       })
       .catch(console.error)
       this.setState({ scopeNameOptionsLoading: true })
@@ -88,7 +94,7 @@ class SDCR extends React.Component {
                     <Input
                       id="scopeType"
                       type="select"
-                      defaultValue={scopeType}
+                      value={scopeType}
                       onChange={e => {
                         this.setState({ scopeType: e.target.value })
                       }}
@@ -111,12 +117,12 @@ class SDCR extends React.Component {
                       <Input
                         id="scopeName"
                         type="select"
-                        defaultValue={scopeName}
+                        value={scopeName}
                         onChange={e => {
                           this.setState({ scopeName: e.target.value })
                         }}
                       >
-                        {scopeNameOptions.map(name => <option id={name}>{name}</option>)}
+                        {scopeNameOptions.map(name => <option key={name}>{name}</option>)}
                       </Input>
                     )) || <Input type="text" placeholder="Loading..." disabled />}
                   </FormGroup>
@@ -168,6 +174,15 @@ class SDCR extends React.Component {
                 className="bg-primary"
                 style={{ flex: 1 }}
                 {...{ scopeType, scopeName, dateRange, groupType, workOrderType }}
+                onClick={data => {
+                  this.setState({
+                    scopeType: groupType,
+                    scopeNameAfterLoad: data.name
+                    .split(' ')
+                    .slice(0, -1)
+                    .join(' '),
+                  })
+                }}
               />
             )}
           </CardBody>
