@@ -80,9 +80,6 @@ export default asNextJSPage(
                   <CardHeader style={{ position: 'relative' }}>
                     {/*relative because card-actions is absolute*/}
                     <i className="icon-menu" /> Today&apos;s Work Order Imports
-                    <DownloadButton endpoint="work-orders" className="card-actions mt-0 h-100" color="primary">
-                      Download Work Order Data
-                    </DownloadButton>
                   </CardHeader>
                   <CardBody className="p-0">
                     <ReactTable
