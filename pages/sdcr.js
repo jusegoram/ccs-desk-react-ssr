@@ -146,13 +146,6 @@ class SDCR extends React.Component {
                       this.setState({ dateRange })
                     }}
                   />
-                  <Button
-                    color="danger"
-                    onClick={() => this.setState({ showProblems: !this.state.showProblems })}
-                    active={this.state.showProblems}
-                  >
-                    Show Problems
-                  </Button>
                 </Form>
               </CardBody>
             </Card>
