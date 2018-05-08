@@ -10,7 +10,7 @@ Model.knex(knex)
 const router = express.Router()
 
 const colors = {
-  Service: '#EF5D28',
+  Service: '#B3AD9E',
   Rollback: '#12939A',
   Upgrade: '#79C7E3',
   'Former Install': '#1A3177',
