@@ -1,17 +1,15 @@
 import React from 'react'
 import ReactTable from 'react-table'
 import { Query } from 'react-apollo'
-import { Card, CardHeader, CardBody, Button, Badge } from 'reactstrap'
+import { Card, CardHeader, CardBody, Badge } from 'reactstrap'
 import Moment from 'react-moment'
-import alert from 'sweetalert'
 import moment from 'moment-timezone'
 
 import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'
-import cookie from 'cookie'
-import config from 'server/config'
+import DownloadButton from 'app/ui/widgets/DownloadButton'
 
 const statusColors = {
   Complete: 'success',
@@ -82,24 +80,10 @@ export default asNextJSPage(
                 <Card>
                   <CardHeader style={{ position: 'relative' }}>
                     {/*relative because card-actions is absolute*/}
-                    <i className="icon-menu" /> Last 10 Tech Imports
-                    <Button
-                      className="card-actions mt-0 h-100"
-                      color="primary"
-                      onClick={() => {
-                        const token = encodeURIComponent(cookie.parse(document.cookie).token)
-                        const timezone = encodeURIComponent(moment.tz.guess())
-                        const downloadUrl = config.host + '/download/techs' + `?token=${token}&timezone=${timezone}`
-                        this.setState({ downloadUrl }, () => {
-                          alert(
-                            'The download should be starting.' +
-                              " If it hasn't, verify that your popup blocker isn't preventing it from opening."
-                          )
-                        })
-                      }}
-                    >
-                      <i className="fa fa-download fa-lg mr-1" /> Download Tech Data
-                    </Button>
+                    <i className="icon-menu" /> Today&apos;s Tech Data Imports
+                    <DownloadButton endpoint="techs" className="card-actions mt-0 h-100" color="primary">
+                      Download Tech Data
+                    </DownloadButton>
                   </CardHeader>
                   <CardBody className="p-0">
                     <ReactTable
