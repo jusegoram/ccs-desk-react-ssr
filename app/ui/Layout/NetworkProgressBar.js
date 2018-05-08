@@ -102,7 +102,7 @@ class NetworkProgressBar extends React.Component {
       backgroundColor: 'transparent',
       opacity: this.state.requests.length ? 1 : 0,
       transition: 'opacity 300ms',
-      zIndex: 10000,
+      zIndex: 1000000,
     }
     const scale = this.state.requests.length ? 1 / this.state.requests.length : 1
     return (
