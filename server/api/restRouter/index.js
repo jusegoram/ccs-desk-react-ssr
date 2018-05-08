@@ -1,13 +1,15 @@
 import express from 'express'
 
-import imageRouter from './image'
-import sdcrRouter from './sdcr'
-import workGroupRouter from './workGroup'
+import image from './image'
+import sdcr from './sdcr'
+import workGroup from './workGroup'
+import workOrder from './workOrder'
 
 const router = express.Router()
 
-router.use('/image', imageRouter)
-router.use('/sdcr', sdcrRouter)
-router.use('/workGroup', workGroupRouter)
+router.use('/image', image)
+router.use('/sdcr', sdcr)
+router.use('/workGroup', workGroup)
+router.use('/workOrder', workOrder)
 
 export default router

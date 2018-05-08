@@ -31,11 +31,11 @@ export default {
       url: '/sdcr',
       icon: Icons.Activity,
     },
-    // {
-    //   name: 'Work Orders',
-    //   url: '/work-orders',
-    //   icon: Icons.Clipboard,
-    // },
+    {
+      name: 'Work Orders',
+      url: '/work-orders',
+      icon: Icons.Clipboard,
+    },
     {
       title: true,
       name: 'Data Import Logs',
