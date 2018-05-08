@@ -6,6 +6,8 @@ export default class SdcrDataPoint extends APIModel {
     table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
     table.date('date').notNullable()
     table.integer('value').notNullable()
+    table.string('type').notNullable()
+    table.string('dwellingType').notNullable()
     table.uuid('workOrderId').index()
     table.uuid('techId').notNullable().index()
   `
