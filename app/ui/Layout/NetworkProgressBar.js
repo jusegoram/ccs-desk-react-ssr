@@ -57,23 +57,23 @@ class NetworkProgressBar extends React.Component {
   constructor(props) {
     super(props)
     this.state = { requests: [] }
-    this.onRequest = this.onRequest.bind(this)
+    const onRequest = this.onRequest.bind(this)
+    this.onRequest = onRequest
     this.requestId = 0
     this.numActiveRequests = 0
     this.axiosInterceptor = config => {
-      console.log('REQUEST')
-      const request = new Promise(resolve => {
-        config.transformResponse = config.transformResponse.concat([
-          data => {
-            console.log('RESPONSE')
-            resolve()
-            return data
-          },
-        ])
-      })
-      .timeout(10000)
-      .catch(() => {})
-      this.onRequest(request)
+      onRequest(
+        new Promise(resolve => {
+          config.transformResponse = axios.defaults.transformResponse.concat([
+            data => {
+              resolve()
+              return data
+            },
+          ])
+        })
+        .timeout(10000)
+        .catch(() => {})
+      )
       return config
     }
   }
