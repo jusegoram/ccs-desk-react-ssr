@@ -52,10 +52,10 @@ class SdcrTreemap extends React.Component {
     const treeProps = {
       height: (size && size.height) || 500,
       width: (size && size.width) || 800,
-      // animation: {
-      //   damping: 18,
-      //   stiffness: 300,
-      // },
+      animation: {
+        damping: 18,
+        stiffness: 300,
+      },
       // onLeafMouseOver: x => this.setState({ hoveredNode: x }),
       // onLeafMouseOut: () => this.setState({ hoveredNode: null }),
       // onLeafClick: x => {
