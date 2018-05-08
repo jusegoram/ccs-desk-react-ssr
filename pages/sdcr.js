@@ -8,6 +8,7 @@ import _ from 'lodash'
 import Layout from 'app/ui/Layout'
 import DateRangePicker from 'app/ui/widgets/DateRangePIcker'
 import SdcrTreeMap from 'app/ui/widgets/SdcrTreeMap'
+import Toggle from 'app/ui/widgets/Toggle'
 
 class SDCR extends React.Component {
   constructor(props) {
@@ -18,6 +19,7 @@ class SDCR extends React.Component {
       scopeNameOptions: null,
       scopeNameOptionsLoading: false,
       groupType: 'DMA',
+      workOrderType: 'Production',
       dateRange: {
         start: moment()
         .add(-1, 'day')
@@ -49,7 +51,8 @@ class SDCR extends React.Component {
     this.populateScopeNameList()
   }
   render() {
-    const { dateRange, scopeType, scopeName, groupType, scopeNameOptions, showProblems } = this.state
+    const { dateRange, scopeType, scopeName, groupType, scopeNameOptions, workOrderType } = this.state
+    const workOrderTypeOptions = [{ name: 'Production', value: 'Production' }, { name: 'Repairs', value: 'Repairs' }]
     return (
       <Layout>
         <Card style={{ height: 'calc(100vh - 100px)' }}>
@@ -146,6 +149,14 @@ class SDCR extends React.Component {
                       this.setState({ dateRange })
                     }}
                   />
+                  <Toggle
+                    options={workOrderTypeOptions}
+                    selected={workOrderType}
+                    onChange={workOrderType => {
+                      console.log('workOrderType', workOrderType)
+                      this.setState({ workOrderType })
+                    }}
+                  />
                 </Form>
               </CardBody>
             </Card>
@@ -156,7 +167,7 @@ class SDCR extends React.Component {
               <SdcrTreeMap
                 className="bg-primary"
                 style={{ flex: 1 }}
-                {...{ scopeType, scopeName, dateRange, groupType, showProblems }}
+                {...{ scopeType, scopeName, dateRange, groupType, workOrderType }}
               />
             )}
           </CardBody>

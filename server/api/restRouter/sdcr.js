@@ -45,8 +45,8 @@ router.get('/', async (req, res) => {
   const { session } = req
   if (!session) return res.sendStatus(401)
   req.query.dateRange = JSON.parse(req.query.dateRange)
-  let { dateRange, scopeType, scopeName, groupType } = req.query
-  if (!scopeType || !scopeName || !groupType || !dateRange) return res.json([])
+  let { dateRange, scopeType, scopeName, groupType, workOrderType } = req.query
+  if (!scopeType || !scopeName || !groupType || !dateRange || !workOrderType) return res.json([])
 
   const query = SdcrDataPoint.query()
   .joinRelation('workGroups')
@@ -54,6 +54,11 @@ router.get('/', async (req, res) => {
   .where('date', '<=', dateRange.end)
   .where('workGroups.type', scopeType)
   .where('workGroups.name', scopeName)
+  if (workOrderType === 'Repairs') {
+    query.where('SdcrDataPoint.type', 'Service')
+  } else {
+    query.whereNot('SdcrDataPoint.type', 'Service')
+  }
   if (session.account.company.name !== 'CCS') {
     query.where('workGroups.companyId', session.account.company.id)
   }
