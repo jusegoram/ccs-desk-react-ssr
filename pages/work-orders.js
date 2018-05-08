@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, CardHeader, CardBody, Input } from 'reactstrap'
 import moment from 'moment-timezone'
-import { Sunburst, LabelSeries } from 'react-vis'
+import { Treemap, LabelSeries } from 'react-vis'
 
 import asNextJSPage from 'app/util/asNextJSPage'
 
@@ -75,7 +75,7 @@ class WorkOrderDonutChart extends React.Component {
     return (
       <div>
         {data && (
-          <Sunburst
+          <Treemap
             data={data}
             width={500}
             height={500}
@@ -111,9 +111,7 @@ class WorkOrderDonutChart extends React.Component {
                   data: updateData(data, false),
                 })
             }
-          >
-            <LabelSeries data={[{ x: 0, y: 0, label: finalValue || 'Hover For Info', style: LABEL_STYLE }]} />
-          </Sunburst>
+          />
         )}
         {pathValue}
       </div>
