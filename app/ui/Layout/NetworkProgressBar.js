@@ -61,16 +61,15 @@ class NetworkProgressBar extends React.Component {
     this.requestId = 0
     this.numActiveRequests = 0
     this.axiosInterceptor = config => {
-      this.onRequest(
-        new Promise(resolve => {
-          config.transformRequest = data => {
-            resolve()
-            return data
-          }
-        })
-        .timeout(10000)
-        .catch(() => {})
-      )
+      const request = new Promise(resolve => {
+        config.transformResponse = data => {
+          resolve()
+          return data
+        }
+      })
+      .timeout(10000)
+      .catch(() => {})
+      this.onRequest(request)
       return config
     }
   }
