@@ -81,15 +81,6 @@ router.get('/', async (req, res) => {
     if (!workOrder.row['Cancelled Date']) return true
     return !moment(workOrder.row['Cancelled Date'].split(' ')[0], 'YYYY-MM-DD').isBefore(moment(date))
   })
-  .map(
-    async workOrder => {
-      if (workOrder.row['Source'] === 'Edge') {
-        const tech = await Tech.query().first({ alternateExternalId: workOrder.row['Tech ID'] })
-        workOrder.row['Tech ID'] = tech.externalId
-      }
-    },
-    { concurrency: 200 }
-  )
   .map(workOrder => {
     stringifier.write(workOrder.row)
   })
