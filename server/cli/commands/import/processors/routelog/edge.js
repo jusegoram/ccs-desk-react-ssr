@@ -15,7 +15,7 @@ const convertRowToStandardForm = ({ row, w2Company, employee }) => {
     'Partner Name': w2Company.name || '',
     Subcontractor: getWorkGroup('Subcontractor').externalId || '',
     'Activity ID': row['Activity ID'] || '',
-    'Tech ID': (employee && employee.alternateExternalId) || '',
+    'Tech ID': (employee && employee.externalId) || '',
     'Tech Name': (employee && employee.name) || '',
     'Tech Team': getWorkGroup('Team').externalId || '',
     'Tech Supervisor': getWorkGroup('Team').name || '',
