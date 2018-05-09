@@ -1,7 +1,6 @@
 import React from 'react'
 import moment from 'moment-timezone'
 import { Card, CardHeader, CardBody, Input, Form, FormGroup, Label, Button, Container, Row, Col } from 'reactstrap'
-import asNextJSPage from 'app/util/asNextJSPage'
 import axios from 'axios'
 import _ from 'lodash'
 

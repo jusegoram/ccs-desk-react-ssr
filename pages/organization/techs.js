@@ -6,7 +6,6 @@ import { Card, CardHeader, CardBody } from 'reactstrap'
 // import alert from 'sweetalert'
 import Link from 'next/link'
 
-import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'

@@ -5,7 +5,6 @@ import { Card, CardHeader, CardBody, Badge } from 'reactstrap'
 import Moment from 'react-moment'
 import moment from 'moment-timezone'
 
-import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'

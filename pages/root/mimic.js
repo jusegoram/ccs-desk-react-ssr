@@ -4,7 +4,6 @@ import { Query, Mutation } from 'react-apollo'
 import { Card, CardHeader, CardBody, Button } from 'reactstrap'
 import alert from 'sweetalert'
 
-import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'

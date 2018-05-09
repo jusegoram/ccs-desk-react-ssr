@@ -3,8 +3,6 @@ import { Card, CardHeader, CardBody, Input } from 'reactstrap'
 import moment from 'moment-timezone'
 import { Treemap, LabelSeries } from 'react-vis'
 
-import asNextJSPage from 'app/util/asNextJSPage'
-
 import DownloadButton from 'app/ui/widgets/DownloadButton'
 import Layout from 'app/ui/Layout'
 import axios from 'axios'

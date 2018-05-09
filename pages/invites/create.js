@@ -4,7 +4,6 @@ import gql from 'graphql-tag'
 import CreateInvite from 'app/ui/Form/CreateInvite'
 import { graphql } from 'react-apollo'
 import Router from 'next/router'
-import asNextJSPage from 'app/util/asNextJSPage'
 
 class CreateInvitePage extends React.Component {
   async sendInvite(variables) {
