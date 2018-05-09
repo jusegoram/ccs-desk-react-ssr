@@ -1,58 +1,68 @@
-//CCS_UNIQUE WLJ95V5NC1J
-import React from 'react'
-import { Form, FormGroup, Label, Input, Button, FormFeedback } from 'reactstrap'
+import React, { Component } from 'react'
 
-const required = value => (value ? undefined : 'Required')
-const renderField = ({ input, label, children, type, meta: { touched, error } }) => {
-  let color = 'normal'
-  if (touched && error) {
-    color = 'danger'
+import { Row, Col, CardGroup, Card, CardBody, Button, Input, InputGroup } from 'reactstrap'
+import Form from 'app/ui/Form'
+import Link from 'next/link'
+import * as Icons from 'react-feather'
+
+export default class CreateInvite extends Component {
+  state = {
+    email: '',
+    name: '',
   }
-  return (
-    <FormGroup color={color}>
-      <Label>{label}</Label>
-      <div>
-        <Input {...input} placeholder={label} type={type}>
-          {children}
-        </Input>
-        {touched && (error && <FormFeedback>{error}</FormFeedback>)}
-      </div>
-    </FormGroup>
-  )
+  render() {
+    return (
+      <CardGroup className="mb-4">
+        <Card className="p-4">
+          <CardBody>
+            <span className="text-center">
+              <h1>Invite User</h1>
+            </span>
+            <p className="text-muted text-center">Invite a new user to use the system</p>
+            <Form onSubmit={this.props.onSubmit}>
+              <InputGroup className="mb-3">
+                <div className="input-group-prepend">
+                  <span className="input-group-text">
+                    <Icons.AtSign size={15} />
+                  </span>
+                </div>
+                <Input
+                  type="email"
+                  placeholder="Recipient Email"
+                  name="email"
+                  autoComplete="off"
+                  autoFocus
+                  required
+                  onChange={e => this.setState({ email: e.target.value.toLowerCase() })}
+                  value={this.state.email}
+                />
+              </InputGroup>
+              <InputGroup className="mb-4">
+                <div className="input-group-prepend">
+                  <span className="input-group-text">
+                    <Icons.User size={15} />
+                  </span>
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Full Name"
+                  name="name"
+                  required
+                  onChange={e => this.setState({ name: e.target.value })}
+                  value={this.state.name}
+                />
+              </InputGroup>
+              <Row>
+                <Col xs="6">
+                  <Button color="primary" className="px-4">
+                    Invite
+                  </Button>
+                </Col>
+              </Row>
+            </Form>
+          </CardBody>
+        </Card>
+      </CardGroup>
+    )
+  }
 }
-
-const InviteForm = () => {
-  return (
-    <div
-      style={{
-        height: '100%',
-        border: '1px solid #ccc',
-        backgroundColor: '#fff',
-        borderRadius: 5,
-        padding: 20,
-      }}
-    >
-      <Form name="invite">
-        <FormGroup>
-          <Label>Company</Label>
-          <div>
-            <Input value="TODO" readOnly />
-          </div>
-        </FormGroup>
-        <Input name="name" component={renderField} type="text" label="First Name" validate={required} />
-        <Input name="email" component={renderField} type="email" label="Email" validate={required} />
-        <Input name="role" component={renderField} type="select" label="Role">
-          <option />
-          <option value="Supervisor">Supervisor</option>
-          <option value="Manager">Manager</option>
-          <option value="Admin">Admin</option>
-        </Input>
-        <Button color="primary" type="submit">
-          Send Invite
-        </Button>
-      </Form>
-    </div>
-  )
-}
-
-export default InviteForm
