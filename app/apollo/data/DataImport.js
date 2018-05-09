@@ -21,11 +21,11 @@ const reports = {
   techs: 'Tech Report',
   workOrders: [
     'SDCR',
-    'Work Order Report',
-    'MW Work Order Report',
-    'SE Work Order Report',
-    'SW Work Order Report',
-    'W Work Order Report',
+    'Siebel Work Order Report',
+    'Edge MW Work Order Report',
+    'Edge SE Work Order Report',
+    'Edge SW Work Order Report',
+    'Edge W Work Order Report',
   ],
 }
 export default class DataImport {
