@@ -63,4 +63,4 @@ const INVITES = gql`
   }
 `
 
-export default wrappedByApolloProvider(Index)
+export default Index
