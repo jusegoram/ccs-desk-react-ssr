@@ -209,4 +209,4 @@ class SDCR extends React.Component {
   }
 }
 
-export default asNextJSPage(SDCR)
+export default SDCR

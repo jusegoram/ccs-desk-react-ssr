@@ -83,4 +83,4 @@ class Timecards extends React.Component {
   }
 }
 
-export default asNextJSPage(Timecards)
+export default Timecards

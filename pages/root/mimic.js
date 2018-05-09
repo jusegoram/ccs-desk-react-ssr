@@ -89,4 +89,4 @@ class Accounts extends React.Component {
   }
 }
 
-export default asNextJSPage(Accounts)
+export default Accounts

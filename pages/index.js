@@ -39,4 +39,4 @@ class SignIn extends React.Component {
   }
 }
 
-export default asNextJSPage(SignIn)
+export default SignIn

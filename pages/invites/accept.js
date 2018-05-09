@@ -74,4 +74,4 @@ const ACCEPT_INVITE = graphql(
   { name: 'acceptInvite' }
 )
 
-export default compose(wrappedByApolloProvider, ACCEPT_INVITE)(AcceptInvite)
+export default compose(ACCEPT_INVITE)(AcceptInvite)

@@ -48,4 +48,4 @@ const CREATE_INVITE = graphql(
   { name: 'createInvite' }
 )
 
-export default asNextJSPage(CreateInvitePage)
+export default CreateInvitePage
