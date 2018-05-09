@@ -1,32 +1,37 @@
 import React from 'react'
-import ReactTable from 'react-table'
-import { Query } from 'react-apollo'
-import { Card, CardHeader, CardBody, Button, Badge } from 'reactstrap'
-import Moment from 'react-moment'
-import alert from 'sweetalert'
-import cookie from 'cookie'
-import moment from 'moment-timezone'
+import Router from 'next/router'
+
+import { Col, Container, Row } from 'reactstrap'
+import { Mutation } from 'react-apollo'
+import Layout from 'app/ui/Layout'
 
 import data from 'app/apollo/data'
 
-import DownloadButton from 'app/ui/widgets/DownloadButton'
-import Layout from 'app/ui/Layout'
-import config from 'server/config'
 import CreateInvite from 'app/ui/Form/CreateInvite'
 
 export default class CreateInvitePage extends React.Component {
+  static title = 'Sign In'
+
   render() {
     return (
       <Layout>
-        <CreateInvite
-          onSendInvite={() => {
-            alert(
-              'Invite Sent',
-              'The specified recipient will soon receive an email inviting them to the service',
-              'success'
-            )
-          }}
-        />
+        <div className="">
+          <Container>
+            <Row className="justify-content-center">
+              <Col xs="12" md="8" lg="5">
+                <Mutation {...data.Invite.create} fetchPolicy="network-only">
+                  {createSession => (
+                    <CreateInvite
+                      onSubmit={variables => {
+                        createSession({ variables })
+                      }}
+                    />
+                  )}
+                </Mutation>
+              </Col>
+            </Row>
+          </Container>
+        </div>
       </Layout>
     )
   }
