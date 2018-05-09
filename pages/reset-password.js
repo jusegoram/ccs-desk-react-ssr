@@ -24,4 +24,4 @@ class ResetPassword extends React.Component {
   }
 }
 
-export default asNextJSPage(ResetPassword)
+export default ResetPassword

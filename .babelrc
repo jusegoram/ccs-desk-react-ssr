@@ -1,9 +1,8 @@
 {
   "presets": [
-    // "next/babel", keep this file updated against https://github.com/zeit/next.js/blob/canary/.babelrc
-    "react", // next/babel
+    "@babel/preset-react",
     [
-      "env",
+      "@babel/preset-env",
       {
         "targets": {
           "node": "current",
@@ -20,17 +19,29 @@
         }
       }
     ],
-    "stage-0",
-    "stage-1"
+    [
+      "@babel/preset-stage-0",
+      {
+        "decoratorsLegacy": true
+      }
+    ],
+    [
+      "@babel/preset-stage-1",
+      {
+        "decoratorsLegacy": true
+      }
+    ]
   ],
   "plugins": [
-    "transform-object-rest-spread", // next/babel
-    "transform-class-properties", // next/babel
-    "transform-runtime", // next/babel
+    "@babel/plugin-proposal-object-rest-spread",
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-transform-runtime",
     [
       "module-resolver",
       {
-        "root": ["./"],
+        "root": [
+          "./"
+        ],
         "alias": {
           "server": "./server",
           "app": "./app",
@@ -43,7 +54,10 @@
     [
       "wrap-in-js",
       {
-        "extensions": ["css$", "scss$"]
+        "extensions": [
+          "css$",
+          "scss$"
+        ]
       }
     ],
     "transform-decorators-legacy"

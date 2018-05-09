@@ -120,55 +120,53 @@ class WorkOrderDonutChart extends React.Component {
   }
 }
 
-export default asNextJSPage(
-  class WorkOrders extends React.Component {
-    state = {
-      date: moment().format('YYYY-MM-DD'),
-      data: null,
-    }
-    populateData() {
-      const { date } = this.state
-      axios
-      .get('/api/workOrder/meta', { params: { date } })
-      .then(res => {
-        const data = updateData(res.data)
-        this.setState({ data })
-      })
-      .catch(console.error)
-    }
-    componentDidUpdate(prevProps, prevState) {
-      if (prevState.date !== this.state.date) this.populateData()
-    }
-    componentDidMount() {
-      this.populateData()
-    }
-    render() {
-      const { date, data } = this.state
-      return (
-        <Layout>
-          <Card style={{ height: 'calc(100vh - 100px)' }}>
-            <CardHeader style={{ position: 'relative' }}>
-              {/*relative because card-actions is absolute*/}
-              <i className="icon-menu" /> Work Orders for {moment(date).format('MMMM Do')}
-              <Input
-                type="date"
-                value={date}
-                onChange={e => {
-                  this.setState({ date: e.target.value })
-                }}
-                className="card-actions mt-0 h-100"
-                style={{ width: 200 }}
-              />
-            </CardHeader>
-            <CardBody className="p-0">
-              <DownloadButton endpoint="work-orders" params={{ date }} color="primary">
-                Download Work Orders
-              </DownloadButton>
-              <WorkOrderDonutChart data={data} />
-            </CardBody>
-          </Card>
-        </Layout>
-      )
-    }
+export default class WorkOrders extends React.Component {
+  state = {
+    date: moment().format('YYYY-MM-DD'),
+    data: null,
   }
-)
+  populateData() {
+    const { date } = this.state
+    axios
+    .get('/api/workOrder/meta', { params: { date } })
+    .then(res => {
+      const data = updateData(res.data)
+      this.setState({ data })
+    })
+    .catch(console.error)
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.date !== this.state.date) this.populateData()
+  }
+  componentDidMount() {
+    this.populateData()
+  }
+  render() {
+    const { date, data } = this.state
+    return (
+      <Layout>
+        <Card style={{ height: 'calc(100vh - 100px)' }}>
+          <CardHeader style={{ position: 'relative' }}>
+            {/*relative because card-actions is absolute*/}
+            <i className="icon-menu" /> Work Orders for {moment(date).format('MMMM Do')}
+            <Input
+              type="date"
+              value={date}
+              onChange={e => {
+                this.setState({ date: e.target.value })
+              }}
+              className="card-actions mt-0 h-100"
+              style={{ width: 200 }}
+            />
+          </CardHeader>
+          <CardBody className="p-0">
+            <DownloadButton endpoint="work-orders" params={{ date }} color="primary">
+              Download Work Orders
+            </DownloadButton>
+            <WorkOrderDonutChart data={data} />
+          </CardBody>
+        </Card>
+      </Layout>
+    )
+  }
+}

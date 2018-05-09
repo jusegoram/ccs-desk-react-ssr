@@ -84,4 +84,4 @@ class VehicleClaims extends React.Component {
   }
 }
 
-export default asNextJSPage(VehicleClaims)
+export default VehicleClaims
