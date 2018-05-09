@@ -4,6 +4,7 @@ import * as models from 'server/api/models'
 import _ from 'lodash'
 import stringify from 'csv-stringify'
 import express from 'express'
+import Tech from 'server/api/models/Tech'
 
 Model.knex(knex)
 
@@ -50,6 +51,8 @@ router.get('/', async (req, res) => {
   .mergeContext({ session, moment })
   ._contextFilter()
   .eager('appointments')
+  .orderBy(raw("row->>'DMA'"))
+  .orderBy(raw("row->>'Tech ID'"))
   .modifyEager('appointments', qb => {
     qb.where(
       'createdAt',
@@ -77,6 +80,12 @@ router.get('/', async (req, res) => {
   .filter(workOrder => {
     if (!workOrder.row['Cancelled Date']) return true
     return !moment(workOrder.row['Cancelled Date'].split(' ')[0], 'YYYY-MM-DD').isBefore(moment(date))
+  })
+  .map(async workOrder => {
+    if (workOrder.row['Source'] === 'Edge') {
+      const tech = await Tech.query().first({ alternateExternalId: workOrder.row['Tech ID'] })
+      workOrder.row['Tech ID'] = tech.externalId
+    }
   })
   .map(workOrder => {
     stringifier.write(workOrder.row)
