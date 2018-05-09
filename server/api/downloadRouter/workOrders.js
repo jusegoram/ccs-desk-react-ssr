@@ -51,8 +51,8 @@ router.get('/', async (req, res) => {
   .mergeContext({ session, moment })
   ._contextFilter()
   .eager('appointments')
-  // .orderBy(raw("row->>'DMA'"))
-  // .orderBy(raw("row->>'Tech ID'"))
+  .orderBy(raw("row->>'DMA'"))
+  .orderBy(raw("row->>'Tech ID'"))
   .modifyEager('appointments', qb => {
     qb.where(
       'createdAt',
@@ -81,12 +81,15 @@ router.get('/', async (req, res) => {
     if (!workOrder.row['Cancelled Date']) return true
     return !moment(workOrder.row['Cancelled Date'].split(' ')[0], 'YYYY-MM-DD').isBefore(moment(date))
   })
-  // .map(async workOrder => {
-  //   if (workOrder.row['Source'] === 'Edge') {
-  //     const tech = await Tech.query().first({ alternateExternalId: workOrder.row['Tech ID'] })
-  //     workOrder.row['Tech ID'] = tech.externalId
-  //   }
-  // })
+  .map(
+    async workOrder => {
+      if (workOrder.row['Source'] === 'Edge') {
+        const tech = await Tech.query().first({ alternateExternalId: workOrder.row['Tech ID'] })
+        workOrder.row['Tech ID'] = tech.externalId
+      }
+    },
+    { concurrency: 200 }
+  )
   .map(workOrder => {
     stringifier.write(workOrder.row)
   })
