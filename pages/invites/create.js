@@ -1,50 +1,33 @@
 import React from 'react'
+import ReactTable from 'react-table'
+import { Query } from 'react-apollo'
+import { Card, CardHeader, CardBody, Button, Badge } from 'reactstrap'
+import Moment from 'react-moment'
+import alert from 'sweetalert'
+import cookie from 'cookie'
+import moment from 'moment-timezone'
 
-import gql from 'graphql-tag'
+import data from 'app/apollo/data'
+
+import DownloadButton from 'app/ui/widgets/DownloadButton'
+import Layout from 'app/ui/Layout'
+import config from 'server/config'
 import CreateInvite from 'app/ui/Form/CreateInvite'
-import { graphql } from 'react-apollo'
-import Router from 'next/router'
 
-class CreateInvitePage extends React.Component {
-  async sendInvite(variables) {
-    await this.props.createInvite({ variables })
-    Router.push('/invites')
-  }
+export default class CreateInvitePage extends React.Component {
   render() {
     return (
-      <MainApp location={this.props.location}>
-        <CreateInvite onSendInvite={this.sendInvite.bind(this)} />
-      </MainApp>
+      <Layout>
+        <CreateInvite
+          onSendInvite={() => {
+            alert(
+              'Invite Sent',
+              'The specified recipient will soon receive an email inviting them to the service',
+              'success'
+            )
+          }}
+        />
+      </Layout>
     )
   }
 }
-
-// const SESSION = gql`
-//   query session {
-//     session {
-//       id
-//     }
-//   }
-// `
-
-const CREATE_INVITE = graphql(
-  gql`
-    mutation Invite_create($recipient: String!, $recipientName: String!, $permissions: [PermissionInput]!) {
-      Invite_create(recipient: $recipient, recipientName: $recipientName, permissions: $permissions) {
-        id
-        status
-        recipient {
-          id
-          email
-          owner {
-            id
-            name
-          }
-        }
-      }
-    }
-  `,
-  { name: 'createInvite' }
-)
-
-export default CreateInvitePage
