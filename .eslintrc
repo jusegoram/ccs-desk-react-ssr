@@ -24,7 +24,16 @@
   },
   "settings": {
     "import/resolver": {
-      "babel-module": {}
+      "babel-module": {
+        "root": ["./"],
+        "alias": {
+          "server": "./server",
+          "app": "./app",
+          "@root": ".",
+          "^react-apollo$": "./node_modules/react-apollo/index.js",
+          "^moment-timezone$": "./util/defaultedTzMoment.js"
+        }
+      }
     }
   },
   "env": {
