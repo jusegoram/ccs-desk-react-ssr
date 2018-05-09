@@ -4,7 +4,6 @@ import Router from 'next/router'
 import { Col, Container, Row } from 'reactstrap'
 import { Mutation } from 'react-apollo'
 
-import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
 
 import Login from 'app/ui/Form/Login'

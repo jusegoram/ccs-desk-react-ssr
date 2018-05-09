@@ -2,7 +2,6 @@ import React from 'react'
 
 import { Col, Container, Row } from 'reactstrap'
 
-import asNextJSPage from 'app/util/asNextJSPage'
 import ForgotPasswordForm from 'app/ui/Form/ForgotPassword'
 
 class ForgotPassword extends React.Component {

@@ -7,7 +7,6 @@ import { Row, Col, Card, CardHeader, CardBody, Table } from 'reactstrap'
 // import Link from 'next/link'
 import _ from 'lodash'
 
-import asNextJSPage from 'app/util/asNextJSPage'
 import ApolloData from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'
