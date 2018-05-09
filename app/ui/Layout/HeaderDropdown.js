@@ -161,11 +161,11 @@ class HeaderDropdown extends Component {
               </DropdownItem>
             </Link>
           )}
-          {/* <Link href="/invites/create">
+          <Link href="/invites/create">
             <DropdownItem>
               <i className="fa icon-envelope-letter" /> Send Invite
             </DropdownItem>
-          </Link> */}
+          </Link>
           <DropdownItem onClick={() => this.logout(p(props, 'session.id'))}>
             <i className="fa fa-lock" style={{ fontSize: 18 }} /> Logout
           </DropdownItem>
