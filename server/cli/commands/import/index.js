@@ -99,7 +99,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
   .first()
   if (!dataSource) throw new Error(`Unable to find data source named ${dataSourceNames[reportName]}`)
   const dataImport = await DataImport.query()
-  .insert({ dataSourceId: dataSource.id, reportName })
+  .insert({ dataSourceId: dataSource.id, reportName: dataSourceNames[reportName] })
   .returning('*')
   try {
     process.stdin.resume() //so the program will not close instantly
