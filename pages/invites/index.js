@@ -1,6 +1,5 @@
 import React from 'react'
 
-import wrappedByApolloProvider from 'app/apolloUtils/wrappedByApolloProvider'
 import MainApp from 'app/ui/MainApp'
 import ReactTable from 'react-table'
 import gql from 'graphql-tag'

@@ -7,7 +7,6 @@ import alert from 'sweetalert'
 import cookie from 'cookie'
 import moment from 'moment-timezone'
 
-import asNextJSPage from 'app/util/asNextJSPage'
 import data from 'app/apollo/data'
 
 import DownloadButton from 'app/ui/widgets/DownloadButton'
