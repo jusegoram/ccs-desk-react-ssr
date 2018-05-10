@@ -1,11 +1,12 @@
 import React from 'react'
 import { Card, CardHeader, CardBody, Input } from 'reactstrap'
 import moment from 'moment-timezone'
-import { Treemap, LabelSeries } from 'react-vis'
+import { Sunburst, LabelSeries, Hint } from 'react-vis'
 
 import DownloadButton from 'app/ui/widgets/DownloadButton'
 import Layout from 'app/ui/Layout'
 import axios from 'axios'
+import _ from 'lodash'
 
 const LABEL_STYLE = {
   fontSize: '8px',
@@ -61,25 +62,85 @@ function updateData(data, keyPath) {
   return data
 }
 
+const tipStyle = {
+  display: 'flex',
+  color: '#fff',
+  background: '#000',
+  alignItems: 'center',
+  padding: '5px',
+}
+const boxStyle = { height: '10px', width: '10px' }
+
+function buildValue(hoveredCell) {
+  const { radius, angle, angle0 } = hoveredCell
+  const truedAngle = (angle + angle0) / 2
+  return {
+    x: radius * Math.cos(truedAngle),
+    y: radius * Math.sin(truedAngle),
+    cell: hoveredCell,
+  }
+}
+
+function formatValue(path) {
+  return hintInfo => {
+    const cell = hintInfo.cell
+    const parent = cell.parent
+    let percent = null
+    if (cell.depth === 1) {
+      percent = (cell.angle - cell.angle0) / (2 * Math.PI)
+    } else {
+      const value = cell.children ? _.sumBy(cell.children, 'value') : cell.value
+      const parentValue = parent.children ? _.sumBy(parent.children, 'value') : parent.value
+      percent = value / parentValue
+    }
+    return [
+      {
+        title: 'Path',
+        value: path,
+      },
+      {
+        title: 'Percent of Parent',
+        value: (100 * percent).toFixed(2) + '%',
+      },
+    ]
+  }
+}
+
 class WorkOrderDonutChart extends React.Component {
   state = {
     pathValue: false,
     finalValue: 'Hover For Info',
     clicked: false,
+    size: null,
+    hoveredCell: false,
+  }
+  componentDidUpdate() {
+    const height = this.divElement.clientHeight
+    const width = this.divElement.clientWidth
+    const size = Math.min(height, width)
+    if (!this.state.size && size) this.setState({ size })
   }
   render() {
-    const { clicked, finalValue, pathValue } = this.state
+    const { clicked, finalValue, pathValue, size, hoveredCell } = this.state
     const { data } = this.props
     return (
-      <div>
+      <div
+        style={{
+          display: 'flex',
+          flex: '1 1 auto',
+          alignItems: 'center',
+          flexDirection: 'column',
+          width: '100%',
+        }}
+        ref={divElement => (this.divElement = divElement)}
+      >
         {data && (
-          <Treemap
+          <Sunburst
             data={data}
-            width={500}
-            height={500}
+            width={(size || 500) - 50}
+            height={(size || 500) - 50}
             getSize={d => d.value}
             getColor={d => d.hex}
-            padding={5}
             colorType="literal"
             hideRootNode
             animation={{
@@ -87,6 +148,7 @@ class WorkOrderDonutChart extends React.Component {
               stiffness: 300,
             }}
             onValueMouseOver={node => {
+              this.setState({ hoveredCell: node })
               if (clicked) {
                 return
               }
@@ -97,7 +159,7 @@ class WorkOrderDonutChart extends React.Component {
               }, {})
               this.setState({
                 finalValue: path[path.length - 1],
-                pathValue: ['Work Orders'].concat(path.slice(1)).join(' > '),
+                pathValue: path.slice(1).join(' > '),
                 data: updateData(data, pathAsMap),
               })
             }}
@@ -108,11 +170,14 @@ class WorkOrderDonutChart extends React.Component {
                   pathValue: false,
                   finalValue: false,
                   data: updateData(data, false),
+                  hoveredCell: false,
                 })
             }
-          />
+          >
+            {hoveredCell ? <Hint value={buildValue(hoveredCell)} format={formatValue(pathValue)} /> : null}
+            {/* <LabelSeries data={[{ x: 0, y: 0, label: finalValue || 'Hover For Info', style: LABEL_STYLE }]} /> */}
+          </Sunburst>
         )}
-        {pathValue}
       </div>
     )
   }
@@ -156,11 +221,14 @@ export default class WorkOrders extends React.Component {
               className="card-actions mt-0 h-100"
               style={{ width: 200 }}
             />
-          </CardHeader>
-          <CardBody className="p-0">
-            <DownloadButton endpoint="work-orders" params={{ date }} color="primary">
+            {/* <DownloadButton endpoint="work-orders" params={{ date }} color="primary">
               Download Work Orders
-            </DownloadButton>
+            </DownloadButton> */}
+          </CardHeader>
+          <CardBody
+            className="p-0"
+            style={{ display: 'flex', flex: '1 0 auto', alignItems: 'center', width: '100%', flexDirection: 'column' }}
+          >
             <WorkOrderDonutChart data={data} />
           </CardBody>
         </Card>
