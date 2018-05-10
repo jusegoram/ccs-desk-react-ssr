@@ -55,26 +55,34 @@ router.get('/meta', async (req, res) => {
     hex: statusColors[data.status],
   }))
   const repairs = _.filter(rawWorkOrderStats, { type: 'Service' })
-  const repairsByType = _.values(
-    _.mapValues(_.groupBy(repairs, 'type'), (group, groupName) => ({
-      name: groupName,
-      hex: colors[groupName],
-      children: group,
-    }))
+  const repairsByType = _.sortBy(
+    _.values(
+      _.mapValues(_.groupBy(repairs, 'type'), (group, groupName) => ({
+        name: groupName,
+        label: groupName,
+        hex: colors[groupName],
+        children: group,
+      }))
+    ),
+    'name'
   )
   const production = _.difference(rawWorkOrderStats, repairs)
-  const productionByType = _.values(
-    _.mapValues(_.groupBy(production, 'type'), (group, groupName) => ({
-      name: groupName,
-      hex: colors[groupName],
-      children: group,
-    }))
+  const productionByType = _.sortBy(
+    _.values(
+      _.mapValues(_.groupBy(production, 'type'), (group, groupName) => ({
+        name: groupName,
+        label: groupName,
+        hex: colors[groupName],
+        children: group,
+      }))
+    ),
+    'name'
   )
   const workOrderStats = {
     name: 'Work Orders',
     children: [
-      { name: 'Repairs', hex: '#F6D18A', children: repairsByType },
-      { name: 'Production', hex: '#F89570', children: productionByType },
+      { name: 'Repairs', label: 'Repairs', hex: '#F6D18A', children: repairsByType },
+      { name: 'Production', label: 'Production', hex: '#F89570', children: productionByType },
     ],
   }
   res.json(workOrderStats)
