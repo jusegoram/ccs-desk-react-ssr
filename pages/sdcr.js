@@ -64,23 +64,6 @@ class SDCR extends React.Component {
           <CardHeader style={{ position: 'relative' }}>
             {/*relative because card-actions is absolute*/}
             <i className="icon-menu" /> SDCR
-            {/* <Button
-                      className="card-actions mt-0 h-100"
-                      color="primary"
-                      onClick={() => {
-                        const token = encodeURIComponent(cookie.parse(document.cookie).token)
-                        const timezone = encodeURIComponent(moment.tz.guess())
-                        const downloadUrl = config.host + '/download/techs' + `?token=${token}&timezone=${timezone}`
-                        this.setState({ downloadUrl }, () => {
-                          alert(
-                            'The download should be starting.' +
-                              " If it hasn't, verify that your popup blocker isn't preventing it from opening."
-                          )
-                        })
-                      }}
-                    >
-                      <i className="fa fa-download fa-lg mr-1" /> Download Tech Data
-                    </Button> */}
           </CardHeader>
           <CardBody className="p-0 d-flex flex-column">
             <Card className="m-0 bg-primary">

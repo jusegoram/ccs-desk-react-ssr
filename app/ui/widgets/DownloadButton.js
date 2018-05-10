@@ -1,10 +1,8 @@
 //CCS_UNIQUE YXQM4TSPWUH
 import React from 'react'
 import { Button } from 'reactstrap'
-import moment from 'moment-timezone'
 import * as Icons from 'react-feather'
 import alert from 'sweetalert'
-import cookie from 'cookie'
 import qs from 'qs'
 
 import config from 'server/config'
