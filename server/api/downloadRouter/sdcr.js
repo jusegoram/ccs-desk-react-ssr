@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
   res.writeHead(200, {
     'Content-Type': 'text/csv',
     'Access-Control-Allow-Origin': '*',
-    'Content-Disposition': 'attachment; filename=WorkOrders.csv',
+    'Content-Disposition': 'attachment; filename=SDCR.csv',
   })
   const stringifier = stringify({ header: true })
 
@@ -32,6 +32,7 @@ router.get('/', async (req, res) => {
       SELECT "workGroupId", row
       FROM "SdcrDataPoint" 
       left join "sdcrDataPointWorkGroups" on "sdcrDataPointWorkGroups"."sdcrDataPointId" = "SdcrDataPoint".id 
+      group by "workGroupId", "row"
     )
     select row
     from sdcr_data left 
