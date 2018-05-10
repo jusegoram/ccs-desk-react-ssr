@@ -21,8 +21,19 @@ export default class Invite {
 
   static create = {
     mutation: gql`
-      mutation Invite_create($email: String!, $name: String!) {
-        Invite_create(email: $email, name: $name) {
+      mutation Invite_create($email: String!, $name: String!, $role: String!) {
+        Invite_create(email: $email, name: $name, role: $role) {
+          ${props}
+        }
+      }
+    `,
+    refetchQueries: ['session'],
+  }
+
+  static accept = {
+    mutation: gql`
+      mutation Invite_accept($password: String!, $passwordConfirm: String!, $name: String!, $token: String!) {
+        Invite_accept(password: $password, passwordConfirm: $passwordConfirm, name: $name, token: $token) {
           ${props}
         }
       }

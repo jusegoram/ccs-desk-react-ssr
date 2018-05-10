@@ -13,8 +13,8 @@ const SES = new AWS.SES({ apiVersion: '2010-12-01' })
 const NodeMailer = nodemailer.createTransport(sesTransport({ ses: SES, rateLimit: 14 }))
 Promise.promisifyAll(NodeMailer)
 
-export default ({ recipient, subject, text, html }) => {
-  return NodeMailer.sendMailAsync({
+export default async ({ recipient, subject, text, html }) => {
+  return await NodeMailer.sendMailAsync({
     from: config.emailSender,
     to: recipient,
     subject,
