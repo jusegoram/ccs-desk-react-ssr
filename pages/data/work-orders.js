@@ -4,7 +4,6 @@ import { Query } from 'react-apollo'
 import { Card, CardHeader, CardBody, Button, Badge } from 'reactstrap'
 import Moment from 'react-moment'
 import alert from 'sweetalert'
-import cookie from 'cookie'
 import moment from 'moment-timezone'
 
 import data from 'app/apollo/data'
