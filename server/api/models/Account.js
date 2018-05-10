@@ -37,7 +37,7 @@ export default class Account extends compose(withDeletedAt, withPassword({ allow
       id: { type: 'string' },
       name: { type: 'string' },
       email: { type: 'string' },
-      password: { type: 'string' },
+      password: { type: 'string', password: true },
       root: { type: 'boolean' },
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
