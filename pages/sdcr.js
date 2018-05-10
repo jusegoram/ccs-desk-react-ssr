@@ -8,6 +8,7 @@ import Layout from 'app/ui/Layout'
 import DateRangePicker from 'app/ui/widgets/DateRangePIcker'
 import SdcrTreeMap from 'app/ui/widgets/SdcrTreeMap'
 import Toggle from 'app/ui/widgets/Toggle'
+import DownloadButton from 'app/ui/widgets/DownloadButton'
 
 class SDCR extends React.Component {
   constructor(props) {
@@ -64,6 +65,14 @@ class SDCR extends React.Component {
           <CardHeader style={{ position: 'relative' }}>
             {/*relative because card-actions is absolute*/}
             <i className="icon-menu" /> SDCR
+            <DownloadButton
+              endpoint="sdcr"
+              params={{ scopeType, scopeName, dateRange, groupType, workOrderType }}
+              className="card-actions mt-0 h-100"
+              color="primary"
+            >
+              Download Data
+            </DownloadButton>
           </CardHeader>
           <CardBody className="p-0 d-flex flex-column">
             <Card className="m-0 bg-primary">

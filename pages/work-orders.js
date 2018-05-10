@@ -9,7 +9,7 @@ import axios from 'axios'
 import _ from 'lodash'
 
 const LABEL_STYLE = {
-  fontSize: '8px',
+  fontSize: '16px',
   textAnchor: 'middle',
 }
 
@@ -95,11 +95,7 @@ function formatValue(path) {
     }
     return [
       {
-        title: 'Path',
-        value: path,
-      },
-      {
-        title: 'Percent of Parent',
+        title: path,
         value: (100 * percent).toFixed(2) + '%',
       },
     ]
@@ -137,8 +133,8 @@ class WorkOrderDonutChart extends React.Component {
         {data && (
           <Sunburst
             data={data}
-            width={(size || 500) - 50}
-            height={(size || 500) - 50}
+            width={size || 500}
+            height={size || 500}
             getSize={d => d.value}
             getColor={d => d.hex}
             colorType="literal"
@@ -175,7 +171,7 @@ class WorkOrderDonutChart extends React.Component {
             }
           >
             {hoveredCell ? <Hint value={buildValue(hoveredCell)} format={formatValue(pathValue)} /> : null}
-            {/* <LabelSeries data={[{ x: 0, y: 0, label: finalValue || 'Hover For Info', style: LABEL_STYLE }]} /> */}
+            <LabelSeries data={[{ x: 0, y: 0, label: finalValue || 'Hover For Info', style: LABEL_STYLE }]} />
           </Sunburst>
         )}
       </div>
@@ -219,11 +215,17 @@ export default class WorkOrders extends React.Component {
                 this.setState({ date: e.target.value })
               }}
               className="card-actions mt-0 h-100"
-              style={{ width: 200 }}
+              style={{ width: 160, display: 'inline-block' }}
             />
-            {/* <DownloadButton endpoint="work-orders" params={{ date }} color="primary">
+            <DownloadButton
+              endpoint="work-orders"
+              params={{ date }}
+              color="primary"
+              className="card-actions mt-0 h-100"
+              style={{ display: 'inline-block', position: 'absolute', right: 160, top: 0 }}
+            >
               Download Work Orders
-            </DownloadButton> */}
+            </DownloadButton>
           </CardHeader>
           <CardBody
             className="p-0"
