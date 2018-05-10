@@ -32,7 +32,6 @@ router.get('/', async (req, res) => {
       SELECT "workGroupId", row
       FROM "SdcrDataPoint" 
       left join "sdcrDataPointWorkGroups" on "sdcrDataPointWorkGroups"."sdcrDataPointId" = "SdcrDataPoint".id 
-      group by "workGroupId"
     )
     select row
     from sdcr_data left 
