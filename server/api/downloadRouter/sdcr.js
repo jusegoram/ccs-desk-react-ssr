@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
   )
   .get('rows')
   .map(sdcrDataPoint => {
-    stringifier.write(sdcrDataPoint)
+    stringifier.write(sdcrDataPoint.row)
   })
   stringifier.end()
   stringifier.pipe(res)
