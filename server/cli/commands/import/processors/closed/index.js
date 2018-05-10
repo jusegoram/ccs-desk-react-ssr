@@ -42,6 +42,9 @@ export default async ({ csvObjStream }) => {
           )
           .orderBy('createdAt', 'desc')
           .first())
+        if (!appointment) {
+          console.log(workOrder)
+        }
         const techId = appointment && appointment.row['Tech ID']
         tech = techId && (await Tech.query().findOne({ externalId: techId }))
         if (!tech) {
