@@ -28,15 +28,14 @@ router.get('/', async (req, res) => {
   await knex
   .raw(
     `
-    with scope as (
+    select row
+    from "SdcrDataPoint"
+    where id in (
       select "sdcrDataPointWorkGroups"."sdcrDataPointId"
       from "WorkGroup" 
       left join "sdcrDataPointWorkGroups" on "sdcrDataPointWorkGroups"."workGroupId" = "WorkGroup".id
       where "WorkGroup"."companyId" = ?
     )
-    select row
-    from "SdcrDataPoint"
-    where id in scope
   `,
     [session.account.company.id]
   )
