@@ -43,8 +43,8 @@ export default async ({ csvObjStream }) => {
           .orderBy('createdAt', 'desc')
           .first())
         if (!appointment) {
-          console.log(workOrder)
-          console.log(row)
+          invalidRowsDetected.push(row)
+          return
         }
         const techId = appointment && appointment.row['Tech ID']
         tech = techId && (await Tech.query().findOne({ externalId: techId }))
