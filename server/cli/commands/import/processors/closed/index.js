@@ -42,7 +42,7 @@ export default async ({ csvObjStream }) => {
           )
           .orderBy('createdAt', 'desc')
           .first())
-        if (!appointment) {
+        if (!appointment || !appointment.row) {
           invalidRowsDetected.push(row)
           return
         }
