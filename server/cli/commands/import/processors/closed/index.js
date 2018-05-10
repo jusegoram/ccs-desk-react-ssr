@@ -44,6 +44,7 @@ export default async ({ csvObjStream }) => {
           .first())
         if (!appointment) {
           console.log(workOrder)
+          console.log(row)
         }
         const techId = appointment && appointment.row['Tech ID']
         tech = techId && (await Tech.query().findOne({ externalId: techId }))
@@ -56,6 +57,8 @@ export default async ({ csvObjStream }) => {
         invalidRowsDetected.push(row)
         return
       }
+
+      row['Tech ID'] = tech.externalId
 
       const serviceRegionWorkGroups = ['Service Region', 'DMA', 'Office', 'Division']
       const techGroups = await tech.$relatedQuery('workGroups').whereNotIn('type', serviceRegionWorkGroups)
