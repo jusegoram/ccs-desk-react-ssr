@@ -9,6 +9,7 @@ export default class SdcrDataPoint extends APIModel {
     table.string('type').notNullable()
     table.string('dwellingType').notNullable()
     table.string('workOrderExternalId')
+    table.json('row')
     table.index(['date', 'workOrderExternalId'])
     table.uuid('workOrderId').index()
     table.uuid('techId').notNullable().index()

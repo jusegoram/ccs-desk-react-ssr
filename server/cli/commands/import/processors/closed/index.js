@@ -109,6 +109,7 @@ export default async ({ csvObjStream }) => {
         workOrderExternalId: row['Activity ID'],
         type: row['Activity Sub Type (Snapshot)'],
         dwellingType: row['Dwelling Type'],
+        row: row,
       })
       await sdcrDataPoint.$relatedQuery('workGroups').relate(sdcrWorkGroups)
     })

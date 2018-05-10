@@ -29,12 +29,12 @@ router.get('/', async (req, res) => {
   .raw(
     `
     with sdcr_data as (
-      SELECT "workGroupId", sum(value) as "numerator", count(*) as "denominator", sum(value)*1.0/count(*) as "sdcr" 
+      SELECT "workGroupId", row
       FROM "SdcrDataPoint" 
       left join "sdcrDataPointWorkGroups" on "sdcrDataPointWorkGroups"."sdcrDataPointId" = "SdcrDataPoint".id 
       group by "workGroupId"
     )
-    select "Company".name as "Company Name", type as "Work Group Type", "WorkGroup".name as "Work Group Name", "WorkGroup"."externalId" as "Work Group External ID", numerator, denominator, sdcr 
+    select row
     from sdcr_data left 
     join "WorkGroup" on "workGroupId" = "WorkGroup".id 
     left join "Company" on "companyId" = "Company".id 
