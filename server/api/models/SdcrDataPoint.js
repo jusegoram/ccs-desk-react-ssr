@@ -24,7 +24,7 @@ export default class SdcrDataPoint extends APIModel {
       table.uuid('workGroupId').notNullable()
       table.primary(['sdcrDataPointId', 'workGroupId'])
       table.unique(['workGroupId', 'sdcrDataPointId'])
-      table.foreign('sdcrDataPointId').references('SdcrDataPoint.id')
+      table.foreign('sdcrDataPointId').references('SdcrDataPoint.id').onDelete('CASCADE')
       table.foreign('workGroupId').references('WorkGroup.id')
     `,
   }
