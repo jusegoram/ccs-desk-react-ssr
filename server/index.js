@@ -48,8 +48,7 @@ const graphqlSchema = graphQlBuilder()
 .build()
 export default async app => {
   app.use((req, res, next) => {
-    const timezone = req.headers.timezone
-    if (timezone) res.cookie('timezone', timezone)
+    const timezone = req.cookies.timezone
     req.moment = createClientMoment(timezone)
     next()
   })
@@ -90,6 +89,9 @@ export default async app => {
     next()
   })
 
+  app.get('/api/logout', (req, res) => {
+    res.cookie('token', '').sendStatus(200)
+  })
   app.use('/api', restRouter)
   app.use('/download', downloadRouter)
   app.use(

@@ -3,10 +3,11 @@ import { Badge, DropdownItem, DropdownMenu, DropdownToggle, Dropdown, Progress }
 import { compose, withApollo, graphql } from 'react-apollo'
 import { get as p } from 'lodash'
 import Link from 'next/link'
-import cookie from 'cookie'
+import Router from 'next/router'
 
 import data from 'app/apollo/data'
 import { withSession } from 'app/util/providers'
+import axios from 'axios'
 
 class HeaderDropdown extends Component {
   constructor(props) {
@@ -20,12 +21,9 @@ class HeaderDropdown extends Component {
   }
 
   async logout() {
-    document.cookie = cookie.serialize('token', '', { maxAge: -1 })
-    this.props.client.cache.reset().then(() => {
-      setTimeout(() => {
-        window.location = '/'
-      }, 2000)
-    })
+    await axios.get('/api/logout')
+    await this.props.client.cache.reset()
+    global.window.location = '/'
   }
 
   toggle() {

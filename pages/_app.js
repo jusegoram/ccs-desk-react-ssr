@@ -63,13 +63,12 @@ export default class CCSApp extends App {
 
   static getReactNode(Component, { location, apollo }) {
     if (process.browser) {
-      const token = encodeURIComponent(cookie.parse(document.cookie).token)
-      const timezone = encodeURIComponent(moment.tz.guess())
-      axios.interceptors.request.use(config => {
-        config.headers.authorization = `Bearer ${token}`
-        config.headers.timezone = timezone
-        return config
-      })
+      document.cookie = cookie.serialize('timezone', moment.tz.guess(), { path: '/' })
+
+      // axios.interceptors.request.use(config => {
+      //   config.headers.timezone = timezone
+      //   return config
+      // })
     }
     return (
       <div>
