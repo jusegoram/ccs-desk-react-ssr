@@ -4,18 +4,22 @@ export function up(knex) {
     .uuid('id')
     .primary()
     .defaultTo(knex.raw('uuid_generate_v4()'))
-    table.string('role').notNullable()
+    table.string('email').notNullable()
+    table
+    .string('name')
+    .notNullable()
+    .defaultTo('Unsent')
     table
     .string('status')
     .notNullable()
     .defaultTo('Unsent')
+    table
+    .string('role')
+    .notNullable()
+    .defaultTo('Supervisor')
     table.uuid('token').defaultTo(knex.raw('uuid_generate_v4()'))
     table
     .uuid('senderId')
-    .notNullable()
-    .index()
-    table
-    .uuid('recipientId')
     .notNullable()
     .index()
     table
@@ -23,7 +27,6 @@ export function up(knex) {
     .defaultTo(knex.fn.now())
     .notNullable()
     table.foreign('senderId').references('Account.id')
-    table.foreign('recipientId').references('Account.id')
   })
 }
 
