@@ -51,8 +51,8 @@ router.get('/', async (req, res) => {
   .mergeContext({ session, moment })
   ._contextFilter()
   .eager('appointments')
-  .orderBy(raw("row->>'DMA'"))
-  .orderBy(raw("row->>'Tech ID'"))
+  .orderByRaw("row->>'DMA'")
+  .orderByRaw("row->>'Tech ID'")
   .modifyEager('appointments', qb => {
     qb.where(
       'createdAt',
