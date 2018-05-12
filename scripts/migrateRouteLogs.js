@@ -42,11 +42,11 @@ const run = async () => {
   .orderBy('started_at')
   const routelogIds = routelogs.clone().select('cid')
 
-  const numRows = await legacyKnex('downloaded_csv_rows')
-  .count('id', 'rows')
-  .whereIn('csv_cid', routelogIds)
-  .first()
-  .get('count')
+  // const numRows = await legacyKnex('downloaded_csv_rows')
+  // .count('id', 'rows')
+  // .whereIn('csv_cid', routelogIds)
+  // .first()
+  // .get('count')
 
   const numReports = await legacyKnex('downloaded_csvs')
   .count()
@@ -55,9 +55,9 @@ const run = async () => {
   .get('count')
 
   console.log(`Processing ${numReports} routelogs`)
-  console.log(`In total, they contain ${numRows} rows`)
-  const numOps = numReports * 10 + numRows * 7
-  console.log(`This process will require roughly ${numOps} database operations`)
+  // console.log(`In total, they contain ${numRows} rows`)
+  // const numOps = numReports * 10 + numRows * 7
+  // console.log(`This process will require roughly ${numOps} database operations`)
 
   const eta = new Eta(numReports)
 
@@ -65,7 +65,7 @@ const run = async () => {
   .tap(() => {
     eta.start()
   })
-  .mapSeries(async (csv, csvIndex) => {
+  .mapSeries(async csv => {
     await legacyKnex.transaction(async legacyTrx => {
       await transaction(..._.values(rawModels), async (...modelsArray) => {
         const models = _.keyBy(modelsArray, 'name')
