@@ -103,6 +103,7 @@ class SdcrTreemap extends React.Component {
           hoveredNode.data.name && (
           <div style={hintStyle}>
             <strong>{hoveredNode.data.name}</strong>
+            <br />SDCs: {hoveredNode.data.value}
             <br />Size: {hoveredNode.data.size}
           </div>
         )}
