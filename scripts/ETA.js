@@ -10,6 +10,7 @@ export default class ETA {
     timeRemaining: 0,
     opsRemaining: 0,
     eta: 0,
+    nextOpEta: 0,
   }
   constructor(totalOps) {
     this.totalOps = totalOps
@@ -27,6 +28,7 @@ export default class ETA {
     const timeRemaining = total - elapsed
     const opsRemaining = this.totalOps - this.opsCompleted
     const eta = currentTime + timeRemaining
+    const nextOpEta = currentTime + rate
     this.info = {
       elapsed,
       rate,
@@ -35,6 +37,7 @@ export default class ETA {
       timeRemaining,
       opsRemaining,
       eta,
+      nextOpEta,
     }
   }
 }
