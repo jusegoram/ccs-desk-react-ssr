@@ -171,12 +171,11 @@ export default async ({ rows, models, w2Company, dataSource, now }) => {
         ),
       ]
       const workGroups = _.filter(await Promise.all(workGroupCreations))
-      await Promise.map(workGroups, workGroup =>
-        knex('workGroupWorkOrders').insert({
-          workGroupId: workGroup.id,
-          workOrderId: workOrder.id,
-        })
-      )
+      const joinTableInserts = await Promise.map(workGroups, workGroup => ({
+        workGroupId: workGroup.id,
+        workOrderId: workOrder.id,
+      }))
+      await knex.batchInsert('workGroupWorkOrders', joinTableInserts).transacting(WorkOrder.knex())
     }
     if (subcontractor) await createForCompany(subcontractor)
     await createForCompany(w2Company)
