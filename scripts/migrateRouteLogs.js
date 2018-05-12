@@ -34,43 +34,43 @@ Model.knex(knex)
 
 const run = async () => {
   // .where('started_at', '<=', '2018-05-03T17:00:00-500')
-  await legacyKnex.transaction(async legacyTrx => {
-    await transaction(..._.values(rawModels), async (...modelsArray) => {
-      const models = _.keyBy(modelsArray, 'name')
+  const routelogs = legacyKnex('downloaded_csvs')
+  .where('started_at', '>=', '2018-04-01T04:00:00-500')
+  .where('imported', false)
+  .where({ saturate_status: 'Complete' })
+  .where({ report_name: 'Routelog' })
+  .orderBy('started_at')
+  .limit(100)
+  const routelogIds = routelogs.clone().select('cid')
 
-      const routelogs = legacyKnex('downloaded_csvs')
-      .where('started_at', '>=', '2018-04-01T04:00:00-500')
-      .where('imported', false)
-      .where({ saturate_status: 'Complete' })
-      .where({ report_name: 'Routelog' })
-      .orderBy('started_at')
-      .limit(100)
-      const routelogIds = routelogs.clone().select('cid')
+  const numRows = await legacyKnex('downloaded_csv_rows')
+  .count('id', 'rows')
+  .whereIn('csv_cid', routelogIds)
+  .first()
+  .get('count')
 
-      const numRows = await legacyKnex('downloaded_csv_rows')
-      .count('id', 'rows')
-      .whereIn('csv_cid', routelogIds)
-      .first()
-      .get('count')
+  const numReports = await legacyKnex('downloaded_csvs')
+  .count()
+  .whereIn('cid', routelogIds)
+  .first()
+  .get('count')
 
-      const numReports = await legacyKnex('downloaded_csvs')
-      .count()
-      .whereIn('cid', routelogIds)
-      .first()
-      .get('count')
+  console.log(`Processing ${numReports} routelogs`)
+  console.log(`In total, they contain ${numRows} rows`)
+  const numOps = numReports * 10 + numRows * 7
+  console.log(`This process will require roughly ${numOps} database operations`)
 
-      console.log(`Processing ${numReports} routelogs`)
-      console.log(`In total, they contain ${numRows} rows`)
-      const numOps = numReports * 10 + numRows * 7
-      console.log(`This process will require roughly ${numOps} database operations`)
+  const eta = new Eta(numReports)
 
-      const eta = new Eta(numReports)
+  await routelogs
+  .tap(() => {
+    eta.start()
+  })
+  .mapSeries(async (csv, csvIndex) => {
+    await legacyKnex.transaction(async legacyTrx => {
+      await transaction(..._.values(rawModels), async (...modelsArray) => {
+        const models = _.keyBy(modelsArray, 'name')
 
-      await routelogs
-      .tap(() => {
-        eta.start()
-      })
-      .mapSeries(async (csv, csvIndex) => {
         const now = moment.tz(csv.started_at, 'America/Chicago').format()
         const startedAt = moment()
         console.log(
