@@ -124,7 +124,7 @@ export default async ({ csvObjStream }) => {
       row['Tech Name'] = tech.name
       const teamGroup = _.find(sdcrWorkGroups, { type: 'Team' })
       row['Team Name'] = teamGroup && teamGroup.name
-      sdcrWorkGroups.forEach(workGroup => {
+      _.filter(sdcrWorkGroups).forEach(workGroup => {
         row[workGroup.type] = row[workGroup].externalId
       })
 
