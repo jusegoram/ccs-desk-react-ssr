@@ -1,5 +1,6 @@
 import React from 'react'
-import { Treemap, Hint } from 'react-vis'
+import ReactDOM from 'react-dom'
+import { Treemap } from 'react-vis'
 import componentQueries from 'react-component-queries'
 import axios from 'axios'
 
@@ -12,7 +13,7 @@ class SdcrTreemap extends React.Component {
       treemapData: {
         children: [],
       },
-      cursor: null,
+      cursor: { x: 0, y: 0 },
     }
   }
   // getOverallData() {
@@ -30,6 +31,7 @@ class SdcrTreemap extends React.Component {
   //   })
   // }
   componentDidMount() {
+    this.domNode = ReactDOM.findDOMNode(this)
     this.getData(this.props)
   }
   componentWillReceiveProps(newProps) {
@@ -45,7 +47,10 @@ class SdcrTreemap extends React.Component {
   _onMouseMove(e) {
     this.setState({ cursor: { x: e.clientX, y: e.clientY } })
   }
-
+  onLeafMouseOver(x) {
+    console.log(x)
+    this.setState({ hoveredNode: x })
+  }
   render() {
     const { onClick, size } = this.props
     const { hoveredNode, treemapData, cursor } = this.state
@@ -56,22 +61,51 @@ class SdcrTreemap extends React.Component {
         damping: 18,
         stiffness: 300,
       },
-      onLeafMouseOver: x => this.setState({ hoveredNode: x }),
-      onLeafMouseOut: () => this.setState({ hoveredNode: null }),
-      onLeafClick: x => {
-        onClick && onClick(x.data)
-      },
+      onLeafMouseOver: this.onLeafMouseOver.bind(this),
+      // onLeafMouseOut: () => this.setState({ hoveredNode: null }),
+      // onLeafClick: x => {
+      //   onClick && onClick(x.data)
+      // },
       getLabel: x => x.name,
       getColor: x => x.color,
       colorType: 'literal',
       mode: 'binary',
     }
-    // const tooltipTransformX = hoveredNode && cursor && cursor.x + 100 > size.width ? '-100%' : '100px'
-    // const tooltipTransformY = hoveredNode && cursor && cursor.y + 50 > size.height ? '-100%' : '100px'
+
+    let hintStyle = {}
+    if (this.domNode) {
+      const bounds = this.domNode.getBoundingClientRect()
+      const left = hoveredNode && hoveredNode.x0 + (hoveredNode.x0 > bounds.width / 2 ? -10 : 10)
+      const top = hoveredNode && hoveredNode.y0 + (hoveredNode.y0 > bounds.height / 2 ? -10 : 30)
+      const translateX = hoveredNode && cursor && (hoveredNode.x0 > bounds.width / 2 ? '-100%' : 0)
+      const translateY = hoveredNode && cursor && (hoveredNode.y0 > bounds.height / 2 ? '-100%' : 0)
+      hintStyle = {
+        position: 'absolute',
+        top: top || 0,
+        left: left || 0,
+        backgroundColor: '#384042',
+        borderRadius: 5,
+        color: '#fff',
+        padding: 10,
+        opacity: 0.8,
+        pointerEvents: 'none',
+        transform: `translate(${translateX}, ${translateY})`,
+      }
+    }
     // this.getOverallData()
     return (
-      <div>
-        <Treemap data={treemapData} {...treeProps} />
+      <div style={{ position: 'relative' }}>
+        <div>
+          <Treemap data={treemapData} {...treeProps} />
+        </div>
+        {hoveredNode &&
+          hoveredNode.data &&
+          hoveredNode.data.name && (
+          <div style={hintStyle}>
+            <strong>{hoveredNode.data.name}</strong>
+            <br />Size: {hoveredNode.data.size}
+          </div>
+        )}
       </div>
     )
   }
