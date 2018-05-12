@@ -47,7 +47,7 @@ const run = async () => {
 
     console.log(`Processing ${numReports} routelogs`)
     console.log(`In total, they contain ${numRows} rows`)
-    const numOps = numReports * 9 + numRows * 7
+    const numOps = numReports * 10 + numRows * 7
     console.log(`This process require roughly ${numOps} database operations`)
 
     const eta = new Eta(numReports)
@@ -118,6 +118,9 @@ const run = async () => {
         .add(moment().diff(startedAt))
         .format(),
       })
+      await legacyKnex('downloaded_csvs')
+      .update({ imported: true })
+      .where({ cid: csv.cid })
       timer.stop('Total')
       console.log(timer.toString()) //
     })
