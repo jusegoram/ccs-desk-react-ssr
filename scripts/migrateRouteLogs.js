@@ -16,15 +16,16 @@ const knex = Knex(knexfile['production'])
 
 const outputEtaInfo = eta => {
   const info = eta.info
-  console.log(`ETA Data:
+  console.log(`Import ${(100 * info.percentComplete).toFixed(1)}% Complete:
+  Current time: ${moment().format('ll LTS')}
   Reports completed: ${eta.opsCompleted}
   Reports remaining: ${info.opsRemaining}
-  Percent complete: ${(100 * info.percentComplete).toFixed(1)}%
   Time taken so far: ${moment.duration(info.elapsed).humanize()} (${info.elapsed}ms)
   Time taken per report: ${moment.duration(info.rate).humanize()} (${info.rate}ms)
+  ETA for next report: ${moment(eta.info.nextOpEta).format('ll LTS')}
   Estimated total time: ${moment.duration(info.total).humanize()} (${info.total}ms)
   Estimated time remaining: ${moment.duration(info.timeRemaining).humanize()} (${info.timeRemaining}ms)
-  Estimated ETA: ${moment(info.eta).format('LLLL')}
+  Overall ETA: ${moment(info.eta).format('ll LTS')}
 `)
 }
 
@@ -42,7 +43,7 @@ const run = async () => {
       .where({ saturate_status: 'Complete' })
       .where({ report_name: 'Routelog' })
       .orderBy('started_at')
-      .limit(3)
+      .limit(2)
       const routelogIds = routelogs.clone().select('cid')
 
       const numRows = await legacyKnex('downloaded_csv_rows')
