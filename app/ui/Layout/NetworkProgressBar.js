@@ -61,28 +61,15 @@ class NetworkProgressBar extends React.Component {
     this.onRequest = onRequest
     this.requestId = 0
     this.numActiveRequests = 0
-    this.axiosInterceptor = config => {
-      onRequest(
-        new Promise(resolve => {
-          config.transformResponse = axios.defaults.transformResponse.concat([
-            data => {
-              resolve()
-              return data
-            },
-          ])
-        })
-        .timeout(10000)
-        .catch(() => {})
-      )
-      return config
-    }
   }
-  onRequest(request) {
+  onRequest(request, config = { url: '/graphql' }) {
     this.numActiveRequests++
     const requestId = this.requestId++
     if (this.ismounted && !this.isunmounted)
       this.setState({ requests: [...this.state.requests, { promise: request, key: requestId }] })
-    Promise.resolve(request).tap(() => {
+    Promise.resolve(request)
+    .timeout(10000)
+    .finally(() => {
       this.numActiveRequests--
       if (this.numActiveRequests === 0) if (this.ismounted && !this.isunmounted) this.setState({ requests: [] })
     })
@@ -91,12 +78,16 @@ class NetworkProgressBar extends React.Component {
   componentDidMount() {
     this.ismounted = true
     ApolloFactory.getInstance().addRequestListener(this.onRequest)
-    axios.interceptors.request.use(this.axiosInterceptor)
+    axios.defaults.adapter = config => {
+      const httpAdapter = require('axios/lib/adapters/http')
+      const promise = httpAdapter(config)
+      this.onRequest(promise, config)
+      return promise
+    }
   }
   componentWillUnmount() {
     this.isunmounted = true
     ApolloFactory.getInstance().removeRequestListener(this.onRequest)
-    axios.interceptors.request.eject(this.axiosInterceptor)
   }
   render() {
     const style = {
