@@ -35,57 +35,64 @@ const statusColors = {
 router.get('/meta', async (req, res) => {
   const { session } = req
   if (!session) return res.sendStatus(401)
-  const companyWorkGroup = await session.account.company.$relatedQuery('workGroup')
-  let workOrders = null
-  if (session.account.company.name === 'CCS') {
-    workOrders = WorkOrder.query()
-  } else {
-    workOrders = companyWorkGroup.$relatedQuery('workOrders')
+  try {
+    const companyWorkGroup = await session.account.company.$relatedQuery('workGroup')
+    let workOrders = null
+    if (session.account.company.name === 'CCS') {
+      workOrders = WorkOrder.query()
+    } else {
+      workOrders = companyWorkGroup.$relatedQuery('workOrders')
+    }
+    const rawWorkOrderStats = await workOrders
+    .select('type', 'status')
+    .count()
+    .where('date', req.query.date)
+    .groupBy('type', 'status')
+    .orderBy('type', 'status')
+    .map(data => ({
+      ...data,
+      name: data.status,
+      value: parseInt(data.count),
+      hex: statusColors[data.status],
+    }))
+    const repairs = _.filter(rawWorkOrderStats, { type: 'Service' })
+    const repairsByType = _.sortBy(
+      _.values(
+        _.mapValues(_.groupBy(repairs, 'type'), (group, groupName) => ({
+          name: groupName,
+          label: groupName,
+          hex: colors[groupName],
+          children: group,
+        }))
+      ),
+      'name'
+    )
+    const production = _.difference(rawWorkOrderStats, repairs)
+    const productionByType = _.sortBy(
+      _.values(
+        _.mapValues(_.groupBy(production, 'type'), (group, groupName) => ({
+          name: groupName,
+          label: groupName,
+          hex: colors[groupName],
+          children: group,
+        }))
+      ),
+      'name'
+    )
+    const workOrderStats = {
+      name: 'Work Orders',
+      children: [
+        { name: 'Repairs', label: 'Repairs', hex: '#F6D18A', children: repairsByType },
+        { name: 'Production', label: 'Production', hex: '#F89570', children: productionByType },
+      ],
+    }
+    res.json(workOrderStats)
+  } catch (e) {
+    if (!res.headersSent) {
+      res.sendStatus(422)
+    }
+    throw e
   }
-  const rawWorkOrderStats = await workOrders
-  .select('type', 'status')
-  .count()
-  .where('date', req.query.date)
-  .groupBy('type', 'status')
-  .orderBy('type', 'status')
-  .map(data => ({
-    ...data,
-    name: data.status,
-    value: parseInt(data.count),
-    hex: statusColors[data.status],
-  }))
-  const repairs = _.filter(rawWorkOrderStats, { type: 'Service' })
-  const repairsByType = _.sortBy(
-    _.values(
-      _.mapValues(_.groupBy(repairs, 'type'), (group, groupName) => ({
-        name: groupName,
-        label: groupName,
-        hex: colors[groupName],
-        children: group,
-      }))
-    ),
-    'name'
-  )
-  const production = _.difference(rawWorkOrderStats, repairs)
-  const productionByType = _.sortBy(
-    _.values(
-      _.mapValues(_.groupBy(production, 'type'), (group, groupName) => ({
-        name: groupName,
-        label: groupName,
-        hex: colors[groupName],
-        children: group,
-      }))
-    ),
-    'name'
-  )
-  const workOrderStats = {
-    name: 'Work Orders',
-    children: [
-      { name: 'Repairs', label: 'Repairs', hex: '#F6D18A', children: repairsByType },
-      { name: 'Production', label: 'Production', hex: '#F89570', children: productionByType },
-    ],
-  }
-  res.json(workOrderStats)
 })
 
 export default router
