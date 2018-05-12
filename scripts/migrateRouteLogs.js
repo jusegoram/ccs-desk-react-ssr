@@ -7,15 +7,26 @@ import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
 import sanitizeCompanyName from 'server/cli/commands/import/processors/sanitizeCompanyName'
 import moment from 'moment-timezone'
-import Eta from 'node-eta'
+import Eta from './ETA'
 
 import knexfile from '../knexfile'
 
 const legacyKnex = Knex(knexfile['legacy'])
 const knex = Knex(knexfile['production'])
 
-const etaLayout =
-  '{{elapsed}} elapsed, {{rate}} rate, {{estimated}} estimated, {{progress}} progress, {{eta}} eta, {{etah}} etah, {{last}} last'
+const outputEtaInfo = eta => {
+  const info = eta.info
+  console.log(`ETA Data:
+  Reports completed: ${eta.opsCompleted}
+  Reports remaining: ${info.opsRemaining}
+  Percent complete: ${(100 * info.percentComplete).toFixed(1)}%
+  Time taken so far: ${moment.duration(info.elapsed).humanize()} (${info.elapsed}ms)
+  Time taken per report: ${moment.duration(info.rate).humanize()} (${info.rate}ms)
+  Estimated total time: ${moment.duration(info.total).humanize()} (${info.total}ms)
+  Estimated time remaining: ${moment.duration(info.timeRemaining).humanize()} (${info.timeRemaining}ms)
+  Estimated ETA: ${moment(info.eta).format('LLLL')}
+`)
+}
 
 Model.knex(knex)
 
@@ -63,7 +74,7 @@ const run = async () => {
         console.log(
           `Processing the ${csv.source} routelog started at ${now} (actual time: ${moment
           .tz('America/Chicago')
-          .format()})`
+          .format()}; cid: ${csv.cid})`
         )
         const timer = new Timer()
         timer.start('Total')
@@ -125,9 +136,8 @@ const run = async () => {
         .update({ imported: true })
         .where({ cid: csv.cid })
         timer.stop('Total')
-        console.log(timer.toString())
-        eta.iterate(csvIndex)
-        console.log(eta.format(etaLayout))
+        eta.markOpComplete()
+        outputEtaInfo(eta)
       })
     })
   })
