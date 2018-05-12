@@ -58,8 +58,6 @@ export default async ({ csvObjStream }) => {
         return
       }
 
-      row['Tech ID'] = tech.externalId
-
       const serviceRegionWorkGroups = ['Service Region', 'DMA', 'Office', 'Division']
       const techGroups = await tech.$relatedQuery('workGroups').whereNotIn('type', serviceRegionWorkGroups)
       let workOrderGroups = null
@@ -107,6 +105,29 @@ export default async ({ csvObjStream }) => {
         date: row['BGO Snapshot Date'],
       })
       .delete()
+
+      const badProps = [
+        'HSP Partner Name',
+        'DMA',
+        'Office',
+        'Service Region',
+        'Tech Team',
+        'Tech ID',
+        'Tech Name',
+        'Subcontractor',
+        'Company Name',
+      ]
+      badProps.forEach(prop => {
+        delete row[prop]
+      })
+      row['Tech ID'] = tech.externalId
+      row['Tech Name'] = tech.name
+      const teamGroup = _.find(sdcrWorkGroups, { type: 'Team' })
+      row['Team Name'] = teamGroup && teamGroup.name
+      sdcrWorkGroups.forEach(workGroup => {
+        row[workGroup.type] = row[workGroup].externalId
+      })
+
       const sdcrDataPoint = await SdcrDataPoint.query().insert({
         value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
         date: row['BGO Snapshot Date'],
