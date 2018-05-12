@@ -54,7 +54,7 @@ export default async ({ csvObjStream }) => {
       }
 
       if (!tech) {
-        invalidRowsDetected.push({reason: 'tech not found', row)
+        invalidRowsDetected.push({ reason: 'tech not found', row })
         return
       }
 
