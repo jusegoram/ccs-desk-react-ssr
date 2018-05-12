@@ -62,13 +62,13 @@ const run = async () => {
 
   const eta = new Eta(numReports)
 
-  await routelogs
-  .tap(() => {
-    eta.start()
-  })
-  .mapSeries(async csv => {
-    await legacyKnex.transaction(async legacyTrx => {
-      await transaction(..._.values(rawModels), async (...modelsArray) => {
+  await legacyKnex.transaction(async legacyTrx => {
+    await transaction(..._.values(rawModels), async (...modelsArray) => {
+      await routelogs
+      .tap(() => {
+        eta.start()
+      })
+      .mapSeries(async csv => {
         const models = _.keyBy(modelsArray, 'name')
 
         const now = moment.tz(csv.started_at, 'America/Chicago').format()
