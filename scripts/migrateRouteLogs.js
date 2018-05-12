@@ -54,8 +54,6 @@ const run = async () => {
     const eta = new Eta(numReports)
 
     await routelogs.mapSeries(async (csv, csvIndex) => {
-      eta.iterate(csvIndex)
-      console.log(eta.format(etaLayout))
       const now = moment.tz(csv.started_at, 'America/Chicago').format()
       const startedAt = moment()
       console.log(
@@ -123,7 +121,9 @@ const run = async () => {
       .update({ imported: true })
       .where({ cid: csv.cid })
       timer.stop('Total')
-      console.log(timer.toString()) //
+      console.log(timer.toString())
+      eta.iterate(csvIndex)
+      console.log(eta.format(etaLayout))
     })
   })
 })
