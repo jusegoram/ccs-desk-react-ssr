@@ -43,7 +43,7 @@ export default async ({ csvObjStream }) => {
           .orderBy('createdAt', 'desc')
           .first())
         if (!appointment || !appointment.row) {
-          invalidRowsDetected.push(row)
+          invalidRowsDetected.push({ reason: 'work order found but not appointment', row })
           return
         }
         const techId = appointment && appointment.row['Tech ID']
@@ -54,7 +54,7 @@ export default async ({ csvObjStream }) => {
       }
 
       if (!tech) {
-        invalidRowsDetected.push(row)
+        invalidRowsDetected.push({reason: 'tech not found', row)
         return
       }
 
