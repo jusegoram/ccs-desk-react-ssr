@@ -53,7 +53,11 @@ const run = async () => {
 
       const eta = new Eta(numReports)
 
-      await routelogs.mapSeries(async (csv, csvIndex) => {
+      await routelogs
+      .tap(() => {
+        eta.start()
+      })
+      .mapSeries(async (csv, csvIndex) => {
         const now = moment.tz(csv.started_at, 'America/Chicago').format()
         const startedAt = moment()
         console.log(
