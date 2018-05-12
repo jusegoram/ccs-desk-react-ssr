@@ -11,31 +11,31 @@ const getDateString = timeString => {
   return date.format('YYYY-MM-DD')
 }
 
-export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
+export default async ({ rows, models, w2Company, dataSource, now }) => {
   const { WorkOrder, WorkGroup, Company, Appointment } = models
   const knex = WorkOrder.knex()
   const workGroupCache = {}
 
-  const directv = await Company.query(trx).findOne({ name: 'DirecTV' })
+  const directv = await Company.query().findOne({ name: 'DirecTV' })
 
   const companyNames = _.without(_.map(_.uniqBy(rows, 'Subcontractor'), 'Subcontractor'), [w2Company.name, 'W2', ''])
   const subcontractors = _.keyBy(
     await Promise.map(companyNames, name => {
       if (name === 'W2' || name === w2Company.name || !name) return
-      return Company.query(trx).ensure(name)
+      return Company.query().ensure(name)
     }),
     'name'
   )
 
   await Promise.resolve(rows).mapSeries(async row => {
-    let workOrder = await WorkOrder.query(trx).findOne({ companyId: directv.id, externalId: row['Activity ID'] })
+    let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
     if (workOrder && _.isEqual(workOrder.row, row)) return
 
     const subcontractorName =
       !row['Subcontractor'] || row['Subcontractor'] === w2Company.name ? null : row['Subcontractor']
     let subcontractor = subcontractors[subcontractorName]
     if (subcontractor) {
-      const subworkgroup = await WorkGroup.query(trx).ensure(
+      const subworkgroup = await WorkGroup.query().ensure(
         {
           companyId: subcontractor.id,
           type: 'Subcontractor',
@@ -47,16 +47,16 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
         workGroupCache
       )
       if (subworkgroup) {
-        await subcontractor.$query(trx).patch({ workGroupId: subworkgroup.id })
+        await subcontractor.$query().patch({ workGroupId: subworkgroup.id })
       }
-      const companyDataSource = await subcontractor.$relatedQuery('dataSources', trx).findOne({ id: dataSource.id })
+      const companyDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
       if (!companyDataSource) {
-        await subcontractor.$relatedQuery('dataSources', trx).relate(dataSource)
+        await subcontractor.$relatedQuery('dataSources').relate(dataSource)
       }
     }
 
     if (!workOrder) {
-      workOrder = await WorkOrder.query(trx).insert({
+      workOrder = await WorkOrder.query().insert({
         companyId: directv.id,
         externalId: row['Activity ID'],
         date: getDateString(row['Due Date']),
@@ -66,19 +66,19 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
         createdAt: now,
       })
     } else {
-      await workOrder.$query(trx).patch({
+      await workOrder.$query().patch({
         date: getDateString(row['Due Date']),
         type: row['Order Type'],
         status: row['Status'],
         row: row,
       })
     }
-    let appointment = await Appointment.query(trx).findOne({
+    let appointment = await Appointment.query().findOne({
       workOrderId: workOrder.id,
       date: getDateString(row['Due Date']),
     })
     if (!appointment) {
-      appointment = await Appointment.query(trx).insert({
+      appointment = await Appointment.query().insert({
         workOrderId: workOrder.id,
         date: getDateString(row['Due Date']),
         status: row['Status'],
@@ -86,19 +86,18 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
         createdAt: now,
       })
     } else {
-      appointment.$query(trx).patch({
+      appointment.$query().patch({
         status: row['Status'],
         row: row,
       })
     }
     await knex('workGroupWorkOrders')
-    .transacting(trx)
     .where({ workOrderId: workOrder.id })
     .delete()
 
     const createForCompany = async company => {
       const workGroupCreations = [
-        WorkGroup.query(trx).ensure(
+        WorkGroup.query().ensure(
           {
             companyId: company.id,
             type: 'Company',
@@ -107,7 +106,7 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
           },
           workGroupCache
         ),
-        WorkGroup.query(trx).ensure(
+        WorkGroup.query().ensure(
           {
             companyId: company.id,
             type: 'Subcontractor',
@@ -116,7 +115,7 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
           },
           workGroupCache
         ),
-        WorkGroup.query(trx).ensure(
+        WorkGroup.query().ensure(
           {
             companyId: company.id,
             type: 'Division',
@@ -125,7 +124,7 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
           },
           workGroupCache
         ),
-        WorkGroup.query(trx).ensure(
+        WorkGroup.query().ensure(
           {
             companyId: company.id,
             type: 'DMA',
@@ -134,7 +133,7 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
           },
           workGroupCache
         ),
-        WorkGroup.query(trx).ensure(
+        WorkGroup.query().ensure(
           {
             companyId: company.id,
             type: 'Service Region',
@@ -143,7 +142,7 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
           },
           workGroupCache
         ),
-        WorkGroup.query(trx).ensure(
+        WorkGroup.query().ensure(
           {
             companyId: company.id,
             type: 'Office',
@@ -152,7 +151,7 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
           },
           workGroupCache
         ),
-        WorkGroup.query(trx).ensure(
+        WorkGroup.query().ensure(
           {
             companyId: company.id,
             type: 'Team',
@@ -161,7 +160,7 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
           },
           workGroupCache
         ),
-        WorkGroup.query(trx).ensure(
+        WorkGroup.query().ensure(
           {
             companyId: company.id,
             type: 'Tech',
@@ -176,7 +175,7 @@ export default async ({ rows, models, w2Company, dataSource, now, trx }) => {
         workGroupId: workGroup.id,
         workOrderId: workOrder.id,
       }))
-      await knex.batchInsert('workGroupWorkOrders', joinTableInserts).transacting(trx)
+      await knex.batchInsert('workGroupWorkOrders', joinTableInserts).transacting(WorkOrder.knex())
     }
     if (subcontractor) await createForCompany(subcontractor)
     await createForCompany(w2Company)
