@@ -29,7 +29,7 @@ export default async ({ csvObjStream }) => {
       if (row['Activity Status (Snapshot)'] === 'Closed' || row['Activity Status (Snapshot)'] === 'Pending Closed') {
         tech = await Tech.query().findOne({ externalId: row['Tech ID'] })
       } else {
-        const appointment =
+        let appointment =
           workOrder &&
           (await workOrder
           .$relatedQuery('appointments')
@@ -43,7 +43,7 @@ export default async ({ csvObjStream }) => {
           .orderBy('createdAt', 'desc')
           .first())
         if (!appointment || !appointment.row) {
-          invalidRowsDetected.push({ reason: 'work order found but not appointment', row })
+          invalidRowsDetected.push({ reason: 'work order or appointment not found', row })
           return
         }
         const techId = appointment && appointment.row['Tech ID']
