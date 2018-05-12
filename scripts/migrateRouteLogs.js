@@ -67,8 +67,8 @@ const run = async () => {
   })
   .mapSeries(async csv => {
     await legacyKnex.transaction(async legacyTrx => {
-      await transaction(..._.values(rawModels), async (...modelsArray) => {
-        const models = _.keyBy(modelsArray, 'name')
+      await transaction(knex, async trx => {
+        const models = _.keyBy(rawModels, 'name')
 
         const now = moment.tz(csv.started_at, 'America/Chicago').format()
         const startedAt = moment()
@@ -81,9 +81,9 @@ const run = async () => {
         timer.start('Total')
         timer.start('Initialization')
         const { WorkGroup, Company, DataImport } = models
-        const w2Company = await Company.query().findOne({ name: csv.source })
-        const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Work Order Report' })
-        const dataImport = await DataImport.query()
+        const w2Company = await Company.query(trx).findOne({ name: csv.source })
+        const dataSource = await w2Company.$relatedQuery('dataSources', trx).findOne({ name: 'Siebel Work Order Report' })
+        const dataImport = await DataImport.query(trx)
         .insert({ dataSourceId: dataSource.id, reportName: 'Siebel Work Order Report', createdAt: now })
         .returning('*')
 
@@ -91,6 +91,7 @@ const run = async () => {
         const w2CompanyName = w2Company.name
         const srData = _.keyBy(
           await WorkGroup.knex()
+          .transacting(trx)
           .select('Service Region', 'Office', 'DMA', 'Division')
           .from('directv_sr_data')
           .where({ HSP: w2CompanyName }),
@@ -99,7 +100,7 @@ const run = async () => {
 
         timer.split('Stream to Array')
 
-        const rows = await legacyKnex('downloaded_csv_rows')
+        const rows = await legacyTrx('downloaded_csv_rows')
         .where({ csv_cid: csv.cid })
         .map(csvRow => {
           const data = {}
@@ -120,14 +121,14 @@ const run = async () => {
           return convertRowToStandardForm({ row: data, w2Company })
         })
 
-        await dataImport.$query().patch({
+        await dataImport.$query(trx).patch({
           status: 'Processing',
           downloadedAt: moment(now)
           .add(moment().diff(startedAt))
           .format(),
         })
-        await handleStandardRows({ rows, timer, models, dataSource, w2Company, now })
-        await dataImport.$query().patch({
+        await handleStandardRows({ rows, timer, models, dataSource, w2Company, now, trx })
+        await dataImport.$query(trx).patch({
           status: 'Complete',
           completedAt: moment(now)
           .add(moment().diff(startedAt))
