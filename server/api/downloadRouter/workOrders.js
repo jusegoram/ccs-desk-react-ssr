@@ -51,8 +51,6 @@ router.get('/', async (req, res) => {
   .mergeContext({ session, moment })
   ._contextFilter()
   .eager('appointments')
-  .orderByRaw("row->>'DMA'")
-  .orderByRaw("row->>'Tech ID'")
   .modifyEager('appointments', qb => {
     qb.where(
       'createdAt',
@@ -81,8 +79,10 @@ router.get('/', async (req, res) => {
     if (!workOrder.row['Cancelled Date']) return true
     return !moment(workOrder.row['Cancelled Date'].split(' ')[0], 'YYYY-MM-DD').isBefore(moment(date))
   })
-  .map(workOrder => {
-    stringifier.write(workOrder.row)
+  .map(workOrder => workOrder.row)
+  .then(rows => _.sortBy(_.sortBy(rows, 'Tech ID'), 'DMA'))
+  .map(row => {
+    stringifier.write(row)
   })
   stringifier.end()
   stringifier.pipe(res)
