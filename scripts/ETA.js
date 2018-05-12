@@ -36,6 +36,5 @@ export default class ETA {
       opsRemaining,
       eta,
     }
-    console.log(this.info)
   }
 }
