@@ -91,7 +91,7 @@ const dataSourceNames = {
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
 module.exports = async ({ companyName, dataSourceName, reportName }) => {
-  if (moment.tz('America/Chicago').hour() < 4) return
+  // if (moment.tz('America/Chicago').hour() < 4) return
   const w2Company = await Company.query().findOne({ name: companyName })
   const dataSource = await DataSource.query()
   .where({ name: dataSourceNames[reportName] }) // confusing, I know
