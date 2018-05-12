@@ -40,6 +40,7 @@ const run = async () => {
   .where({ saturate_status: 'Complete' })
   .where({ report_name: 'Routelog' })
   .orderBy('started_at')
+  .limit(400)
   const routelogIds = routelogs.clone().select('cid')
 
   // const numRows = await legacyKnex('downloaded_csv_rows')
