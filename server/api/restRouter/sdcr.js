@@ -72,13 +72,14 @@ router.get('/', async (req, res) => {
   const sdcr = _.map(_.values(_.groupBy(sdcrDataPoints, 'workGroups[0].externalId')), dataPointsGroup => {
     const size = dataPointsGroup.length
     const value = _.sum(_.map(dataPointsGroup, 'value'))
-    const color = colorMap({ value: 100 * value / (size || 1) })
+    const sdcr = 100 * value / (size || 1)
+    const color = colorMap({ value: sdcr })
     const undefinedWorkgroupName = groupType === 'Subcontractor' ? 'W2' : 'N/A'
     const workGroupName = dataPointsGroup[0].workGroups[0]
       ? dataPointsGroup[0].workGroups[0].name
       : undefinedWorkgroupName
-    const name = workGroupName + ' (' + (100 * value / (size || 1)).toFixed(2) + '%)'
-    return { size, value, color, name }
+    const name = workGroupName + ' (' + sdcr.toFixed(2) + '%)'
+    return { size, value, color, name, sdcr }
   })
   res.json({
     children: sdcr,
