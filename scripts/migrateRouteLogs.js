@@ -13,6 +13,7 @@ import knexfile from '../knexfile'
 
 const legacyKnex = Knex(knexfile['legacy'])
 const knex = Knex(knexfile['production'])
+moment.tz.setDefault('America/Chicago')
 
 const outputEtaInfo = eta => {
   const info = eta.info
