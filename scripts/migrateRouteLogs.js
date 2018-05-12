@@ -21,6 +21,7 @@ Model.knex(knex)
 
 const run = async () => {
   // .where('started_at', '<=', '2018-05-03T17:00:00-500')
+  legacyKnex.transaction(legacyTrx => {
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
 
@@ -48,7 +49,7 @@ const run = async () => {
     console.log(`Processing ${numReports} routelogs`)
     console.log(`In total, they contain ${numRows} rows`)
     const numOps = numReports * 10 + numRows * 7
-    console.log(`This process require roughly ${numOps} database operations`)
+    console.log(`This process will require roughly ${numOps} database operations`)
 
     const eta = new Eta(numReports)
 
@@ -118,13 +119,15 @@ const run = async () => {
         .add(moment().diff(startedAt))
         .format(),
       })
-      await legacyKnex('downloaded_csvs')
+      await legacyTrx('downloaded_csvs')
       .update({ imported: true })
       .where({ cid: csv.cid })
       timer.stop('Total')
       console.log(timer.toString()) //
     })
   })
+})
+  
 }
 
 const convertRowToStandardForm = ({ row, w2Company }) => {
