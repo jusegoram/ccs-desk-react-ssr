@@ -9,7 +9,7 @@ import sanitizeCompanyName from 'server/cli/commands/import/processors/sanitizeC
 import moment from 'moment-timezone'
 import Eta from 'node-eta'
 
-import knexfile from '../../knexfile'
+import knexfile from '../knexfile'
 
 const legacyKnex = Knex(knexfile['legacy'])
 const knex = Knex(knexfile['production'])
@@ -67,9 +67,9 @@ const run = async () => {
       timer.start('Initialization')
       const { WorkGroup, Company, DataImport } = models
       const w2Company = await Company.query().findOne({ name: csv.source })
-      const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Routelog' })
+      const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Work Order Report' })
       const dataImport = await DataImport.query()
-      .insert({ dataSourceId: dataSource.id, reportName: 'Siebel Routelog', createdAt: now })
+      .insert({ dataSourceId: dataSource.id, reportName: 'Siebel Work Order Report', createdAt: now })
       .returning('*')
 
       timer.split('SR Data Load')
