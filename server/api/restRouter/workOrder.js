@@ -36,23 +36,31 @@ router.get('/meta', async (req, res) => {
   const { session } = req
   if (!session) return res.sendStatus(401)
   try {
-    const companyWorkGroup = await session.account.company.$relatedQuery('workGroup')
-    let workOrders = null
-    if (session.account.company.name === 'CCS') {
-      workOrders = WorkOrder.query()
-    } else {
-      workOrders = companyWorkGroup.$relatedQuery('workOrders')
-    }
-    const rawWorkOrderStats = await workOrders
+    const knex = WorkOrder.knex()
+    const visibleWorkGroupIds = knex('WorkGroup')
+    .select('id')
+    .where('companyId', session.account.company.id)
+    const visibleWorkOrderIds = knex('workGroupWorkOrders')
+    .select('workOrderId')
+    .whereIn('workGroupId', visibleWorkGroupIds)
+    const rawWorkOrderStats = await knex('WorkOrder')
+    .whereIn('id', visibleWorkOrderIds)
     .select('type', 'status')
     .count()
     .where('date', req.query.date)
     .groupBy('type', 'status')
     .orderBy('type', 'status')
+    .map(data => {
+      data.count = parseInt(data.count)
+      return data
+    })
+    .tap(data => {
+      console.log(_.sumBy(data, 'count'))
+    })
     .map(data => ({
       ...data,
       name: data.status,
-      value: parseInt(data.count),
+      value: data.count,
       hex: statusColors[data.status],
     }))
     const repairs = _.filter(rawWorkOrderStats, { type: 'Service' })
@@ -63,6 +71,7 @@ router.get('/meta', async (req, res) => {
           label: groupName,
           hex: colors[groupName],
           children: group,
+          value: _.sumBy(group, 'value'),
         }))
       ),
       'name'
@@ -75,16 +84,31 @@ router.get('/meta', async (req, res) => {
           label: groupName,
           hex: colors[groupName],
           children: group,
+          value: _.sumBy(group, 'value'),
         }))
       ),
       'name'
     )
+    const topLevelGroups = [
+      {
+        name: 'Repairs',
+        label: 'Repairs',
+        hex: '#F6D18A',
+        value: _.sumBy(repairsByType, 'value'),
+        children: repairsByType,
+      },
+      {
+        name: 'Production',
+        label: 'Production',
+        hex: '#F89570',
+        value: _.sumBy(productionByType, 'value'),
+        children: productionByType,
+      },
+    ]
     const workOrderStats = {
       name: 'Work Orders',
-      children: [
-        { name: 'Repairs', label: 'Repairs', hex: '#F6D18A', children: repairsByType },
-        { name: 'Production', label: 'Production', hex: '#F89570', children: productionByType },
-      ],
+      value: _.sumBy(topLevelGroups, 'value'),
+      children: topLevelGroups,
     }
     res.json(workOrderStats)
   } catch (e) {
