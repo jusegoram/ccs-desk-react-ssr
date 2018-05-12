@@ -21,113 +21,112 @@ Model.knex(knex)
 
 const run = async () => {
   // .where('started_at', '<=', '2018-05-03T17:00:00-500')
-  legacyKnex.transaction(legacyTrx => {
-  await transaction(..._.values(rawModels), async (...modelsArray) => {
-    const models = _.keyBy(modelsArray, 'name')
+  await legacyKnex.transaction(async legacyTrx => {
+    await transaction(..._.values(rawModels), async (...modelsArray) => {
+      const models = _.keyBy(modelsArray, 'name')
 
-    const routelogs = legacyKnex('downloaded_csvs')
-    .where('started_at', '>=', '2018-04-01T04:00:00-500')
-    .where('imported', false)
-    .where({ saturate_status: 'Complete' })
-    .where({ report_name: 'Routelog' })
-    .orderBy('started_at')
-    .limit(3)
-    const routelogIds = routelogs.clone().select('cid')
+      const routelogs = legacyKnex('downloaded_csvs')
+      .where('started_at', '>=', '2018-04-01T04:00:00-500')
+      .where('imported', false)
+      .where({ saturate_status: 'Complete' })
+      .where({ report_name: 'Routelog' })
+      .orderBy('started_at')
+      .limit(3)
+      const routelogIds = routelogs.clone().select('cid')
 
-    const numRows = await legacyKnex('downloaded_csv_rows')
-    .count('id', 'rows')
-    .whereIn('csv_cid', routelogIds)
-    .first()
-    .get('count')
+      const numRows = await legacyKnex('downloaded_csv_rows')
+      .count('id', 'rows')
+      .whereIn('csv_cid', routelogIds)
+      .first()
+      .get('count')
 
-    const numReports = await legacyKnex('downloaded_csvs')
-    .count()
-    .whereIn('cid', routelogIds)
-    .first()
-    .get('count')
+      const numReports = await legacyKnex('downloaded_csvs')
+      .count()
+      .whereIn('cid', routelogIds)
+      .first()
+      .get('count')
 
-    console.log(`Processing ${numReports} routelogs`)
-    console.log(`In total, they contain ${numRows} rows`)
-    const numOps = numReports * 10 + numRows * 7
-    console.log(`This process will require roughly ${numOps} database operations`)
+      console.log(`Processing ${numReports} routelogs`)
+      console.log(`In total, they contain ${numRows} rows`)
+      const numOps = numReports * 10 + numRows * 7
+      console.log(`This process will require roughly ${numOps} database operations`)
 
-    const eta = new Eta(numReports)
+      const eta = new Eta(numReports)
 
-    await routelogs.mapSeries(async (csv, csvIndex) => {
-      const now = moment.tz(csv.started_at, 'America/Chicago').format()
-      const startedAt = moment()
-      console.log(
-        `Processing the ${csv.source} routelog started at ${now} (actual time: ${moment
-        .tz('America/Chicago')
-        .format()})`
-      )
-      const timer = new Timer()
-      timer.start('Total')
-      timer.start('Initialization')
-      const { WorkGroup, Company, DataImport } = models
-      const w2Company = await Company.query().findOne({ name: csv.source })
-      const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Work Order Report' })
-      const dataImport = await DataImport.query()
-      .insert({ dataSourceId: dataSource.id, reportName: 'Siebel Work Order Report', createdAt: now })
-      .returning('*')
+      await routelogs.mapSeries(async (csv, csvIndex) => {
+        const now = moment.tz(csv.started_at, 'America/Chicago').format()
+        const startedAt = moment()
+        console.log(
+          `Processing the ${csv.source} routelog started at ${now} (actual time: ${moment
+          .tz('America/Chicago')
+          .format()})`
+        )
+        const timer = new Timer()
+        timer.start('Total')
+        timer.start('Initialization')
+        const { WorkGroup, Company, DataImport } = models
+        const w2Company = await Company.query().findOne({ name: csv.source })
+        const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Work Order Report' })
+        const dataImport = await DataImport.query()
+        .insert({ dataSourceId: dataSource.id, reportName: 'Siebel Work Order Report', createdAt: now })
+        .returning('*')
 
-      timer.split('SR Data Load')
-      const w2CompanyName = w2Company.name
-      const srData = _.keyBy(
-        await WorkGroup.knex()
-        .select('Service Region', 'Office', 'DMA', 'Division')
-        .from('directv_sr_data')
-        .where({ HSP: w2CompanyName }),
-        'Service Region'
-      )
+        timer.split('SR Data Load')
+        const w2CompanyName = w2Company.name
+        const srData = _.keyBy(
+          await WorkGroup.knex()
+          .select('Service Region', 'Office', 'DMA', 'Division')
+          .from('directv_sr_data')
+          .where({ HSP: w2CompanyName }),
+          'Service Region'
+        )
 
-      timer.split('Stream to Array')
+        timer.split('Stream to Array')
 
-      const rows = await legacyKnex('downloaded_csv_rows')
-      .where({ csv_cid: csv.cid })
-      .map(csvRow => {
-        const data = {}
-        csv.header_order.forEach(header => {
-          data[header] = csvRow.data[header]
+        const rows = await legacyKnex('downloaded_csv_rows')
+        .where({ csv_cid: csv.cid })
+        .map(csvRow => {
+          const data = {}
+          csv.header_order.forEach(header => {
+            data[header] = csvRow.data[header]
+          })
+          const serviceRegion = data.SR
+          const groups = srData[serviceRegion]
+          if (groups) {
+            data.DMA = groups.DMA
+            data.Office = groups.Office
+            data.Division = groups.Division
+          }
+          data.companyName = !data['Tech Type'] || data['Tech Type'] === 'W2' ? w2Company.name : data['Tech Type']
+          data['Tech Type'] = sanitizeCompanyName(data['Tech Type'])
+          if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
+          data.assignedTechId = data['Tech User ID']
+          return convertRowToStandardForm({ row: data, w2Company })
         })
-        const serviceRegion = data.SR
-        const groups = srData[serviceRegion]
-        if (groups) {
-          data.DMA = groups.DMA
-          data.Office = groups.Office
-          data.Division = groups.Division
-        }
-        data.companyName = !data['Tech Type'] || data['Tech Type'] === 'W2' ? w2Company.name : data['Tech Type']
-        data['Tech Type'] = sanitizeCompanyName(data['Tech Type'])
-        if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
-        data.assignedTechId = data['Tech User ID']
-        return convertRowToStandardForm({ row: data, w2Company })
-      })
 
-      await dataImport.$query().patch({
-        status: 'Processing',
-        downloadedAt: moment(now)
-        .add(moment().diff(startedAt))
-        .format(),
+        await dataImport.$query().patch({
+          status: 'Processing',
+          downloadedAt: moment(now)
+          .add(moment().diff(startedAt))
+          .format(),
+        })
+        await handleStandardRows({ rows, timer, models, dataSource, w2Company, now })
+        await dataImport.$query().patch({
+          status: 'Complete',
+          completedAt: moment(now)
+          .add(moment().diff(startedAt))
+          .format(),
+        })
+        await legacyTrx('downloaded_csvs')
+        .update({ imported: true })
+        .where({ cid: csv.cid })
+        timer.stop('Total')
+        console.log(timer.toString())
+        eta.iterate(csvIndex)
+        console.log(eta.format(etaLayout))
       })
-      await handleStandardRows({ rows, timer, models, dataSource, w2Company, now })
-      await dataImport.$query().patch({
-        status: 'Complete',
-        completedAt: moment(now)
-        .add(moment().diff(startedAt))
-        .format(),
-      })
-      await legacyTrx('downloaded_csvs')
-      .update({ imported: true })
-      .where({ cid: csv.cid })
-      timer.stop('Total')
-      console.log(timer.toString())
-      eta.iterate(csvIndex)
-      console.log(eta.format(etaLayout))
     })
   })
-})
-  
 }
 
 const convertRowToStandardForm = ({ row, w2Company }) => {
