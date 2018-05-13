@@ -36,7 +36,7 @@ const run = async () => {
   // .where('started_at', '<=', '2018-05-03T17:00:00-500')
   const routelogs = legacyKnex('downloaded_csvs')
   .where('started_at', '>=', '2018-04-01T04:00:00-500')
-  .where('imported', false)
+  .whereNot('imported', true)
   .where({ saturate_status: 'Complete' })
   .where({ report_name: 'Routelog' })
   .orderBy('started_at')
