@@ -98,6 +98,10 @@ function formatValue(path) {
         title: path,
         value: (100 * percent).toFixed(2) + '%',
       },
+      {
+        title: 'Size',
+        value: cell.value,
+      },
     ]
   }
 }
