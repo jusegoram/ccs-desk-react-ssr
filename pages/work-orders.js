@@ -185,7 +185,7 @@ export default class WorkOrders extends React.Component {
   state = {
     date: moment().format('YYYY-MM-DD'),
     data: null,
-    firstSelectionName: 'Production',
+    firstSelectionName: 'Siebel',
     secondSelectionName: 'Upgrade',
   }
   populateData() {
