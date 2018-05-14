@@ -331,7 +331,10 @@ export default class WorkOrders extends React.Component {
               </Row>
               <Row>
                 <Col>
-                  <WorkOrderDonutChart data={pieChartData} currentScope={`${firstSelectionName} > ${secondSelectionName}} />
+                  <WorkOrderDonutChart
+                    data={pieChartData}
+                    currentScope={`${firstSelectionName} > ${secondSelectionName}`}
+                  />
                 </Col>
               </Row>
             </Container>
