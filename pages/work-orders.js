@@ -75,8 +75,8 @@ function buildValue(hoveredCell) {
   const { radius, angle, angle0 } = hoveredCell
   const truedAngle = (angle + angle0) / 2
   return {
-    x: radius * Math.cos(truedAngle),
-    y: radius * Math.sin(truedAngle),
+    x: radius * Math.sin(truedAngle),
+    y: radius * Math.cos(truedAngle),
     cell: hoveredCell,
   }
 }
@@ -132,8 +132,8 @@ class WorkOrderDonutChart extends React.Component {
         {data && (
           <Sunburst
             data={data}
-            width={size || 500}
-            height={size || 500}
+            width={350}
+            height={350}
             getSize={d => d.value}
             getColor={d => d.hex}
             colorType="literal"
@@ -173,9 +173,9 @@ class WorkOrderDonutChart extends React.Component {
             }}
           >
             {hoveredCell ? <Hint value={buildValue(hoveredCell)} format={formatValue(pathValue)} /> : null}
-            <LabelSeries data={[{ x: 0, y: 0, label: currentScope || 'Click to Navigate', style: LABEL_STYLE }]} />
           </Sunburst>
         )}
+        {currentScope || 'Click to Navigate'}
       </div>
     )
   }
@@ -233,7 +233,6 @@ export default class WorkOrders extends React.Component {
               </DownloadButton>
             </CardHeader>
             <CardBody
-              className="p-0"
               style={{
                 display: 'flex',
                 flex: '1 0 auto',
@@ -274,6 +273,7 @@ export default class WorkOrders extends React.Component {
         name: child.name,
         value: child.value,
         hex: child.hex,
+        radius0: 0,
       })),
     }
     return (
@@ -302,7 +302,6 @@ export default class WorkOrders extends React.Component {
             </DownloadButton>
           </CardHeader>
           <CardBody
-            className="p-0"
             style={{ display: 'flex', flex: '1 0 auto', alignItems: 'center', width: '100%', flexDirection: 'column' }}
           >
             <Container>
@@ -328,8 +327,6 @@ export default class WorkOrders extends React.Component {
                     }}
                   />
                 </Col>
-              </Row>
-              <Row>
                 <Col>
                   <WorkOrderDonutChart
                     data={pieChartData}
