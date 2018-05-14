@@ -54,10 +54,10 @@ function updateData(data, keyPath) {
       fill: EXTENDED_DISCRETE_COLOR_RANGE[5],
     }
   }
-  data.style = {
-    ...data.style,
-    fillOpacity: keyPath && !keyPath[data.name] ? 0.2 : 1,
-  }
+  // data.style = {
+  //   ...data.style,
+  //   fillOpacity: keyPath && !keyPath[data.name] ? 0.2 : 1,
+  // }
 
   return data
 }
@@ -179,7 +179,7 @@ class WorkOrderDonutChart extends React.Component {
             {hoveredCell ? <Hint value={buildValue(hoveredCell)} format={formatValue(pathValue)} /> : null}
           </Sunburst>
         )}
-        {currentScope || 'Click to Navigate'}
+        Total Size: {_.sum(_.map(data.children, 'value'))}
       </div>
     )
   }
@@ -189,8 +189,17 @@ export default class WorkOrders extends React.Component {
   state = {
     date: moment().format('YYYY-MM-DD'),
     data: null,
-    firstSelectionName: 'Siebel',
-    secondSelectionName: 'Upgrade',
+    firstSelections: {
+      Siebel: true,
+      Edge: true,
+    },
+    secondSelections: {
+      Upgrade: true,
+      'Former Install': true,
+      'NC Rollback': true,
+      'New Install': true,
+      Service: true,
+    },
   }
   populateData() {
     const { date } = this.state
@@ -209,7 +218,7 @@ export default class WorkOrders extends React.Component {
     this.populateData()
   }
   render() {
-    const { date, data, firstSelectionName, secondSelectionName } = this.state
+    const { date, data, firstSelections, secondSelections } = this.state
     if (!data) {
       return (
         <Layout>
@@ -254,31 +263,48 @@ export default class WorkOrders extends React.Component {
     const firstDonutData = {
       name: data.name,
       children: data.children.map(child => ({
+        style: { fillOpacity: firstSelections[child.name] ? 1 : 0.25 },
         name: child.name,
         label: child.label,
+        labelStyle: { 'pointer-events': 'none' },
         value: child.value,
         hex: child.hex,
       })),
     }
-    const firstSelection = _.find(data.children, { name: firstSelectionName })
+    let secondDonutChildren = {}
+    let pieChartChildren = {}
+    for (let name in firstSelections) {
+      if (!firstSelections[name]) continue
+      const firstSelection = _.find(data.children, { name })
+      firstSelection.children.forEach(child => {
+        secondDonutChildren[child.name] = secondDonutChildren[child.name] || {
+          style: { fillOpacity: secondSelections[child.name] ? 1 : 0.25 },
+          name: child.name,
+          label: child.label,
+          labelStyle: { pointerEvents: 'none' },
+          value: 0,
+          hex: child.hex,
+        }
+        secondDonutChildren[child.name].value += child.value
+        child.children.forEach(grandchild => {
+          if (!secondSelections[grandchild.type]) return
+          pieChartChildren[grandchild.status] = pieChartChildren[grandchild.status] || {
+            name: grandchild.status,
+            value: 0,
+            hex: grandchild.hex,
+          }
+          pieChartChildren[grandchild.status].value += grandchild.value
+        })
+      })
+    }
     const secondDonutData = {
-      name: firstSelection.name,
-      children: firstSelection.children.map(child => ({
-        name: child.name,
-        label: child.label,
-        value: child.value,
-        hex: child.hex,
-      })),
+      name: 'Type',
+      children: _.values(secondDonutChildren),
     }
-    const secondSelection = _.find(firstSelection.children, { name: secondSelectionName })
+
     const pieChartData = {
-      name: secondSelection.name,
-      children: secondSelection.children.map(child => ({
-        name: child.name,
-        value: child.value,
-        hex: child.hex,
-        radius0: 0,
-      })),
+      name: 'Status',
+      children: _.values(pieChartChildren),
     }
     return (
       <Layout>
@@ -313,29 +339,33 @@ export default class WorkOrders extends React.Component {
                 <Col>
                   <WorkOrderDonutChart
                     data={firstDonutData}
+                    selected={firstSelections}
                     onClick={target => {
-                      const newFirstSelection = _.find(data.children, { name: target })
-                      let newSecondSelectionName = secondSelectionName
-                      const newSecondSelection = _.find(newFirstSelection.children, { name: newSecondSelectionName })
-                      if (!newSecondSelection) newSecondSelectionName = newFirstSelection.children[0].name
-                      this.setState({ firstSelectionName: target, secondSelectionName: newSecondSelectionName })
+                      this.setState({
+                        firstSelections: {
+                          ...firstSelections,
+                          [target]: !firstSelections[target],
+                        },
+                      })
                     }}
                   />
                 </Col>
                 <Col>
                   <WorkOrderDonutChart
                     data={secondDonutData}
-                    currentScope={firstSelectionName}
+                    selected={secondSelections}
                     onClick={target => {
-                      this.setState({ secondSelectionName: target })
+                      this.setState({
+                        secondSelections: {
+                          ...secondSelections,
+                          [target]: !secondSelections[target],
+                        },
+                      })
                     }}
                   />
                 </Col>
                 <Col>
-                  <WorkOrderDonutChart
-                    data={pieChartData}
-                    currentScope={`${firstSelectionName} > ${secondSelectionName}`}
-                  />
+                  <WorkOrderDonutChart data={pieChartData} />
                 </Col>
               </Row>
             </Container>
