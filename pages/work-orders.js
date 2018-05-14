@@ -121,7 +121,7 @@ class WorkOrderDonutChart extends React.Component {
   }
   render() {
     const { clicked, finalValue, pathValue, size, hoveredCell } = this.state
-    const { data, onClick, currentScope } = this.props
+    const { data, onClick, currentScope, label } = this.props
     return (
       <div
         style={{
@@ -176,11 +176,15 @@ class WorkOrderDonutChart extends React.Component {
               onClick(v.name)
             }}
           >
-            <LabelSeries data={[{ x: 0, y: 0, label: 'Click to Filter', style: LABEL_STYLE }]} />
+            {label && <LabelSeries data={[{ x: 0, y: 0, label: 'Click to Filter', style: LABEL_STYLE }]} />}
             {hoveredCell ? <Hint value={buildValue(hoveredCell)} format={formatValue(pathValue)} /> : null}
           </Sunburst>
         )}
-        Total Size: {_.sum(_.map(data.children, 'value'))}
+        <span style={{ textAlign: 'center' }}>
+          {label}
+          <br />
+          Total Size: {_.sum(_.map(data.children, 'value'))}
+        </span>
       </div>
     )
   }
@@ -293,6 +297,7 @@ export default class WorkOrders extends React.Component {
             name: grandchild.status,
             value: 0,
             hex: grandchild.hex,
+            radius0: 0,
           }
           pieChartChildren[grandchild.status].value += grandchild.value
         })
@@ -341,6 +346,7 @@ export default class WorkOrders extends React.Component {
                   <WorkOrderDonutChart
                     data={firstDonutData}
                     selected={firstSelections}
+                    label="Data Source"
                     onClick={target => {
                       this.setState({
                         firstSelections: {
@@ -355,6 +361,7 @@ export default class WorkOrders extends React.Component {
                   <WorkOrderDonutChart
                     data={secondDonutData}
                     selected={secondSelections}
+                    label="Type"
                     onClick={target => {
                       this.setState({
                         secondSelections: {
