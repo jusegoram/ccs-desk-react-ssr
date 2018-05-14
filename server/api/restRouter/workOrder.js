@@ -45,18 +45,14 @@ router.get('/meta', async (req, res) => {
     .whereIn('workGroupId', visibleWorkGroupIds)
     const rawWorkOrderStats = await knex('WorkOrder')
     .whereIn('id', visibleWorkOrderIds)
-    .select('type', 'status')
+    .select(knex.raw("row->>'Source' as source"), 'type', 'status')
     .count()
     .where('date', req.query.date)
-    .groupBy('type', 'status')
+    .groupByRaw("row->>'Source', type, status")
     .orderBy('type', 'status')
     .map(data => {
       data.count = parseInt(data.count)
       return data
-    })
-    .tap(data => {
-      console.log('data', data)
-      console.log(_.sumBy(data, 'count'))
     })
     .map(data => ({
       ...data,
@@ -64,7 +60,7 @@ router.get('/meta', async (req, res) => {
       value: data.count,
       hex: statusColors[data.status],
     }))
-    const repairs = _.filter(rawWorkOrderStats, { type: 'Service' })
+    const repairs = _.filter(rawWorkOrderStats, { source: 'Siebel' })
     const repairsByType = _.sortBy(
       _.values(
         _.mapValues(_.groupBy(repairs, 'type'), (group, groupName) => ({
@@ -92,15 +88,15 @@ router.get('/meta', async (req, res) => {
     )
     const topLevelGroups = [
       {
-        name: 'Repairs',
-        label: 'Repairs',
+        name: 'Siebel',
+        label: 'Siebel',
         hex: '#F6D18A',
         value: _.sumBy(repairsByType, 'value'),
         children: repairsByType,
       },
       {
-        name: 'Production',
-        label: 'Production',
+        name: 'Edge',
+        label: 'Edge',
         hex: '#F89570',
         value: _.sumBy(productionByType, 'value'),
         children: productionByType,
