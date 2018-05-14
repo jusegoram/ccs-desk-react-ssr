@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, CardHeader, CardBody, Input, Container, Row, Col } from 'reactstrap'
 import moment from 'moment-timezone'
-import { Sunburst, LabelSeries, Hint } from 'react-vis'
+import { Sunburst, Hint } from 'react-vis'
 
 import DownloadButton from 'app/ui/widgets/DownloadButton'
 import Layout from 'app/ui/Layout'
@@ -251,17 +251,17 @@ export default class WorkOrders extends React.Component {
       name: data.name,
       children: data.children.map(child => ({
         name: child.name,
+        label: child.label,
         value: child.value,
         hex: child.hex,
       })),
     }
-    console.log(firstSelectionName)
-    console.log(data.children)
     const firstSelection = _.find(data.children, { name: firstSelectionName })
     const secondDonutData = {
       name: firstSelection.name,
       children: firstSelection.children.map(child => ({
         name: child.name,
+        label: child.label,
         value: child.value,
         hex: child.hex,
       })),
