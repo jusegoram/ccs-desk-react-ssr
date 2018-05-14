@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, CardHeader, CardBody, Input } from 'reactstrap'
+import { Card, CardHeader, CardBody, Input, Container, Row, Col } from 'reactstrap'
 import moment from 'moment-timezone'
 import { Sunburst, LabelSeries, Hint } from 'react-vis'
 
@@ -105,7 +105,6 @@ function formatValue(path) {
 class WorkOrderDonutChart extends React.Component {
   state = {
     pathValue: false,
-    finalValue: 'Hover For Info',
     clicked: false,
     size: null,
     hoveredCell: false,
@@ -118,7 +117,7 @@ class WorkOrderDonutChart extends React.Component {
   }
   render() {
     const { clicked, finalValue, pathValue, size, hoveredCell } = this.state
-    const { data } = this.props
+    const { data, onClick, currentScope } = this.props
     return (
       <div
         style={{
@@ -169,9 +168,12 @@ class WorkOrderDonutChart extends React.Component {
                   hoveredCell: false,
                 })
             }
+            onValueClick={v => {
+              onClick(v.name)
+            }}
           >
             {hoveredCell ? <Hint value={buildValue(hoveredCell)} format={formatValue(pathValue)} /> : null}
-            <LabelSeries data={[{ x: 0, y: 0, label: finalValue || 'Hover For Info', style: LABEL_STYLE }]} />
+            <LabelSeries data={[{ x: 0, y: 0, label: currentScope || 'Click to Navigate', style: LABEL_STYLE }]} />
           </Sunburst>
         )}
       </div>
@@ -183,6 +185,8 @@ export default class WorkOrders extends React.Component {
   state = {
     date: moment().format('YYYY-MM-DD'),
     data: null,
+    firstSelectionName: 'Production',
+    secondSelectionName: 'Upgrade',
   }
   populateData() {
     const { date } = this.state
@@ -201,10 +205,80 @@ export default class WorkOrders extends React.Component {
     this.populateData()
   }
   render() {
-    const { date, data } = this.state
+    const { date, data, firstSelectionName, secondSelectionName } = this.state
+    if (!data) {
+      return (
+        <Layout>
+          <Card style={{ height: 'calc(100vh - 100px)' }}>
+            <CardHeader style={{ position: 'relative' }}>
+              {/*relative because card-actions is absolute*/}
+              <i className="icon-menu" /> Work Orders for {moment(date).format('MMMM Do')}
+              <Input
+                type="date"
+                value={date}
+                onChange={e => {
+                  this.setState({ date: e.target.value })
+                }}
+                className="card-actions mt-0 h-100"
+                style={{ width: 160, display: 'inline-block' }}
+              />
+              <DownloadButton
+                endpoint="work-orders"
+                params={{ date }}
+                color="primary"
+                className="card-actions mt-0 h-100"
+                style={{ display: 'inline-block', position: 'absolute', right: 160, top: 0 }}
+              >
+                Download Work Orders
+              </DownloadButton>
+            </CardHeader>
+            <CardBody
+              className="p-0"
+              style={{
+                display: 'flex',
+                flex: '1 0 auto',
+                alignItems: 'center',
+                width: '100%',
+                flexDirection: 'column',
+              }}
+            >
+              Loading
+            </CardBody>
+          </Card>
+        </Layout>
+      )
+    }
+    const firstDonutData = {
+      name: data.name,
+      children: data.children.map(child => ({
+        name: child.name,
+        value: child.value,
+        hex: child.hex,
+      })),
+    }
+    console.log(firstSelectionName)
+    console.log(data.children)
+    const firstSelection = _.find(data.children, { name: firstSelectionName })
+    const secondDonutData = {
+      name: firstSelection.name,
+      children: firstSelection.children.map(child => ({
+        name: child.name,
+        value: child.value,
+        hex: child.hex,
+      })),
+    }
+    const secondSelection = _.find(firstSelection.children, { name: secondSelectionName })
+    const pieChartData = {
+      name: secondSelection.name,
+      children: secondSelection.children.map(child => ({
+        name: child.name,
+        value: child.value,
+        hex: child.hex,
+      })),
+    }
     return (
       <Layout>
-        <Card style={{ height: 'calc(100vh - 100px)' }}>
+        <Card>
           <CardHeader style={{ position: 'relative' }}>
             {/*relative because card-actions is absolute*/}
             <i className="icon-menu" /> Work Orders for {moment(date).format('MMMM Do')}
@@ -231,7 +305,36 @@ export default class WorkOrders extends React.Component {
             className="p-0"
             style={{ display: 'flex', flex: '1 0 auto', alignItems: 'center', width: '100%', flexDirection: 'column' }}
           >
-            <WorkOrderDonutChart data={data} />
+            <Container>
+              <Row>
+                <Col>
+                  <WorkOrderDonutChart
+                    data={firstDonutData}
+                    onClick={target => {
+                      const newFirstSelection = _.find(data.children, { name: target })
+                      let newSecondSelectionName = secondSelectionName
+                      const newSecondSelection = _.find(newFirstSelection.children, { name: newSecondSelectionName })
+                      if (!newSecondSelection) newSecondSelectionName = newFirstSelection.children[0].name
+                      this.setState({ firstSelectionName: target, secondSelectionName: newSecondSelectionName })
+                    }}
+                  />
+                </Col>
+                <Col>
+                  <WorkOrderDonutChart
+                    data={secondDonutData}
+                    currentScope={firstSelectionName}
+                    onClick={target => {
+                      this.setState({ secondSelectionName: target })
+                    }}
+                  />
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  <WorkOrderDonutChart data={pieChartData} currentScope={secondSelectionName} />
+                </Col>
+              </Row>
+            </Container>
           </CardBody>
         </Card>
       </Layout>
