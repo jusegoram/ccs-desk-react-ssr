@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, CardHeader, CardBody, Input, Container, Row, Col } from 'reactstrap'
 import moment from 'moment-timezone'
-import { Sunburst, Hint } from 'react-vis'
+import { Sunburst, Hint, LabelSeries } from 'react-vis'
 
 import DownloadButton from 'app/ui/widgets/DownloadButton'
 import Layout from 'app/ui/Layout'
@@ -176,6 +176,7 @@ class WorkOrderDonutChart extends React.Component {
               onClick(v.name)
             }}
           >
+            <LabelSeries data={[{ x: 0, y: 0, label: 'Click to Filter', style: LABEL_STYLE }]} />
             {hoveredCell ? <Hint value={buildValue(hoveredCell)} format={formatValue(pathValue)} /> : null}
           </Sunburst>
         )}
