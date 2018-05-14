@@ -55,6 +55,7 @@ router.get('/meta', async (req, res) => {
       return data
     })
     .tap(data => {
+      console.log('data', data)
       console.log(_.sumBy(data, 'count'))
     })
     .map(data => ({
