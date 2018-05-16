@@ -10,13 +10,13 @@ import uuid from 'uuid/v4'
 
 class ExpectedError extends Error {}
 
-export default async ({ csvObjStream, w2Company }) => {
+export default async ({ csvObjStream, w2Company, now }) => {
   const timer = new Timer()
   timer.start('Total')
   timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
-    const { Tech, Company, Appointment, WorkGroup } = models
+    const { Tech, Company, Appointment, SdcrDataPoint } = models
     const knex = Appointment.knex()
 
     const companies = await Company.query().eager('workGroups')
@@ -32,6 +32,20 @@ export default async ({ csvObjStream, w2Company }) => {
       await knex('directv_sr_data').select('Service Region', 'Office', 'DMA', 'Division'),
       'Service Region'
     )
+
+    const reportWindowStart = moment(now)
+    .add(-2, 'days')
+    .startOf('month')
+    .format()
+    const reportWindowEnd = moment(now)
+    .add(-2, 'days')
+    .endOf('month')
+    .format()
+    await SdcrDataPoint.query()
+    .where('date', '>=', reportWindowStart)
+    .where('date', '<=', reportWindowEnd)
+    .whereRaw("row->>'Company' = ?", [w2Company.name])
+    .delete()
 
     const rows = await streamToArray(csvObjStream)
     let invalidRowsDetected = []
@@ -87,13 +101,6 @@ export default async ({ csvObjStream, w2Company }) => {
               : _.filter(tech.workGroups, workGroup => !_.includes(srWorkGroupTypes, workGroup.type))
             return srWorkGroups.concat(techWorkGroups)
           })()
-
-          // await SdcrDataPoint.query()
-          // .where({
-          //   externalId: row['Activity ID'],
-          //   date: row['BGO Snapshot Date'],
-          // })
-          // .delete()
 
           const sdcrPojo = (() => {
             const badProps = [
