@@ -79,7 +79,7 @@ const workGroupCache = {}
 
 export default async ({ knex, rows, now }) => {
   const { Appointment, Tech, Company, WorkGroup } = models
-  const appointmentInserts = []
+  const appointmentInserts = {}
   const workGroupAppointmentsInserts = []
 
   await knex.transaction(async trx => {
@@ -166,7 +166,9 @@ export default async ({ knex, rows, now }) => {
           workOrderId: (appointment && appointment.workOrderId) || undefined,
         }
 
-        appointmentInserts.push(newAppointment)
+        if (appointmentInserts[newAppointment.externalId]) return
+
+        appointmentInserts[newAppointment.externalId] = newAppointment
 
         const getWorkGroupsForCompany = company =>
           _.filter(
@@ -193,7 +195,7 @@ export default async ({ knex, rows, now }) => {
       }
     )
 
-    await knex.batchInsert('Appointment', appointmentInserts).transacting(trx)
+    await knex.batchInsert('Appointment', _.values(appointmentInserts)).transacting(trx)
     await knex.batchInsert('workGroupAppointments', workGroupAppointmentsInserts).transacting(trx)
   })
   console.log(`${appointmentInserts.length} appointments created`)
