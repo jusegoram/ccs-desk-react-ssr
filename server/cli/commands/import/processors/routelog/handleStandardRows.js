@@ -99,9 +99,11 @@ export default async ({ knex, rows, now }) => {
       const serviceRegion = row['Service Region']
       const srWorkGroupNames = srData[serviceRegion]
       const srGroupTypes = ['Division', 'DMA', 'Office', 'Service Region']
-      srGroupTypes.forEach(type => {
-        row[type] = srWorkGroupNames[type]
-      })
+      if (srWorkGroupNames) {
+        srGroupTypes.forEach(type => {
+          row[type] = srWorkGroupNames[type]
+        })
+      }
       const rowHsp = companiesByName[row['Partner Name']]
       const rowCompanies = [rowHsp]
       if (row['Subcontractor']) {
