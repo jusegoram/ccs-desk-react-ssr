@@ -26,18 +26,18 @@ class SiebelReportFetcher {
     this.credentials = credentials
   }
   close() {
-    this.browser.close()
+    // this.browser.close()
   }
   async goToDashboard() {
-    const userDataDir = path.resolve(__dirname, 'user_data', this.company)
-    this.browser = await puppeteer.launch({
-      userDataDir,
-      headless: true,
-      slowMo: true,
-      args: ['--no-sandbox'],
-      timeout,
-    })
-    this.page = await this.browser.newPage()
+    // const userDataDir = path.resolve(__dirname, 'user_data', this.company)
+    // this.browser = await puppeteer.launch({
+    //   userDataDir,
+    //   headless: true,
+    //   slowMo: true,
+    //   args: ['--no-sandbox'],
+    //   timeout,
+    // })
+    // this.page = await this.browser.newPage()
     // const dashboardUrl = 'https://sesar.directv.com/analytics/saw.dll?Dashboard'
     // const loginUrl = 'https://sso.directv.com/idp/SSO.saml2'
     // await this.page.goto(dashboardUrl, { timeout })
