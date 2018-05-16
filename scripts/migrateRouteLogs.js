@@ -35,12 +35,12 @@ Model.knex(knex)
 const run = async () => {
   // .where('started_at', '<=', '2018-05-03T17:00:00-500')
   const routelogs = legacyKnex('downloaded_csvs')
-  .where('started_at', '>=', '2018-04-01T04:00:00-500')
+  .where('started_at', '>=', '2018-05-01T04:00:00-500')
   .whereNot('imported', true)
   .where({ saturate_status: 'Complete' })
   .where({ report_name: 'Routelog' })
   .orderBy('started_at')
-  // .limit(400)
+  .limit(1)
   const routelogIds = routelogs.clone().select('cid')
 
   // const numRows = await legacyKnex('downloaded_csv_rows')
@@ -62,132 +62,120 @@ const run = async () => {
 
   const eta = new Eta(numReports)
 
-  await legacyKnex.transaction(async legacyTrx => {
-    await transaction(..._.values(rawModels), async (...modelsArray) => {
-      await routelogs
-      .tap(() => {
-        eta.start()
-      })
-      .mapSeries(async csv => {
-        const models = _.keyBy(modelsArray, 'name')
+  // export default async ({ csvObjStream, w2Company, now }) => {
+  //   const timer = new Timer()
+  //   timer.start('Total')
+  //   timer.start('Initialization')
 
-        const now = moment.tz(csv.started_at, 'America/Chicago').format()
-        const startedAt = moment()
-        console.log(
-          `Processing the ${csv.source} routelog started at ${now} (actual time: ${moment
-          .tz('America/Chicago')
-          .format()}; cid: ${csv.cid})`
-        )
-        const timer = new Timer()
-        timer.start('Total')
-        timer.start('Initialization')
-        const { WorkGroup, Company, DataImport } = models
-        const w2Company = await Company.query().findOne({ name: csv.source })
-        const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Work Order Report' })
-        const dataImport = await DataImport.query()
-        .insert({ dataSourceId: dataSource.id, reportName: 'Siebel Work Order Report', createdAt: now })
-        .returning('*')
+  //   timer.split('Stream to Array')
+  //   const rows = await streamToArray(csvObjStream, data => {
+  //   })
 
-        timer.split('SR Data Load')
-        const w2CompanyName = w2Company.name
-        const srData = _.keyBy(
-          await WorkGroup.knex()
-          .select('Service Region', 'Office', 'DMA', 'Division')
-          .from('directv_sr_data')
-          .where({ HSP: w2CompanyName }),
-          'Service Region'
-        )
+  //   timer.split('Process Rows')
+  //   await handleStandardRows({ rows, now })
 
-        timer.split('Stream to Array')
+  //   timer.stop('Total')
+  //   console.log(timer.toString()) // eslint-disable-line no-console
+  // }
 
-        const rows = await legacyKnex('downloaded_csv_rows')
-        .where({ csv_cid: csv.cid })
-        .map(csvRow => {
-          const data = {}
-          csv.header_order.forEach(header => {
-            data[header] = csvRow.data[header]
-          })
-          const serviceRegion = data.SR
-          const groups = srData[serviceRegion]
-          if (groups) {
-            data.DMA = groups.DMA
-            data.Office = groups.Office
-            data.Division = groups.Division
-          }
-          data.companyName = !data['Tech Type'] || data['Tech Type'] === 'W2' ? w2Company.name : data['Tech Type']
-          data['Tech Type'] = sanitizeCompanyName(data['Tech Type'])
-          if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
-          data.assignedTechId = data['Tech User ID']
-          return convertRowToStandardForm({ row: data, w2Company })
-        })
+  await routelogs
+  .tap(() => {
+    eta.start()
+  })
+  .mapSeries(async csv => {
+    const now = moment.tz(csv.started_at, 'America/Chicago').format()
+    const startedAt = moment()
+    .tz('America/Chicago')
+    .format()
+    console.log(
+      `Processing the ${csv.source} routelog started at ${now} (actual time: ${startedAt} CST; cid: ${csv.cid})`
+    )
+    const timer = new Timer()
+    timer.start('Total')
+    timer.start('Initialization')
+    const { WorkGroup, Company, DataImport } = rawModels
+    const w2Company = await Company.query().findOne({ name: csv.source })
+    const dataSource = await w2Company.$relatedQuery('dataSources').findOne({ name: 'Siebel Work Order Report' })
+    const dataImport = await DataImport.query()
+    .insert({ dataSourceId: dataSource.id, reportName: 'Siebel Work Order Report', createdAt: now })
+    .returning('*')
 
-        await dataImport.$query().patch({
-          status: 'Processing',
-          downloadedAt: moment(now)
-          .add(moment().diff(startedAt))
-          .format(),
-        })
-        await handleStandardRows({ rows, timer, models, dataSource, w2Company, now })
-        await dataImport.$query().patch({
-          status: 'Complete',
-          completedAt: moment(now)
-          .add(moment().diff(startedAt))
-          .format(),
-        })
-        await legacyTrx('downloaded_csvs')
-        .update({ imported: true })
-        .where({ cid: csv.cid })
-        timer.stop('Total')
-        eta.markOpComplete()
-        outputEtaInfo(eta)
-      })
+    const rows = await legacyKnex('downloaded_csv_rows')
+    .where({ csv_cid: csv.cid })
+    .map(result => {
+      const row = _.mapKeys(result.data, (value, key) =>
+        key.replace(/[^a-zA-Z0-9~!@#$%^&*()\-+[\]{}|;',./<>?\s]/, '')
+      )
+      row.HSP = w2Company.name
+      row.Subcontractor =
+            row['Tech Type'] === 'W2' || !row['Tech Type'] ? null : sanitizeCompanyName(row['Tech Type'])
+      if (!row['Tech User ID'] || row['Tech User ID'] === 'UNKNOWN') row['Tech User ID'] = null
+      const convertedRow = convertRowToStandardForm({ row })
+      return convertedRow
     })
+
+    await dataImport.$query().patch({
+      status: 'Processing',
+      downloadedAt: moment(now)
+      .add(moment().diff(startedAt))
+      .format(),
+    })
+    await handleStandardRows({ knex, rows, now })
+    await dataImport.$query().patch({
+      status: 'Complete',
+      completedAt: moment(now)
+      .add(moment().diff(startedAt))
+      .format(),
+    })
+    await legacyKnex('downloaded_csvs')
+    .update({ imported: true })
+    .where({ cid: csv.cid })
+    timer.stop('Total')
+    eta.markOpComplete()
+    outputEtaInfo(eta)
   })
 }
 
-const convertRowToStandardForm = ({ row, w2Company }) => {
-  const standardRow = {
-    Source: 'Siebel',
-    'Partner Name': w2Company.name || '',
-    Subcontractor: row['Tech Type'] || '',
-    'Activity ID': row['Activity #'] || '',
-    'Tech ID': row['Tech User ID'] || '',
-    'Tech Name': sanitizeName(row['Tech Full Name']) || '',
-    'Tech Team': row['Tech Team'] || '',
-    'Tech Supervisor': sanitizeName(row['Team Name']) || '',
-    'Order Type': row['Order Type'] || '',
-    Status: row['Status'] || '',
-    'Reason Code': row['Reason Code'] || '',
-    'Service Region': row['SR'] || '',
-    DMA: row['DMA'] || '',
-    Office: row['Office'] || '',
-    Division: row['Division'] || '',
-    'Time Zone': row['Time Zone'] || '',
-    'Created Date': row['Created Date (with timestamp)'] || '',
-    'Due Date': row['Activity Due Date RT'] || '',
-    'Planned Start Date': row['Planned Start Date RT'] || '',
-    'Actual Start Date': row['Actual Start Date RT'] || '',
-    'Actual End Date': row['Actual End Date RT'] || '',
-    'Cancelled Date': row['Activity Cancelled Date'] || '',
-    'Negative Reschedules': row['# of Negative Reschedules'] || '',
-    'Planned Duration': row['Planned Duration (FS Scheduler)'] || '',
-    'Actual Duration': row['Total Duration Minutes'] || '',
-    'Service in 7 Days': '',
-    'Repeat Service': '',
-    'Internet Connectivity': row['Internet Connectivity'] === 'Y',
-    'Customer ID': row['Cust Acct Number'] || '',
-    'Customer Name': sanitizeName(row['Cust Name']) || '',
-    'Customer Phone': sanitizeName(row['Home Phone']) || '',
-    'Dwelling Type': row['Dwelling Type'] || '',
-    Address: row['House #'] + ' ' + row['Street Name'],
-    Zipcode: row['Zip'] || '',
-    City: row['City'] || '',
-    State: row['Service State'] || '',
-    Latitude: row['Activity Geo Latitude'] / 1000000 || '',
-    Longitude: row['Activity Geo Longitude'] / 1000000 || '',
-  }
-  return standardRow
-}
+const convertRowToStandardForm = ({ row }) => ({
+  Source: 'Siebel',
+  'Partner Name': row.HSP || '',
+  Subcontractor: null,
+  'Activity ID': row['Activity #'] || '',
+  'Tech ID': row['Tech User ID'] || '',
+  'Tech Name': null,
+  'Team ID': null,
+  'Team Name': null,
+  'Service Region': row['SR'] || '',
+  Office: null,
+  DMA: null,
+  Division: null,
+  'Order Type': row['Order Type'] || '',
+  Status: row['Status'] || '',
+  'Reason Code': row['Reason Code'] || '',
+  'Time Zone': row['Time Zone'] || '',
+  'Created Date': row['Created Date (with timestamp)'] || '',
+  'Due Date': row['Activity Due Date RT'] || '',
+  'Planned Start Date': row['Planned Start Date RT'] || '',
+  'Actual Start Date': row['Actual Start Date RT'] || '',
+  'Actual End Date': row['Actual End Date RT'] || '',
+  'Cancelled Date': row['Activity Cancelled Date'] || '',
+  'Negative Reschedules': row['# of Negative Reschedules'] || '',
+  'Planned Duration': row['Planned Duration (FS Scheduler)'] || '',
+  'Actual Duration': row['Total Duration Minutes'] || '',
+  'Service in 7 Days': '',
+  'Repeat Service': '',
+  'Internet Connectivity': row['Internet Connectivity'] === 'Y',
+  'Customer ID': row['Cust Acct Number'] || '',
+  'Customer Name': sanitizeName(row['Cust Name']) || '',
+  'Customer Phone': sanitizeName(row['Home Phone']) || '',
+  'Dwelling Type': row['Dwelling Type'] || '',
+  Address: row['House #'] + ' ' + row['Street Name'],
+  Zipcode: row['Zip'] || '',
+  City: row['City'] || '',
+  State: row['Service State'] || '',
+  Latitude: row['Activity Geo Latitude'] / 1000000 || '',
+  Longitude: row['Activity Geo Longitude'] / 1000000 || '',
+})
 
 run()
 .catch(console.error)

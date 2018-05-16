@@ -90,7 +90,7 @@ const dataSourceNames = {
 // }
 
 // const screenshotsDirectory = path.resolve(__dirname, 'screenshots')
-module.exports = async ({ companyName, dataSourceName, reportName }) => {
+module.exports = async ({ knex, companyName, dataSourceName, reportName }) => {
   //eslint-disable-next-line no-console
   console.log('Data import script started at: ' + moment.tz('America/Chicago').format('LLLL'))
   if (moment.tz('America/Chicago').hour() < 4) return
@@ -147,7 +147,7 @@ module.exports = async ({ companyName, dataSourceName, reportName }) => {
     )
     await dataImport.$query().patch({ status: 'Processing', downloadedAt: moment().format() })
     const now = moment().format()
-    await processors[dataSourceName][reportName]({ csvObjStream, dataSource, w2Company, now })
+    await processors[dataSourceName][reportName]({ knex, csvObjStream, w2Company, now })
     await dataImport.$query().patch({ status: 'Complete', completedAt: moment().format() })
   } catch (e) {
     await dataImport.$query().patch({ status: 'Errored' })
