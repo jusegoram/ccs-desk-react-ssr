@@ -17,7 +17,7 @@ export default async ({ csvObjStream, w2Company }) => {
   timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
-    const { Tech, WorkOrder, SdcrDataPoint, Appointment } = models
+    const { Tech, SdcrDataPoint, Appointment } = models
     const knex = Appointment.knex()
 
     const srData = _.keyBy(
@@ -34,11 +34,12 @@ export default async ({ csvObjStream, w2Company }) => {
       async row => {
         index++
         if (!(index % 1000)) console.log(index / 1000)
+
         try {
           const externalId = row['Activity ID']
           if (row['Subcontractor Company Name'] === 'UNKNOWN') delete row['Subcontractor Company Name']
           const subcontractorName = sanitizeCompanyName(row['Subcontractor Company Name'])
-          const subcontractor = await Company.query().findOne({ name: subcontractorName })
+          const subcontractor = subcontractorName && (await Company.query().findOne({ name: subcontractorName }))
 
           const tech = await (async () => {
             if (
@@ -62,7 +63,8 @@ export default async ({ csvObjStream, w2Company }) => {
             const tech = appointment.assignedTech
             if (!tech)
               throw new ExpectedError(
-                `The appointment with ID ${externalId} that existed at ${endOfBgoSnapshotDate} did not have an assigned tech`
+                `The appointment with ID ${externalId} that existed at ` +
+                  `${endOfBgoSnapshotDate} did not have an assigned tech`
               )
             return tech
           })()
@@ -70,24 +72,19 @@ export default async ({ csvObjStream, w2Company }) => {
           const sdcrWorkGroups = await (async () => {
             const srWorkGroupTypes = ['Service Region', 'DMA', 'Office', 'Division']
             const companyIds = _.filter([w2Company.id, subcontractor && subcontractor.id])
-            const getSrWorkGroups = async company => {
-              const workGroupExternalIds = srData[row['Service Region']]
-              return await WorkGroup.query()
-              .whereIn('companyId', companyIds)
-              .where(qb => {
-                srWorkGroupTypes.forEach(type => {
-                  qb.orWhere({ type, externalId: workGroupExternalIds[type] })
-                })
+            const workGroupExternalIds = srData[row['Service Region']]
+            const srWorkGroupQuery = WorkGroup.query()
+            .whereIn('companyId', companyIds)
+            .where(qb => {
+              srWorkGroupTypes.forEach(type => {
+                qb.orWhere({ type, externalId: workGroupExternalIds[type] })
               })
-            }
+            })
             return _.flatten(
-              _.filter(
-                await Promise.all([
-                  tech.$relatedQuery('workGroups').whereNotIn('type', srWorkGroupTypes),
-                  getSrWorkGroups(w2Company),
-                  subcontractor && getSrWorkGroups(subcontractor),
-                ])
-              )
+              await Promise.all([
+                tech.$relatedQuery('workGroups').whereNotIn('type', srWorkGroupTypes),
+                srWorkGroupQuery,
+              ])
             )
           })()
 
@@ -98,39 +95,47 @@ export default async ({ csvObjStream, w2Company }) => {
           })
           .delete()
 
-          const badProps = [
-            'HSP Partner Name',
-            'DMA',
-            'Office',
-            'Service Region',
-            'Tech Team',
-            'Tech ID',
-            'Tech Name',
-            'Subcontractor',
-            'Company Name',
-          ]
-          badProps.forEach(prop => {
-            delete row[prop]
-          })
-          row['Tech ID'] = tech.externalId
-          const teamGroup = _.find(sdcrWorkGroups, { type: 'Team' })
-          row['Team Name'] = teamGroup && teamGroup.name
-          sdcrWorkGroups.forEach(workGroup => {
-            row[workGroup.type] = workGroup.externalId
-          })
+          const sdcrPojo = (() => {
+            const badProps = [
+              'HSP Partner Name',
+              'DMA',
+              'Office',
+              'Service Region',
+              'Tech Team',
+              'Tech ID',
+              'Tech Name',
+              'Subcontractor',
+              'Company Name',
+            ]
+            badProps.forEach(prop => {
+              delete row[prop]
+            })
+            row['Tech ID'] = tech.externalId
+            const teamGroup = _.find(sdcrWorkGroups, { type: 'Team' })
+            row['Team Name'] = teamGroup && teamGroup.name
+            sdcrWorkGroups.forEach(workGroup => {
+              row[workGroup.type] = workGroup.externalId
+            })
+            return {
+              value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
+              date: row['BGO Snapshot Date'],
+              techId: tech.id,
+              externalId: row['Activity ID'],
+              type: row['Activity Sub Type (Snapshot)'],
+              dwellingType: row['Dwelling Type'],
+              row: row,
+            }
+          })()
 
-          const sdcrDataPoint = await SdcrDataPoint.query().insert({
-            value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
-            date: row['BGO Snapshot Date'],
-            techId: tech.id,
-            externalId: row['Activity ID'],
-            type: row['Activity Sub Type (Snapshot)'],
-            dwellingType: row['Dwelling Type'],
-            row: row,
-          })
+          const sdcrDataPoint = await SdcrDataPoint.query()
+          .insert(sdcrPojo)
+          .returning('*')
           await sdcrDataPoint.$relatedQuery('workGroups').relate(sdcrWorkGroups)
         } catch (e) {
-          if (!(e instanceof ExpectedError)) throw e
+          if (!(e instanceof ExpectedError)) {
+            console.log(row)
+            throw e
+          }
           invalidRowsDetected.push({
             failureReason: e.message,
             ...row,
