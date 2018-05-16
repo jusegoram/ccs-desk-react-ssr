@@ -151,6 +151,7 @@ export default async ({ knex, rows, now }) => {
           })
         }
 
+        const { original_row, ...standardRow } = row
         const newAppointment = {
           id: uuid(),
           lifespan: knex.raw("tstzrange(?, null, '[)')", [now]),
@@ -158,8 +159,8 @@ export default async ({ knex, rows, now }) => {
           dueDate: getDateString(row['Due Date']),
           type: row['Order Type'],
           status: row['Status'],
-          row: row,
-          original_row: row.original_row,
+          row: standardRow,
+          original_row: original_row,
           createdAt: now,
           techId: tech && tech.id,
           workOrderId: (appointment && appointment.workOrderId) || undefined,
