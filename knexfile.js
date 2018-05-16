@@ -29,7 +29,7 @@ module.exports = {
       host: 'ccs2.cljr4tpdvim0.us-east-1.rds.amazonaws.com',
       user: 'master',
       password: process.env.DB_PASSWORD_PRODUCTION,
-      database: 'ccs2',
+      database: 'ccs',
       multipleStatements: true,
       charset: 'utf8',
     },
