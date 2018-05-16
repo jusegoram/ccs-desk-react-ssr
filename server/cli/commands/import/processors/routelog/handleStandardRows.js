@@ -110,17 +110,23 @@ export default async ({ knex, rows, now }) => {
         rowCompanies.push(rowSubcontractor)
       }
       return Promise.map(rowCompanies, company =>
-        Promise.map(groupTypes, type =>
-          WorkGroup.query(trx).ensure(
-            {
-              companyId: company.id,
-              type,
-              externalId: row[typeToIdProp[type]],
-              name: row[typeToNameProp[type]],
-            },
-            workGroupCache
+        Promise.map(groupTypes, type => {
+          const externalId = row[typeToIdProp[type]]
+          const name = row[typeToNameProp[type]]
+          return (
+            name &&
+            externalId &&
+            WorkGroup.query(trx).ensure(
+              {
+                companyId: company.id,
+                type,
+                externalId,
+                name,
+              },
+              workGroupCache
+            )
           )
-        )
+        })
       )
     })
 
