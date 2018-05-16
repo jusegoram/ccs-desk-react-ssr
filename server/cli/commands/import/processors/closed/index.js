@@ -153,8 +153,8 @@ export default async ({ csvObjStream, w2Company }) => {
       { concurrency: 200 }
     )
 
-    await knex.batchInsert('Appointment', sdcrDataPointInserts).transacting(knex)
-    await knex.batchInsert('workGroupAppointments', workGroupSdcrDataPointsInserts).transacting(knex)
+    await knex.batchInsert('SdcrDataPoint', sdcrDataPointInserts).transacting(knex)
+    await knex.batchInsert('workGroupSdcrDataPoints', workGroupSdcrDataPointsInserts).transacting(knex)
 
     if (invalidRowsDetected.length) {
       console.log('invalid row detected')
