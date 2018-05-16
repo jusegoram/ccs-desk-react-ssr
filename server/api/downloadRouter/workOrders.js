@@ -23,17 +23,14 @@ router.get('/', async (req, res) => {
   })
   const stringifier = stringify({ header: true })
   const workOrderIdsScheduledTodayAtSomePointToday = models.Appointment.query()
-  .with('livedtoday', qb => {
+  .with('waslasttoday', qb => {
     qb.from('Appointment').select(
       'id',
       'row',
       raw(
         'tstzrange("createdAt", lag("createdAt") over (partition by "workOrderId" order by "createdAt" desc), \'[)\')' +
-            " && tstzrange(?, ?, '[)') as livedtoday",
+            ' @> ? as waslasttoday',
         [
-          moment(date)
-          .startOf('day')
-          .format(),
           moment(date)
           .add(1, 'day')
           .startOf('day')
@@ -43,9 +40,9 @@ router.get('/', async (req, res) => {
     )
   })
   .distinct('workOrderId')
-  .leftJoin('livedtoday', 'livedtoday.id', 'Appointment.id')
+  .leftJoin('waslasttoday', 'waslasttoday.id', 'Appointment.id')
   .where({ date: moment(date).format('YYYY-MM-DD') })
-  .where({ livedtoday: true })
+  .where({ waslasttoday: true })
 
   await models.WorkOrder.query()
   .mergeContext({ session, moment })
