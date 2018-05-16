@@ -108,7 +108,10 @@ export default async ({ knex, rows, now }) => {
       const rowCompanies = [rowHsp]
       if (row['Subcontractor']) {
         const rowSubcontractor = companiesByName[row['Subcontractor']]
-        if (!rowSubcontractor) throw new Error(`Missing subcontractor: ${row['Subcontractor']}`)
+        if (!rowSubcontractor) {
+          console.log(row)
+          throw new Error(`Missing subcontractor: ${row['Subcontractor']}`)
+        }
         rowCompanies.push(rowSubcontractor)
       }
       return Promise.map(rowCompanies, company =>
