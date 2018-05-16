@@ -55,7 +55,7 @@ export default async ({ csvObjStream, w2Company }) => {
             .format()
             const appointment = await Appointment.query()
             .eager('assignedTech')
-            .findOne(raw('lifespan @> ? and "externalId" = ?', [endOfBgoSnapshotDate, externalId]))
+            .findOne(raw('lifespan @> ?::timestamptz and "externalId" = ?', [endOfBgoSnapshotDate, externalId]))
             if (!appointment)
               throw new ExpectedError(
                 `Unable to find appointment with ID ${externalId} that existed at ${endOfBgoSnapshotDate}`
