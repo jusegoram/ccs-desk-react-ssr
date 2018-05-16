@@ -79,7 +79,6 @@ const workGroupCache = {}
 
 export default async ({ knex, rows, now }) => {
   const { Appointment, Tech, Company, WorkGroup } = models
-  const badRows = []
   const appointmentInserts = []
   const workGroupAppointmentsInserts = []
 
@@ -193,6 +192,5 @@ export default async ({ knex, rows, now }) => {
     await knex.batchInsert('Appointment', appointmentInserts).transacting(trx)
     await knex.batchInsert('workGroupAppointments', workGroupAppointmentsInserts).transacting(trx)
   })
-  console.log(badRows)
-  console.log(`${badRows.length} rows not processed`)
+  console.log(`${appointmentInserts.length} appointments created`)
 }
