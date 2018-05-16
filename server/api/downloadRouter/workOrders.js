@@ -22,61 +22,45 @@ router.get('/', async (req, res) => {
     'Content-Disposition': 'attachment; filename=WorkOrders.csv',
   })
   const stringifier = stringify({ header: true })
-  const workOrderIdsScheduledTodayAtSomePointToday = models.Appointment.query()
-  .with('waslasttoday', qb => {
-    qb.from('Appointment').select(
-      'id',
-      'row',
-      raw(
-        'tstzrange("createdAt", lag("createdAt") over (partition by "workOrderId" order by "createdAt" desc), \'[)\')' +
-            ' @> ? as waslasttoday',
-        [
-          moment(date)
-          .add(1, 'day')
-          .startOf('day')
-          .format(),
-        ]
-      )
+  const { Appointment } = models
+  const knex = Appointment.knex()
+  const endOfQueryDate = moment(date, 'YYYY-MM-DD')
+  .endOf('day')
+  .format()
+  const visibleWorkGroupIds = knex('WorkGroup')
+  .select('id')
+  .where('companyId', session.account.company.id)
+  const visibleAppointmentIds = knex('workGroupAppointments')
+  .select('appointmentId')
+  .whereIn('workGroupId', visibleWorkGroupIds)
+  await knex('Appointment')
+  .with('most_recent', qb => {
+    qb
+    .select('workOrderId', knex.raw('MAX("createdAt") as "createdAt"'))
+    .from('Appointment')
+    .whereIn('id', visibleAppointmentIds)
+    .whereRaw('lifespan @> ?::timestamptz', [endOfQueryDate])
+    .where('dueDate', date)
+    .groupBy('workOrderId')
+  })
+  .innerJoin('most_recent', function() {
+    this.on('Appointment.workOrderId', '=', 'most_recent.workOrderId').on(
+      'Appointment.createdAt',
+      '=',
+      'most_recent.createdAt'
     )
   })
-  .distinct('workOrderId')
-  .leftJoin('waslasttoday', 'waslasttoday.id', 'Appointment.id')
-  .where({ date: moment(date).format('YYYY-MM-DD') })
-  .where({ waslasttoday: true })
-
-  await models.WorkOrder.query()
-  .mergeContext({ session, moment })
-  ._contextFilter()
-  .eager('appointments')
-  .modifyEager('appointments', qb => {
-    qb.where(
-      'createdAt',
-      '<=',
-      moment(date)
-      .endOf('day')
-      .format()
-    )
+  .select('row', knex.raw("(case when (upper(lifespan) is null) then status else 'Rescheduled' end) as status"))
+  .map(async appointment => {
+    appointment.row.Status = appointment.status
+    appointment.row = _.mapValues(appointment.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
+    return appointment
   })
-  .whereIn('id', workOrderIdsScheduledTodayAtSomePointToday)
-  .map(async workOrder => {
-    if (!workOrder.appointments || workOrder.appointments.length < 2) {
-      return workOrder
-    }
-    const sortedAppointments = _.sortBy(workOrder.appointments, 'createdAt')
-    const currentAppointment = sortedAppointments.slice(-1)[0]
-    workOrder.row = currentAppointment.row
-    if (currentAppointment.date !== moment(date).format('YYYY-MM-DD')) workOrder.row['Status'] = 'Rescheduled'
-    return workOrder
-  })
-  .map(async workOrder => {
-    workOrder.row = _.mapValues(workOrder.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
-    return workOrder
-  })
-  .filter(workOrder => {
-    if (!workOrder.row['Cancelled Date']) return true
-    return !moment(workOrder.row['Cancelled Date'].split(' ')[0], 'YYYY-MM-DD').isBefore(moment(date))
-  })
-  .map(workOrder => workOrder.row)
+  // .filter(appointment => {
+  //   if (!appointment.row['Cancelled Date']) return true
+  //   return !moment(appointment.row['Cancelled Date'].split(' ')[0], 'YYYY-MM-DD').isBefore(moment(date))
+  // })
+  .map(appointment => appointment.row)
   .then(rows => _.sortBy(_.sortBy(rows, 'Tech ID'), 'DMA'))
   .map(row => {
     stringifier.write(row)

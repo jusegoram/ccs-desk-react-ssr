@@ -47,14 +47,28 @@ router.get('/meta', async (req, res) => {
     .select('appointmentId')
     .whereIn('workGroupId', visibleWorkGroupIds)
     const rawWorkOrderStats = await knex('Appointment')
-    .whereIn('id', visibleAppointmentIds)
+    .with('most_recent', qb => {
+      qb
+      .select('workOrderId', knex.raw('MAX("createdAt") as "createdAt"'))
+      .from('Appointment')
+      .whereRaw('lifespan @> ?::timestamptz', [endOfQueryDate])
+      .where('dueDate', req.query.date)
+      .whereIn('id', visibleAppointmentIds)
+      .groupBy('workOrderId')
+    })
+    .innerJoin('most_recent', function() {
+      this.on('Appointment.workOrderId', '=', 'most_recent.workOrderId').on(
+        'Appointment.createdAt',
+        '=',
+        'most_recent.createdAt'
+      )
+    })
     .select(
       knex.raw("row->>'Source' as source"),
       'type',
       knex.raw("(case when (upper(lifespan) is null) then status else 'Rescheduled' end) as status")
     )
     .count()
-    .whereRaw('lifespan @> ?::timestamptz', [endOfQueryDate])
     .groupByRaw("row->>'Source', type, status, lifespan")
     .orderBy('type', 'status')
     .map(data => {
