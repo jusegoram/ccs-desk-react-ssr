@@ -53,6 +53,28 @@ const getDateString = timeString => {
   return date.format('YYYY-MM-DD')
 }
 
+const groupTypes = ['Company', 'Subcontractor', 'Division', 'DMA', 'Office', 'Service Region', 'Team', 'Tech']
+const typeToIdProp = {
+  Company: 'Partner Name',
+  Subcontractor: 'Subcontractor',
+  Division: 'Division',
+  DMA: 'DMA',
+  Office: 'Office',
+  'Service Region': 'Service Region',
+  Team: 'Tech Team',
+  Tech: 'Tech ID',
+}
+const typeToNameProp = {
+  Company: 'Partner Name',
+  Subcontractor: 'Subcontractor',
+  Division: 'Division',
+  DMA: 'DMA',
+  Office: 'Office',
+  'Service Region': 'Service Region',
+  Team: 'Tech Supervisor',
+  Tech: 'Tech Name',
+}
+
 const workGroupCache = {}
 
 export default async ({ knex, rows, now }) => {
@@ -63,54 +85,38 @@ export default async ({ knex, rows, now }) => {
 
   await knex.transaction(async trx => {
     const companies = await Company.query(trx).eager('workGroups')
-    const companiesByWorkGroupId = _.keyBy(companies, 'workGroupId')
-
-    const techs = await Tech.query(trx)
-    .eager('workGroups')
-    .map(tech => {
-      const techCompanyWorkGroup = _.find(tech.workGroups, workGroup => {
-        return workGroup.type === 'Company' && companiesByWorkGroupId[workGroup.id]
-      })
-      const techSubcontractorWorkGroup = _.find(tech.workGroups, workGroup => {
-        return workGroup.type === 'Subcontractor' && companiesByWorkGroupId[workGroup.id]
-      })
-      const hsp = companiesByWorkGroupId[techCompanyWorkGroup.id]
-      if (!hsp) {
-        throw new Error('Tech company not found')
-      }
-      const subcontractor = techSubcontractorWorkGroup && companiesByWorkGroupId[techSubcontractorWorkGroup.id]
-      const companies = [hsp]
-      if (subcontractor) companies.push(subcontractor)
-      return {
-        ...tech,
-        hsp,
-        subcontractor,
-        companies,
-      }
+    companies.forEach(company => {
+      company.workGroupsByType = _.groupBy(company.workGroups, 'type')
+      company.workGroupIndex = _.mapValues(company.workGroupsByType, groups => _.keyBy(groups, 'externalId'))
     })
-    const techsById = _.keyBy(techs, 'externalId')
+    const companiesByName = _.keyBy(companies, 'name')
+    const techsByExternalId = _.keyBy(await Tech.query(trx), 'externalId')
 
     const srData = _.keyBy(
       await trx('directv_sr_data').select('Service Region', 'Office', 'DMA', 'Division'),
       'Service Region'
     )
     await Promise.resolve(rows).mapSeries(row => {
-      const tech = techsById[row['Tech ID']]
-      if (!tech) return
       const serviceRegion = row['Service Region']
-      const srWorkGroupNames = srData[serviceRegion]
-      return Promise.map(tech.companies, company =>
-        Promise.all(
-          ['Division', 'DMA', 'Office', 'Service Region'].map(type =>
-            WorkGroup.query(trx).ensure(
-              {
-                companyId: company.id,
-                type,
-                externalId: srWorkGroupNames[type],
-                name: srWorkGroupNames[type],
-              },
-              workGroupCache
-            )
+      const srWorkGroupNames = srData[serviceRegion][('Division', 'DMA', 'Office', 'Service Region')].forEach(type => {
+        row[type] = srWorkGroupNames[type]
+      })
+      const rowHsp = companiesByName[row['Partner Name']]
+      const rowCompanies = [rowHsp]
+      if (row['Subcontractor']) {
+        const rowSubcontractor = companiesByName[row['Subcontractor']]
+        rowCompanies.push(rowSubcontractor)
+      }
+      return Promise.map(rowCompanies, company =>
+        Promise.map(groupTypes, type =>
+          WorkGroup.query(trx).ensure(
+            {
+              companyId: company.id,
+              type,
+              externalId: row[typeToIdProp[type]],
+              name: row[typeToNameProp[type]],
+            },
+            workGroupCache
           )
         )
       )
@@ -127,13 +133,7 @@ export default async ({ knex, rows, now }) => {
 
         if (appointment && _.isEqual(appointment.row, row)) return
 
-        const tech = techsById[row['Tech ID']]
-
-        if (!tech) {
-          row.failureReason = 'Tech not found'
-          badRows.push(row)
-          return
-        }
+        const tech = techsByExternalId[row['Tech ID']]
 
         if (appointment) {
           await appointment.$query(trx).patch({
@@ -151,24 +151,24 @@ export default async ({ knex, rows, now }) => {
           status: row['Status'],
           row: row,
           createdAt: now,
-          techId: tech.id,
+          techId: tech && tech.id,
           workOrderId: (appointment && appointment.workOrderId) || undefined,
         }
 
         appointmentInserts.push(newAppointment)
 
-        const techWorkGroups = _.filter(tech.workGroups, workGroup =>
-          _.includes(['Company', 'Subcontractor', 'Team', 'Tech'], workGroup.type)
-        )
-        const srWorkGroups = _.flatten(
-          tech.companies.map(company => {
-            return _.filter(company.workGroups, workGroup =>
-              _.includes(['DMA', 'Division', 'Service Region', 'Office'], workGroup.type)
-            )
-          })
-        )
-
-        const workGroups = techWorkGroups.concat(srWorkGroups)
+        const getWorkGroupsForCompany = company =>
+          _.filter(
+            groupTypes.map(type => {
+              const externalId = row[typeToIdProp[type]]
+              return company.workGroupIndex[type][externalId]
+            })
+          )
+        const rowHsp = companiesByName[row['Partner Name']]
+        const rowSubcontractor = row['Subcontractor'] && companiesByName[row['Subcontractor']]
+        const hspWorkGroups = getWorkGroupsForCompany(rowHsp)
+        const subcontractorWorkGroups = getWorkGroupsForCompany(rowSubcontractor)
+        const workGroups = hspWorkGroups.concat(subcontractorWorkGroups)
 
         workGroupAppointmentsInserts.push(
           ...workGroups.map(workGroup => ({
