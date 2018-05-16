@@ -38,24 +38,24 @@ class SiebelReportFetcher {
       timeout,
     })
     this.page = await this.browser.newPage()
-    const dashboardUrl = 'https://sesar.directv.com/analytics/saw.dll?Dashboard'
-    const loginUrl = 'https://sso.directv.com/idp/SSO.saml2'
-    await this.page.goto(dashboardUrl, { timeout })
-    await this.page.waitForFunction(`window.location == "${dashboardUrl}" || window.location == "${loginUrl}"`)
-    await this.page.waitFor(5000)
-    try {
-      await this.page.type('#username', this.credentials.username)
-      await this.page.waitFor(1000)
-      await this.page.type('#password', this.credentials.password)
-      await this.page.waitFor(1000)
-      await this.page.click('.ping-button.normal.allow')
-      await this.page.waitForFunction(`window.location == "${dashboardUrl}"`)
-    } catch (e) {} // eslint-disable-line no-empty
-    const downloadPath = path.resolve(__dirname, 'downloaded_reports', this.company)
-    await this.page._client.send('Page.setDownloadBehavior', {
-      behavior: 'allow',
-      downloadPath,
-    })
+    // const dashboardUrl = 'https://sesar.directv.com/analytics/saw.dll?Dashboard'
+    // const loginUrl = 'https://sso.directv.com/idp/SSO.saml2'
+    // await this.page.goto(dashboardUrl, { timeout })
+    // await this.page.waitForFunction(`window.location == "${dashboardUrl}" || window.location == "${loginUrl}"`)
+    // await this.page.waitFor(5000)
+    // try {
+    //   await this.page.type('#username', this.credentials.username)
+    //   await this.page.waitFor(1000)
+    //   await this.page.type('#password', this.credentials.password)
+    //   await this.page.waitFor(1000)
+    //   await this.page.click('.ping-button.normal.allow')
+    //   await this.page.waitForFunction(`window.location == "${dashboardUrl}"`)
+    // } catch (e) {} // eslint-disable-line no-empty
+    // const downloadPath = path.resolve(__dirname, 'downloaded_reports', this.company)
+    // await this.page._client.send('Page.setDownloadBehavior', {
+    //   behavior: 'allow',
+    //   downloadPath,
+    // })
   }
   getDownloadUrl({ reportName }) {
     const reportPath = `/shared/FSS HSP Objects - Transfer/STL/${reportName}`
@@ -65,31 +65,33 @@ class SiebelReportFetcher {
   async fetchReport(reportLocalName) {
     const reportName = availableReports[reportLocalName]
     console.log('fetching ' + reportName)
-    await this.goToDashboard()
+    // await this.goToDashboard()
     console.log('logged in')
-    const downloadUrl = this.getDownloadUrl({ reportName })
+    // const downloadUrl = this.getDownloadUrl({ reportName })
     const downloadPath = path.resolve(__dirname, 'downloaded_reports', this.company)
     const filePath = path.resolve(downloadPath, `${reportName}.csv`)
-    if (fs.existsSync(filePath)) {
-      await fs.renameAsync(filePath, `${filePath}.bk`)
-    }
-    console.log('downloading...')
-    this.page.goto(downloadUrl, { timeout }).catch(() => {})
-    console.log('waiting for file to download...')
-    let fileWatchInterval = null
-    return new Promise(resolve => {
-      fileWatchInterval = setInterval(async () => {
-        if (fs.existsSync(filePath)) {
-          console.log('downloaded.')
-          clearInterval(fileWatchInterval)
-          return resolve('' + (await fs.readFileAsync(filePath)))
-        }
-      }, 1000)
-    })
-    .timeout(20 * 60 * 1000)
-    .finally(async () => {
-      clearInterval(fileWatchInterval)
-    })
+    //remove the below line
+    return Promise.resolve('' + (await fs.readFileAsync(filePath)))
+    // if (fs.existsSync(filePath)) {
+    //   await fs.renameAsync(filePath, `${filePath}.bk`)
+    // }
+    // console.log('downloading...')
+    // this.page.goto(downloadUrl, { timeout }).catch(() => {})
+    // console.log('waiting for file to download...')
+    // let fileWatchInterval = null
+    // return new Promise(resolve => {
+    //   fileWatchInterval = setInterval(async () => {
+    //     if (fs.existsSync(filePath)) {
+    //       console.log('downloaded.')
+    //       clearInterval(fileWatchInterval)
+    //       return resolve('' + (await fs.readFileAsync(filePath)))
+    //     }
+    //   }, 1000)
+    // })
+    // .timeout(20 * 60 * 1000)
+    // .finally(async () => {
+    //   clearInterval(fileWatchInterval)
+    // })
   }
 }
 
