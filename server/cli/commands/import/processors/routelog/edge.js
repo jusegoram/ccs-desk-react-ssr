@@ -8,16 +8,17 @@ import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
 import sanitizeCompanyName from '../sanitizeCompanyName'
 
+const getWorkGroup = (employee, type) => (employee && _.find(employee.workGroups, { type })) || {}
+
 const convertRowToStandardForm = ({ row, employee }) => ({
-  const getWorkGroup = type => (employee && _.find(employee.workGroups, { type })) || {}
   Source: 'Edge',
   'Partner Name': row.HSP || '',
-  Subcontractor: getWorkGroup('Subcontractor').externalId || '',
+  Subcontractor: getWorkGroup(employee, 'Subcontractor').externalId || '',
   'Activity ID': row['Activity ID'] || '',
   'Tech ID': row['Tech ID'] || '', // this is updated below to be the Siebel ID
   'Tech Name': (employee && employee.name) || '',
-  'Tech Team': getWorkGroup('Team').externalId || '',
-  'Tech Supervisor': getWorkGroup('Team').name || '',
+  'Tech Team': getWorkGroup(employee, 'Team').externalId || '',
+  'Tech Supervisor': getWorkGroup(employee, 'Team').name || '',
   'Service Region': row['Service Region'] || '',
   'Order Type': row['Order Sub Type'] || '',
   Status: row['Status'] || '',
