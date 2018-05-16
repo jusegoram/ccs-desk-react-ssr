@@ -198,5 +198,5 @@ export default async ({ knex, rows, now }) => {
     await knex.batchInsert('Appointment', _.values(appointmentInserts)).transacting(trx)
     await knex.batchInsert('workGroupAppointments', workGroupAppointmentsInserts).transacting(trx)
   })
-  console.log(`${appointmentInserts.length} appointments created`)
+  console.log(`${_.values(appointmentInserts).length} appointments created`)
 }
