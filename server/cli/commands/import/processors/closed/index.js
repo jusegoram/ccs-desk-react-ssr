@@ -57,32 +57,23 @@ export default async ({ csvObjStream, w2Company }) => {
               row['Activity Status (Snapshot)'] === 'Pending Closed'
             ) {
               const tech = techsByExternalId[row['Tech ID']]
-              if (!tech) throw new ExpectedError(`Unable to find tech with tech ID ${row['Tech ID']}`)
-              return tech
+              return tech || null
             }
             const bgoSnapshotDate = moment.tz(row['BGO Snapshot Date'], 'YYYY-MM-DD', 'America/Chicago')
             const rangeStart = bgoSnapshotDate.clone().startOf('day')
             const rangeEnd = bgoSnapshotDate.clone().endOf('day')
             const appointment = await Appointment.query()
             .eager('assignedTech')
+            // give me the first one that overlaps with today
             .findOne(
               raw('lifespan && tstzrange(?, ?, \'[)\') and "externalId" = ?', [rangeStart, rangeEnd, externalId])
             )
+            // "first" as defined by looking backwards in time
             .orderBy('createdAt', 'desc')
+            // where there is a tech assigned
             .whereNotNull('techId')
-            if (!appointment)
-              throw new ExpectedError(
-                `Unable to find appointment with ID ${externalId} that existed on ${bgoSnapshotDate.format(
-                  'YYYY-MM-DD'
-                )}`
-              )
-            const tech = appointment.assignedTech
-            if (!tech)
-              throw new ExpectedError(
-                `The appointment with ID ${externalId} that existed on ` +
-                  `${bgoSnapshotDate.format('YYYY-MM-DD')} did not have an assigned tech`
-              )
-            return tech
+            const tech = appointment && appointment.assignedTech
+            return tech || null
           })()
 
           const sdcrWorkGroups = (() => {
@@ -94,7 +85,9 @@ export default async ({ csvObjStream, w2Company }) => {
               srWorkGroups.push(w2Company.workGroupIndex[type][externalId])
               if (subcontractor) srWorkGroups.push(subcontractor.workGroupIndex[type][externalId])
             })
-            const techWorkGroups = _.filter(tech.workGroups, workGroup => !_.includes(srWorkGroupTypes, workGroup.type))
+            const techWorkGroups = !tech
+              ? []
+              : _.filter(tech.workGroups, workGroup => !_.includes(srWorkGroupTypes, workGroup.type))
             return srWorkGroups.concat(techWorkGroups)
           })()
 
@@ -120,9 +113,9 @@ export default async ({ csvObjStream, w2Company }) => {
             badProps.forEach(prop => {
               delete row[prop]
             })
-            row['Tech ID'] = tech.externalId
+            row['Tech ID'] = tech ? tech.externalId : ''
             const teamGroup = _.find(sdcrWorkGroups, { type: 'Team' })
-            row['Team Name'] = teamGroup && teamGroup.name
+            row['Team Name'] = teamGroup ? teamGroup.name : ''
             sdcrWorkGroups.forEach(workGroup => {
               row[workGroup.type] = workGroup.externalId
             })
@@ -130,7 +123,7 @@ export default async ({ csvObjStream, w2Company }) => {
               id: uuid(),
               value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
               date: row['BGO Snapshot Date'],
-              techId: tech.id,
+              techId: tech ? tech.id : null,
               externalId: row['Activity ID'],
               type: row['Activity Sub Type (Snapshot)'],
               dwellingType: row['Dwelling Type'],
