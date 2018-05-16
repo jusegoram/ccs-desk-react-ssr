@@ -91,12 +91,12 @@ export default async ({ csvObjStream, w2Company }) => {
             )
           })()
 
-          await SdcrDataPoint.query()
-          .where({
-            externalId: row['Activity ID'],
-            date: row['BGO Snapshot Date'],
-          })
-          .delete()
+          // await SdcrDataPoint.query()
+          // .where({
+          //   externalId: row['Activity ID'],
+          //   date: row['BGO Snapshot Date'],
+          // })
+          // .delete()
 
           const sdcrPojo = (() => {
             const badProps = [
@@ -132,11 +132,12 @@ export default async ({ csvObjStream, w2Company }) => {
           })()
 
           sdcrDataPointInserts.push(sdcrPojo)
-          workGroupSdcrDataPointsInserts.push(...sdcrWorkGroups.map(workGroup => ({
-            workGroupId: workGroup.id,
-            sdcrDataPointId: sdcrPojo.id,
-          })))
-
+          workGroupSdcrDataPointsInserts.push(
+            ...sdcrWorkGroups.map(workGroup => ({
+              workGroupId: workGroup.id,
+              sdcrDataPointId: sdcrPojo.id,
+            }))
+          )
         } catch (e) {
           if (!(e instanceof ExpectedError)) {
             console.log(row)
