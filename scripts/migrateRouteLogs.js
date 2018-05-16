@@ -40,7 +40,7 @@ const run = async () => {
   .where({ saturate_status: 'Complete' })
   .where({ report_name: 'Routelog' })
   .orderBy('started_at')
-  .limit(1)
+  .limit(3)
   const routelogIds = routelogs.clone().select('cid')
 
   // const numRows = await legacyKnex('downloaded_csv_rows')
@@ -61,22 +61,6 @@ const run = async () => {
   // console.log(`This process will require roughly ${numOps} database operations`)
 
   const eta = new Eta(numReports)
-
-  // export default async ({ csvObjStream, w2Company, now }) => {
-  //   const timer = new Timer()
-  //   timer.start('Total')
-  //   timer.start('Initialization')
-
-  //   timer.split('Stream to Array')
-  //   const rows = await streamToArray(csvObjStream, data => {
-  //   })
-
-  //   timer.split('Process Rows')
-  //   await handleStandardRows({ rows, now })
-
-  //   timer.stop('Total')
-  //   console.log(timer.toString()) // eslint-disable-line no-console
-  // }
 
   await routelogs
   .tap(() => {
