@@ -9,24 +9,6 @@ export function up(knex) {
     .defaultTo(knex.raw('uuid_generate_v4()'))
     .index()
   })
-  .dropTable('WorkOrder').raw(`
-    create or replace view "WorkOrder" as (
-      with t as (
-        select *, ROW_NUMBER() over (partition by "workOrderId" order by "createdAt" desc) as rk 
-        from "Appointment"
-      )
-      select
-        "workOrderId" as id,
-        id as "currentAppointmentId",
-        "dueDate",
-        type,
-        status,
-        "techId"
-      from t 
-      where t.rk = 1
-    )
-    
-  `)
 }
 
 export function down(knex, Promise) {

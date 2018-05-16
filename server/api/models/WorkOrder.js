@@ -2,20 +2,6 @@ import { Model } from 'objection'
 import { APIModel, BaseQueryBuilder } from 'server/api/util'
 
 export default class WorkOrder extends APIModel {
-  static knexCreateTable = `
-    table.uuid('id').primary().defaultTo(knex.raw("uuid_generate_v4()"))
-    // <custom>
-    table.string('externalId').unique()
-    table.date('date')
-    table.string('type')
-    table.string('status')
-    table.uuid('companyId').index()
-    table.json('row')
-    table.unique(['companyId', 'externalId'])
-    // </custom>
-    table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
-  `
-
   static jsonSchema = {
     title: 'WorkOrder',
     description: 'A request from a customer for work',
@@ -25,13 +11,14 @@ export default class WorkOrder extends APIModel {
       id: { type: 'string' },
       // <custom>
       externalId: { type: ['string', 'null'] },
-      date: { type: ['string', 'null'], format: 'date' },
+      dueDate: { type: ['string', 'null'], format: 'date' },
       status: { type: ['string', 'null'] },
+      type: { type: ['string', 'null'] },
       // </custom>
     },
   }
 
-  static visible = ['id', 'externalId', 'type', 'status', 'date', 'workGroups']
+  static visible = ['id', 'externalId', 'type', 'status', 'dueDate']
 
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
@@ -54,16 +41,12 @@ export default class WorkOrder extends APIModel {
           to: 'Appointment.workOrderId',
         },
       },
-      workGroups: {
-        relation: Model.ManyToManyRelation,
-        modelClass: 'WorkGroup',
+      currentAppointment: {
+        relation: Model.HasOneRelation,
+        modelClass: 'Appointment',
         join: {
-          from: 'WorkOrder.id',
-          through: {
-            from: 'workGroupWorkOrders.workOrderId',
-            to: 'workGroupWorkOrders.workGroupId',
-          },
-          to: 'WorkGroup.id',
+          from: 'WorkOrder.currentAppointmentId',
+          to: 'Appointment.id',
         },
       },
     }
