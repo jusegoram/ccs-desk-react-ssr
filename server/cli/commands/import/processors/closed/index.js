@@ -60,22 +60,25 @@ export default async ({ csvObjStream, w2Company }) => {
               if (!tech) throw new ExpectedError(`Unable to find tech with tech ID ${row['Tech ID']}`)
               return tech
             }
-            const endOfBgoSnapshotDate = moment
-            .tz(row['BGO Snapshot Date'], 'YYYY-MM-DD', 'America/Chicago')
-            .endOf('day')
-            .format()
+            const bgoSnapshotDate = moment.tz(row['BGO Snapshot Date'], 'YYYY-MM-DD', 'America/Chicago')
+            const rangeStart = bgoSnapshotDate.clone().startOf('day')
+            const rangeEnd = bgoSnapshotDate.clone().endOf('day')
             const appointment = await Appointment.query()
             .eager('assignedTech')
-            .findOne(raw('lifespan @> ?::timestamptz and "externalId" = ?', [endOfBgoSnapshotDate, externalId]))
+            .findOne(
+              raw('lifespan && tstzrange(?, ?, \\\'[)\\\') and "externalId" = ?', [rangeStart, rangeEnd, externalId])
+            )
+            .orderBy('createdAt', 'desc')
+            .whereNotNull('techId')
             if (!appointment)
               throw new ExpectedError(
-                `Unable to find appointment with ID ${externalId} that existed at ${endOfBgoSnapshotDate}`
+                `Unable to find appointment with ID ${externalId} that existed on ${bgoSnapshotDate.format('YYYY-MM-DD')}`
               )
             const tech = appointment.assignedTech
             if (!tech)
               throw new ExpectedError(
-                `The appointment with ID ${externalId} that existed at ` +
-                  `${endOfBgoSnapshotDate} did not have an assigned tech`
+                `The appointment with ID ${externalId} that existed on ` +
+                  `${bgoSnapshotDate.format('YYYY-MM-DD')} did not have an assigned tech`
               )
             return tech
           })()

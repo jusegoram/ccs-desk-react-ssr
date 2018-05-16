@@ -33,22 +33,29 @@ const statusColors = {
 }
 
 router.get('/meta', async (req, res) => {
-  const { session } = req
+  const { session, moment } = req
   if (!session) return res.sendStatus(401)
   try {
     const knex = WorkOrder.knex()
+    const endOfQueryDate = moment(req.query.date, 'YYYY-MM-DD')
+    .endOf('day')
+    .format()
     const visibleWorkGroupIds = knex('WorkGroup')
     .select('id')
     .where('companyId', session.account.company.id)
-    const visibleWorkOrderIds = knex('workGroupWorkOrders')
-    .select('workOrderId')
+    const visibleAppointmentIds = knex('workGroupAppointments')
+    .select('appointmentId')
     .whereIn('workGroupId', visibleWorkGroupIds)
-    const rawWorkOrderStats = await knex('WorkOrder')
-    .whereIn('id', visibleWorkOrderIds)
-    .select(knex.raw("row->>'Source' as source"), 'type', 'status')
+    const rawWorkOrderStats = await knex('Appointment')
+    .whereIn('id', visibleAppointmentIds)
+    .select(
+      knex.raw("row->>'Source' as source"),
+      'type',
+      knex.raw("(case when (upper(lifespan) is null) then status else 'Rescheduled' end) as status")
+    )
     .count()
-    .where('date', req.query.date)
-    .groupByRaw("row->>'Source', type, status")
+    .whereRaw('lifespan @> ?::timestamptz', [endOfQueryDate])
+    .groupByRaw("row->>'Source', type, status, lifespan")
     .orderBy('type', 'status')
     .map(data => {
       data.count = parseInt(data.count)
