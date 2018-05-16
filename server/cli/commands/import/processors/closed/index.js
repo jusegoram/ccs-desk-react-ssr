@@ -79,7 +79,7 @@ export default async ({ csvObjStream, w2Company }) => {
             return tech
           })()
 
-          const sdcrWorkGroups = await (async () => {
+          const sdcrWorkGroups = (() => {
             const srWorkGroupTypes = ['Service Region', 'DMA', 'Office', 'Division']
             const workGroupExternalIds = srData[row['Service Region']]
             const srWorkGroups = []
