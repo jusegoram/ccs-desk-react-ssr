@@ -21,6 +21,7 @@ export default class ETA {
   markOpComplete() {
     this.opsCompleted++
     const currentTime = moment().valueOf()
+    const lastOpTime = currentTime - (this.initialTime + this.info.elapsed)
     const elapsed = currentTime - this.initialTime
     const rate = elapsed / this.opsCompleted
     const total = parseInt(rate * this.totalOps)
@@ -38,6 +39,7 @@ export default class ETA {
       opsRemaining,
       eta,
       nextOpEta,
+      lastOpTime,
     }
   }
 }
