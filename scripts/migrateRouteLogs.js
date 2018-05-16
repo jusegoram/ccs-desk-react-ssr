@@ -43,7 +43,6 @@ const run = async () => {
   .orderBy('started_at')
   .limit(100)
   const routelogIds = routelogs.clone().select('cid')
-  console.log(await routelogs.clone().count())
 
   // const numRows = await legacyKnex('downloaded_csv_rows')
   // .count('id', 'rows')
