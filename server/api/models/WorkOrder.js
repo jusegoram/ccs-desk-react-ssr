@@ -15,16 +15,7 @@ export default class WorkOrder extends APIModel {
     // </custom>
     table.timestamp('createdAt').defaultTo(knex.fn.now()).notNullable()
   `
-  static knexCreateJoinTables = {
-    workGroupWorkOrders: `
-      table.uuid('workOrderId').notNullable()
-      table.uuid('workGroupId').notNullable()
-      table.primary(['workOrderId', 'workGroupId'])
-      table.unique(['workGroupId', 'workOrderId'])
-      table.foreign('workGroupId').references('WorkGroup.id')
-      table.foreign('workOrderId').references('WorkOrder.id')
-    `,
-  }
+
   static jsonSchema = {
     title: 'WorkOrder',
     description: 'A request from a customer for work',

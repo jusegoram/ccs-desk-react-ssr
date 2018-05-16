@@ -11,11 +11,11 @@ export default class SdcrDataPoint extends APIModel {
     table.string('workOrderExternalId')
     table.json('row')
     table.index(['date', 'workOrderExternalId'])
-    table.uuid('workOrderId').index()
+    table.uuid('appointmentId').index()
     table.uuid('techId').notNullable().index()
   `
   static knexAlterTable = `
-    table.foreign('workOrderId').references('WorkOrder.id')
+    table.foreign('appointmentId').references('Appointment.id')
     table.foreign('techId').references('Tech.id')
   `
   static knexCreateJoinTables = {
