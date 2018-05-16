@@ -60,7 +60,8 @@ export default async ({ csvObjStream, w2Company }) => {
               if (!tech) throw new ExpectedError(`Unable to find tech with tech ID ${row['Tech ID']}`)
               return tech
             }
-            const endOfBgoSnapshotDate = moment(row['BGO Snapshot Date'], 'YYYY-MM-DD')
+            const endOfBgoSnapshotDate = moment
+            .tz(row['BGO Snapshot Date'], 'YYYY-MM-DD', 'America/Chicago')
             .endOf('day')
             .format()
             const appointment = await Appointment.query()
