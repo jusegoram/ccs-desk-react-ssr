@@ -108,7 +108,11 @@ export default async ({ knex, rows, now }) => {
       const rowCompanies = [rowHsp]
       if (row['Subcontractor']) {
         const rowSubcontractor = companiesByName[row['Subcontractor']]
-        rowCompanies.push(rowSubcontractor)
+        if (rowSubcontractor) {
+          rowCompanies.push(rowSubcontractor)
+        } else {
+          console.log(`Missing subcontractor: ${row['Subcontractor']}`)
+        }
       }
       return Promise.map(rowCompanies, company =>
         Promise.map(groupTypes, type => {
