@@ -18,14 +18,15 @@ moment.tz.setDefault('America/Chicago')
 const outputEtaInfo = eta => {
   const info = eta.info
   console.log(`Import ${(100 * info.percentComplete).toFixed(1)}% Complete:
+  Last report duration: ${moment.duration(info.lastOpTime).humanize()} (${info.lastOpTime} ms)
   Current time: ${moment().format('ll LTS')}
   Reports completed: ${eta.opsCompleted}
   Reports remaining: ${info.opsRemaining}
-  Time taken so far: ${moment.duration(info.elapsed).humanize()} (${info.elapsed}ms)
-  Time taken per report: ${moment.duration(info.rate).humanize()} (${info.rate}ms)
+  Time taken so far: ${moment.duration(info.elapsed).humanize()} (${info.elapsed} ms)
+  Time taken per report: ${moment.duration(info.rate).humanize()} (${info.rate} ms)
   ETA for next report: ${moment(eta.info.nextOpEta).format('ll LTS')}
-  Estimated total time: ${moment.duration(info.total).humanize()} (${info.total}ms)
-  Estimated time remaining: ${moment.duration(info.timeRemaining).humanize()} (${info.timeRemaining}ms)
+  Estimated total time: ${moment.duration(info.total).humanize()} (${info.total} ms)
+  Estimated time remaining: ${moment.duration(info.timeRemaining).humanize()} (${info.timeRemaining} ms)
   Overall ETA: ${moment(info.eta).format('ll LTS')}
 `)
 }
@@ -40,8 +41,9 @@ const run = async () => {
   .where({ saturate_status: 'Complete' })
   .where({ report_name: 'Routelog' })
   .orderBy('started_at')
-  .limit(3)
+  .limit(100)
   const routelogIds = routelogs.clone().select('cid')
+  console.log(await routelogs.clone().count())
 
   // const numRows = await legacyKnex('downloaded_csv_rows')
   // .count('id', 'rows')
