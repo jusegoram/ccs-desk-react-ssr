@@ -84,6 +84,7 @@ export default async ({ knex, csvObjStream, w2Company, now }) => {
 
   timer.split('Stream to Array')
   const rows = await streamToArray(csvObjStream, data => {
+    data.original_row = { ...data }
     data = _.mapKeys(data, (value, key) => key.replace(/[^a-zA-Z0-9#\s]/, ''))
     data.HSP = w2Company.name
     data.Subcontractor =

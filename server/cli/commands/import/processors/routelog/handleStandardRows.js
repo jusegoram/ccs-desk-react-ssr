@@ -157,6 +157,7 @@ export default async ({ knex, rows, now }) => {
           type: row['Order Type'],
           status: row['Status'],
           row: row,
+          original_row: row.original_row,
           createdAt: now,
           techId: tech && tech.id,
           workOrderId: (appointment && appointment.workOrderId) || undefined,

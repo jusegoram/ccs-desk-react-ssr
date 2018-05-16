@@ -103,9 +103,11 @@ const run = async () => {
     const rows = await legacyKnex('downloaded_csv_rows')
     .where({ csv_cid: csv.cid })
     .map(result => {
+      const original_row = { ...result.data }
       const row = _.mapKeys(result.data, (value, key) =>
         key.replace(/[^a-zA-Z0-9~!@#$%^&*()\-+[\]{}|;',./<>?\s]/, '')
       )
+      row.original_row = original_row
       row.HSP = w2Company.name
       row.Subcontractor =
             row['Tech Type'] === 'W2' || !row['Tech Type'] ? null : sanitizeCompanyName(row['Tech Type'])
