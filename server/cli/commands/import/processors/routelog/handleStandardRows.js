@@ -1,6 +1,48 @@
 import _ from 'lodash'
 import Promise from 'bluebird'
 import moment from 'moment-timezone'
+import * as models from 'server/api/models'
+import uuid from 'uuid/v4'
+
+// Standard Row Props
+//   Source
+//   Partner Name
+//   Subcontractor - TBD
+//   Activity ID
+//   Tech ID
+//   Tech Name - TBD
+//   Team ID - TBD
+//   Team Name - TBD
+//   Service Region
+//   Office - TBD
+//   DMA - TBD
+//   Division - TBD
+//   Order Type
+//   Status
+//   Reason Code
+//   Time Zone
+//   Created Date
+//   Due Date
+//   Planned Start Date
+//   Actual Start Date
+//   Actual End Date
+//   Cancelled Date
+//   Negative Reschedules
+//   Planned Duration
+//   Actual Duration
+//   Service in 7 Days
+//   Repeat Service
+//   Internet Connectivity
+//   Customer ID
+//   Customer Name
+//   Customer Phone
+//   Dwelling Type
+//   Address
+//   Zipcode
+//   City
+//   State
+//   Latitude
+//   Longitude
 
 const getDateString = timeString => {
   if (!timeString) return null
@@ -11,186 +53,138 @@ const getDateString = timeString => {
   return date.format('YYYY-MM-DD')
 }
 
-export default async ({ rows, models, w2Company, dataSource, now }) => {
-  const { WorkOrder, WorkGroup, Company, Appointment } = models
-  const knex = WorkOrder.knex()
-  const workGroupCache = {}
+const workGroupCache = {}
 
-  const directv = await Company.query().findOne({ name: 'DirecTV' })
+export default async ({ knex, rows, now }) => {
+  const { Appointment, Tech, Company, WorkGroup } = models
+  const badRows = []
+  const appointmentInserts = []
+  const workGroupAppointmentsInserts = []
 
-  const companyNames = _.without(_.map(_.uniqBy(rows, 'Subcontractor'), 'Subcontractor'), [w2Company.name, 'W2', ''])
-  const subcontractors = _.keyBy(
-    await Promise.map(companyNames, name => {
-      if (name === 'W2' || name === w2Company.name || !name) return
-      return Company.query().ensure(name)
-    }),
-    'name'
-  )
+  await knex.transaction(async trx => {
+    const companies = await Company.query(trx).eager('workGroups')
+    const companiesByWorkGroupId = _.keyBy(companies, 'workGroupId')
 
-  await Promise.resolve(rows).mapSeries(async row => {
-    let workOrder = await WorkOrder.query().findOne({ companyId: directv.id, externalId: row['Activity ID'] })
-    if (workOrder && _.isEqual(workOrder.row, row)) return
-
-    const subcontractorName =
-      !row['Subcontractor'] || row['Subcontractor'] === w2Company.name ? null : row['Subcontractor']
-    let subcontractor = subcontractors[subcontractorName]
-    if (subcontractor) {
-      const subworkgroup = await WorkGroup.query().ensure(
-        {
-          companyId: subcontractor.id,
-          type: 'Subcontractor',
-          externalId: subcontractor.name,
-          name: subcontractor.name,
-          createdAt: now,
-          updatedAt: now,
-        },
-        workGroupCache
-      )
-      if (subworkgroup) {
-        await subcontractor.$query().patch({ workGroupId: subworkgroup.id })
-      }
-      const companyDataSource = await subcontractor.$relatedQuery('dataSources').findOne({ id: dataSource.id })
-      if (!companyDataSource) {
-        await subcontractor.$relatedQuery('dataSources').relate(dataSource)
-      }
-    }
-
-    if (!workOrder) {
-      workOrder = await WorkOrder.query().insert({
-        companyId: directv.id,
-        externalId: row['Activity ID'],
-        date: getDateString(row['Due Date']),
-        type: row['Order Type'],
-        status: row['Status'],
-        row: row,
-        createdAt: now,
+    const techs = await Tech.query(trx)
+    .eager('workGroups')
+    .map(tech => {
+      const techCompanyWorkGroup = _.find(tech.workGroups, workGroup => {
+        return workGroup.type === 'Company' && companiesByWorkGroupId[workGroup.id]
       })
-    } else {
-      await workOrder.$query().patch({
-        date: getDateString(row['Due Date']),
-        type: row['Order Type'],
-        status: row['Status'],
-        row: row,
+      const techSubcontractorWorkGroup = _.find(tech.workGroups, workGroup => {
+        return workGroup.type === 'Subcontractor' && companiesByWorkGroupId[workGroup.id]
       })
-    }
-    let appointment = await Appointment.query().findOne({
-      workOrderId: workOrder.id,
-      date: getDateString(row['Due Date']),
+      const hsp = companiesByWorkGroupId[techCompanyWorkGroup.id]
+      if (!hsp) {
+        throw new Error('Tech company not found')
+      }
+      const subcontractor = techSubcontractorWorkGroup && companiesByWorkGroupId[techSubcontractorWorkGroup.id]
+      const companies = [hsp]
+      if (subcontractor) companies.push(subcontractor)
+      return {
+        ...tech,
+        hsp,
+        subcontractor,
+        companies,
+      }
     })
-    if (!appointment) {
-      appointment = await Appointment.query().insert({
-        workOrderId: workOrder.id,
-        date: getDateString(row['Due Date']),
-        status: row['Status'],
-        row: row,
-        createdAt: now,
-      })
-    } else {
-      appointment.$query().patch({
-        status: row['Status'],
-        row: row,
-      })
-    }
+    const techsById = _.keyBy(techs, 'externalId')
 
-    await knex('workGroupAppointments')
-    .where({ appointmentId: appointment.id })
-    .delete()
+    const srData = _.keyBy(
+      await trx('directv_sr_data').select('Service Region', 'Office', 'DMA', 'Division'),
+      'Service Region'
+    )
+    await Promise.resolve(rows).mapSeries(row => {
+      const tech = techsById[row['Tech ID']]
+      if (!tech) return
+      const serviceRegion = row['Service Region']
+      const srWorkGroupNames = srData[serviceRegion]
+      return Promise.map(tech.companies, company =>
+        Promise.all(
+          ['Division', 'DMA', 'Office', 'Service Region'].map(type =>
+            WorkGroup.query(trx).ensure(
+              {
+                companyId: company.id,
+                type,
+                externalId: srWorkGroupNames[type],
+                name: srWorkGroupNames[type],
+              },
+              workGroupCache
+            )
+          )
+        )
+      )
+    })
 
-    await knex('workGroupWorkOrders')
-    .where({ workOrderId: workOrder.id })
-    .delete()
+    await Promise.map(companies, company => company.$loadRelated('workGroups'))
 
-    const createForCompany = async company => {
-      const workGroupCreations = [
-        WorkGroup.query().ensure(
-          {
-            companyId: company.id,
-            type: 'Company',
-            externalId: w2Company.name,
-            name: w2Company.name,
-          },
-          workGroupCache
-        ),
-        WorkGroup.query().ensure(
-          {
-            companyId: company.id,
-            type: 'Subcontractor',
-            externalId: subcontractor && subcontractor.name,
-            name: subcontractor && subcontractor.name,
-          },
-          workGroupCache
-        ),
-        WorkGroup.query().ensure(
-          {
-            companyId: company.id,
-            type: 'Division',
-            externalId: row['Division'],
-            name: row['Division'],
-          },
-          workGroupCache
-        ),
-        WorkGroup.query().ensure(
-          {
-            companyId: company.id,
-            type: 'DMA',
-            externalId: row['DMA'],
-            name: row['DMA'],
-          },
-          workGroupCache
-        ),
-        WorkGroup.query().ensure(
-          {
-            companyId: company.id,
-            type: 'Service Region',
-            externalId: row['Service Region'],
-            name: row['Service Region'],
-          },
-          workGroupCache
-        ),
-        WorkGroup.query().ensure(
-          {
-            companyId: company.id,
-            type: 'Office',
-            externalId: row['Office'],
-            name: row['Office'],
-          },
-          workGroupCache
-        ),
-        WorkGroup.query().ensure(
-          {
-            companyId: company.id,
-            type: 'Team',
-            externalId: row['Tech Team'],
-            name: row['Tech Supervisor'],
-          },
-          workGroupCache
-        ),
-        WorkGroup.query().ensure(
-          {
-            companyId: company.id,
-            type: 'Tech',
-            externalId: row['Tech ID'],
-            name: row['Tech Name'],
-          },
-          workGroupCache
-        ),
-      ]
-      const workGroups = _.filter(await Promise.all(workGroupCreations))
-      const workOrderJoinTableInserts = await Promise.map(workGroups, workGroup => ({
-        workGroupId: workGroup.id,
-        workOrderId: workOrder.id,
-      }))
-      const appointmentJoinTableInserts = await Promise.map(workGroups, workGroup => ({
-        workGroupId: workGroup.id,
-        appointmentId: appointment.id,
-      }))
-      await Promise.all([
-        knex.batchInsert('workGroupWorkOrders', workOrderJoinTableInserts).transacting(WorkOrder.knex()),
-        knex.batchInsert('workGroupAppointments', appointmentJoinTableInserts).transacting(WorkOrder.knex()),
-      ])
-    }
+    await Promise.resolve(rows).map(
+      async row => {
+        let appointment = await Appointment.query(trx)
+        .where({ externalId: row['Activity ID'] })
+        .orderBy('createdAt', 'desc')
+        .first()
 
-    if (subcontractor) await createForCompany(subcontractor)
-    await createForCompany(w2Company)
+        if (appointment && _.isEqual(appointment.row, row)) return
+
+        const tech = techsById[row['Tech ID']]
+
+        if (!tech) {
+          row.failureReason = 'Tech not found'
+          badRows.push(row)
+          return
+        }
+
+        if (appointment) {
+          await appointment.$query(trx).patch({
+            lifespan: knex.raw("tstzrange(lower(lifespan), ?, '[)')", [now]),
+            destroyedAt: now,
+          })
+        }
+
+        const newAppointment = {
+          id: uuid(),
+          lifespan: knex.raw("tstzrange(?, null, '[)')", [now]),
+          externalId: row['Activity ID'],
+          dueDate: getDateString(row['Due Date']),
+          type: row['Order Type'],
+          status: row['Status'],
+          row: row,
+          createdAt: now,
+          techId: tech.id,
+          workOrderId: (appointment && appointment.workOrderId) || undefined,
+        }
+
+        appointmentInserts.push(newAppointment)
+
+        const techWorkGroups = _.filter(tech.workGroups, workGroup =>
+          _.includes(['Company', 'Subcontractor', 'Team', 'Tech'], workGroup.type)
+        )
+        const srWorkGroups = _.flatten(
+          tech.companies.map(company => {
+            return _.filter(company.workGroups, workGroup =>
+              _.includes(['DMA', 'Division', 'Service Region', 'Office'], workGroup.type)
+            )
+          })
+        )
+
+        const workGroups = techWorkGroups.concat(srWorkGroups)
+
+        workGroupAppointmentsInserts.push(
+          ...workGroups.map(workGroup => ({
+            workGroupId: workGroup.id,
+            appointmentId: newAppointment.id,
+          }))
+        )
+      },
+      {
+        concurrency: 100,
+      }
+    )
+
+    await knex.batchInsert('Appointment', appointmentInserts).transacting(trx)
+    await knex.batchInsert('workGroupAppointments', workGroupAppointmentsInserts).transacting(trx)
   })
+  console.log(badRows)
+  console.log(`${badRows.length} rows not processed`)
 }

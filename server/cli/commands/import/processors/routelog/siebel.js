@@ -1,55 +1,50 @@
 import _ from 'lodash'
-import { transaction } from 'objection'
-import * as rawModels from 'server/api/models'
 import { streamToArray } from 'server/util'
 import sanitizeName from 'server/util/sanitizeName'
 import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
 import sanitizeCompanyName from 'server/cli/commands/import/processors/sanitizeCompanyName'
 
-const convertRowToStandardForm = ({ row, w2Company }) => {
-  const standardRow = {
-    Source: 'Siebel',
-    'Partner Name': w2Company.name || '',
-    Subcontractor: row['Tech Type'] || '',
-    'Activity ID': row['Activity #'] || '',
-    'Tech ID': row['Tech User ID'] || '',
-    'Tech Name': sanitizeName(row['Tech Full Name']) || '',
-    'Tech Team': row['Tech Team'] || '',
-    'Tech Supervisor': sanitizeName(row['Team Name']) || '',
-    'Order Type': row['Order Type'] || '',
-    Status: row['Status'] || '',
-    'Reason Code': row['Reason Code'] || '',
-    'Service Region': row['SR'] || '',
-    DMA: row['DMA'] || '',
-    Office: row['Office'] || '',
-    Division: row['Division'] || '',
-    'Time Zone': row['Time Zone'] || '',
-    'Created Date': row['Created Date (with timestamp)'] || '',
-    'Due Date': row['Activity Due Date RT'] || '',
-    'Planned Start Date': row['Planned Start Date RT'] || '',
-    'Actual Start Date': row['Actual Start Date RT'] || '',
-    'Actual End Date': row['Actual End Date RT'] || '',
-    'Cancelled Date': row['Activity Cancelled Date'] || '',
-    'Negative Reschedules': row['# of Negative Reschedules'] || '',
-    'Planned Duration': row['Planned Duration (FS Scheduler)'] || '',
-    'Actual Duration': row['Total Duration Minutes'] || '',
-    'Service in 7 Days': '',
-    'Repeat Service': '',
-    'Internet Connectivity': row['Internet Connectivity'] === 'Y',
-    'Customer ID': row['Cust Acct Number'] || '',
-    'Customer Name': sanitizeName(row['Cust Name']) || '',
-    'Customer Phone': sanitizeName(row['Home Phone']) || '',
-    'Dwelling Type': row['Dwelling Type'] || '',
-    Address: row['House #'] + ' ' + row['Street Name'],
-    Zipcode: row['Zip'] || '',
-    City: row['City'] || '',
-    State: row['Service State'] || '',
-    Latitude: row['Activity Geo Latitude'] / 1000000 || '',
-    Longitude: row['Activity Geo Longitude'] / 1000000 || '',
-  }
-  return standardRow
-}
+const convertRowToStandardForm = ({ row }) => ({
+  Source: 'Siebel',
+  'Partner Name': row.HSP || '',
+  Subcontractor: null,
+  'Activity ID': row['Activity #'] || '',
+  'Tech ID': row['Tech User ID'] || '',
+  'Tech Name': null,
+  'Team ID': null,
+  'Team Name': null,
+  'Service Region': row['SR'] || '',
+  Office: null,
+  DMA: null,
+  Division: null,
+  'Order Type': row['Order Type'] || '',
+  Status: row['Status'] || '',
+  'Reason Code': row['Reason Code'] || '',
+  'Time Zone': row['Time Zone'] || '',
+  'Created Date': row['Created Date (with timestamp)'] || '',
+  'Due Date': row['Activity Due Date RT'] || '',
+  'Planned Start Date': row['Planned Start Date RT'] || '',
+  'Actual Start Date': row['Actual Start Date RT'] || '',
+  'Actual End Date': row['Actual End Date RT'] || '',
+  'Cancelled Date': row['Activity Cancelled Date'] || '',
+  'Negative Reschedules': row['# of Negative Reschedules'] || '',
+  'Planned Duration': row['Planned Duration (FS Scheduler)'] || '',
+  'Actual Duration': row['Total Duration Minutes'] || '',
+  'Service in 7 Days': '',
+  'Repeat Service': '',
+  'Internet Connectivity': row['Internet Connectivity'] === 'Y',
+  'Customer ID': row['Cust Acct Number'] || '',
+  'Customer Name': sanitizeName(row['Cust Name']) || '',
+  'Customer Phone': sanitizeName(row['Home Phone']) || '',
+  'Dwelling Type': row['Dwelling Type'] || '',
+  Address: row['House #'] + ' ' + row['Street Name'],
+  Zipcode: row['Zip'] || '',
+  City: row['City'] || '',
+  State: row['Service State'] || '',
+  Latitude: row['Activity Geo Latitude'] / 1000000 || '',
+  Longitude: row['Activity Geo Longitude'] / 1000000 || '',
+})
 
 /* Sample Row Data:
   { 'Time Zone': 'CENTRAL',
@@ -92,44 +87,23 @@ const convertRowToStandardForm = ({ row, w2Company }) => {
   Timezone: '(GMT-06:00) Central Time (US & Canada)' }
 */
 
-export default async ({ csvObjStream, w2Company, dataSource, now }) => {
+export default async ({ knex, csvObjStream, w2Company, now }) => {
   const timer = new Timer()
   timer.start('Total')
-  timer.start('Initialization')
-  await transaction(..._.values(rawModels), async (...modelsArray) => {
-    const models = _.keyBy(modelsArray, 'name')
-    const { WorkGroup } = models
 
-    timer.split('SR Data Load')
-    const w2CompanyName = w2Company.name
-    const srData = _.keyBy(
-      await WorkGroup.knex()
-      .select('Service Region', 'Office', 'DMA', 'Division')
-      .from('directv_sr_data')
-      .where({ HSP: w2CompanyName }),
-      'Service Region'
-    )
-
-    timer.split('Stream to Array')
-    const rows = await streamToArray(csvObjStream, data => {
-      data = _.mapKeys(data, (value, key) => key.replace(/[^a-zA-Z0-9~!@#$%^&*()\-+[\]{}|;',./<>?\s]/, ''))
-      const serviceRegion = data.SR
-      const groups = srData[serviceRegion]
-      if (groups) {
-        data.DMA = groups.DMA
-        data.Office = groups.Office
-        data.Division = groups.Division
-      }
-      if (data['Tech Type'] === 'W2' || !data['Tech Type']) delete data['Tech Type']
-      data.companyName = !data['Tech Type'] ? w2Company.name : data['Tech Type']
-      data['Tech Type'] = sanitizeCompanyName(data['Tech Type'])
-      if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
-      data.assignedTechId = data['Tech User ID']
-      return convertRowToStandardForm({ row: data, w2Company })
-    })
-
-    await handleStandardRows({ rows, timer, models, dataSource, w2Company, now })
+  timer.split('Stream to Array')
+  const rows = await streamToArray(csvObjStream, data => {
+    data = _.mapKeys(data, (value, key) => key.replace(/[^a-zA-Z0-9~!@#$%^&*()\-+[\]{}|;',./<>?\s]/, ''))
+    data.HSP = w2Company.name
+    data.Subcontractor =
+      data['Tech Type'] === 'W2' || !data['Tech Type'] ? null : sanitizeCompanyName(data['Tech Type'])
+    if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
+    return convertRowToStandardForm({ row: data, w2Company })
   })
+
+  timer.split('Process Rows')
+  await handleStandardRows({ knex, rows, now })
+
   timer.stop('Total')
   console.log(timer.toString()) // eslint-disable-line no-console
 }
