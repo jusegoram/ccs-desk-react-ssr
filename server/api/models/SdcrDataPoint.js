@@ -61,8 +61,8 @@ export default class SdcrDataPoint extends APIModel {
         join: {
           from: 'SdcrDataPoint.id',
           through: {
-            from: 'sdcrDataPointWorkGroups.sdcrDataPointId',
-            to: 'sdcrDataPointWorkGroups.workGroupId',
+            from: 'workGroupSdcrDataPoints.sdcrDataPointId',
+            to: 'workGroupSdcrDataPoints.workGroupId',
           },
           to: 'WorkGroup.id',
         },
