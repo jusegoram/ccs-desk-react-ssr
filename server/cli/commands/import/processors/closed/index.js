@@ -40,7 +40,7 @@ export default async ({ csvObjStream, w2Company }) => {
     const sdcrDataPointInserts = []
     const workGroupSdcrDataPointsInserts = []
     await Promise.map(
-      rows.slice(0, 1000),
+      rows,
       async row => {
         index++
         if (!(index % 1000)) console.log(index / 1000)
