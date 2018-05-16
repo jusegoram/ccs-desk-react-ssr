@@ -5,8 +5,6 @@ import { streamToArray } from 'server/util'
 import Timer from 'server/util/Timer'
 import Promise from 'bluebird'
 import moment from 'moment-timezone'
-import WorkGroup from 'server/api/models/WorkGroup'
-import Company from 'server/api/models/Company'
 import sanitizeCompanyName from 'server/cli/commands/import/processors/sanitizeCompanyName'
 import uuid from 'uuid/v4'
 
@@ -18,8 +16,17 @@ export default async ({ csvObjStream, w2Company }) => {
   timer.start('Initialization')
   await transaction(..._.values(rawModels), async (...modelsArray) => {
     const models = _.keyBy(modelsArray, 'name')
-    const { Tech, SdcrDataPoint, Appointment } = models
+    const { Tech, Company, Appointment, WorkGroup } = models
     const knex = Appointment.knex()
+
+    const companies = await Company.query().eager('workGroups')
+    companies.forEach(company => {
+      company.workGroupsByType = _.groupBy(company.workGroups, 'type')
+      company.workGroupIndex = _.mapValues(company.workGroupsByType, groups => _.keyBy(groups, 'externalId'))
+    })
+    const companiesByName = _.keyBy(companies, 'name')
+    w2Company = companiesByName[w2Company.name]
+    const techsByExternalId = _.keyBy(await Tech.query(knex).eager('workGroups'), 'externalId')
 
     const srData = _.keyBy(
       await knex('directv_sr_data').select('Service Region', 'Office', 'DMA', 'Division'),
@@ -42,14 +49,14 @@ export default async ({ csvObjStream, w2Company }) => {
           const externalId = row['Activity ID']
           if (row['Subcontractor Company Name'] === 'UNKNOWN') delete row['Subcontractor Company Name']
           const subcontractorName = sanitizeCompanyName(row['Subcontractor Company Name'])
-          const subcontractor = subcontractorName && (await Company.query().findOne({ name: subcontractorName }))
+          const subcontractor = subcontractorName && companiesByName[subcontractorName]
 
           const tech = await (async () => {
             if (
               row['Activity Status (Snapshot)'] === 'Closed' ||
               row['Activity Status (Snapshot)'] === 'Pending Closed'
             ) {
-              const tech = await Tech.query().findOne({ externalId: row['Tech ID'] })
+              const tech = techsByExternalId[row['Tech ID']]
               if (!tech) throw new ExpectedError(`Unable to find tech with tech ID ${row['Tech ID']}`)
               return tech
             }
@@ -74,21 +81,15 @@ export default async ({ csvObjStream, w2Company }) => {
 
           const sdcrWorkGroups = await (async () => {
             const srWorkGroupTypes = ['Service Region', 'DMA', 'Office', 'Division']
-            const companyIds = _.filter([w2Company.id, subcontractor && subcontractor.id])
             const workGroupExternalIds = srData[row['Service Region']]
-            const srWorkGroupQuery = WorkGroup.query()
-            .whereIn('companyId', companyIds)
-            .where(qb => {
-              srWorkGroupTypes.forEach(type => {
-                qb.orWhere({ type, externalId: workGroupExternalIds[type] })
-              })
+            const srWorkGroups = []
+            srWorkGroupTypes.forEach(type => {
+              const externalId = workGroupExternalIds[type]
+              srWorkGroups.push(w2Company.workGroupIndex[type][externalId])
+              if (subcontractor) srWorkGroups.push(subcontractor.workGroupIndex[type][externalId])
             })
-            return _.flatten(
-              await Promise.all([
-                tech.$relatedQuery('workGroups').whereNotIn('type', srWorkGroupTypes),
-                srWorkGroupQuery,
-              ])
-            )
+            const techWorkGroups = _.filter(tech.workGroups, workGroup => !_.includes(srWorkGroupTypes, workGroup.type))
+            return srWorkGroups.concat(techWorkGroups)
           })()
 
           // await SdcrDataPoint.query()
