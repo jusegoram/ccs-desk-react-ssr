@@ -12,7 +12,8 @@ export function up(knex) {
         "dueDate",
         type,
         status,
-        "techId"
+        "techId",
+        row
       from t 
       where t.rk = 1
     )
