@@ -147,7 +147,7 @@ module.exports = async ({ knex, companyName, dataSourceName, reportName }) => {
     )
     await dataImport.$query().patch({ status: 'Processing', downloadedAt: moment().format() })
     const now = moment().format()
-    await processors[dataSourceName][reportName]({ knex, csvObjStream, w2Company, now })
+    await processors[dataSourceName][reportName]({ knex, csvObjStream, dataSource, w2Company, now })
     await dataImport.$query().patch({ status: 'Complete', completedAt: moment().format() })
   } catch (e) {
     await dataImport.$query().patch({ status: 'Errored' })
