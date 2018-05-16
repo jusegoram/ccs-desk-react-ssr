@@ -8,16 +8,13 @@ import sanitizeCompanyName from 'server/cli/commands/import/processors/sanitizeC
 const convertRowToStandardForm = ({ row }) => ({
   Source: 'Siebel',
   'Partner Name': row.HSP || '',
-  Subcontractor: null,
+  Subcontractor: row.Subcontractor || '',
   'Activity ID': row['Activity #'] || '',
   'Tech ID': row['Tech User ID'] || '',
-  'Tech Name': null,
-  'Team ID': null,
-  'Team Name': null,
+  'Tech Name': sanitizeName(row['Tech Full Name']) || '',
+  'Tech Team': row['Tech Team'] || '',
+  'Tech Supervisor': sanitizeName(row['Team Name']) || '',
   'Service Region': row['SR'] || '',
-  Office: null,
-  DMA: null,
-  Division: null,
   'Order Type': row['Order Type'] || '',
   Status: row['Status'] || '',
   'Reason Code': row['Reason Code'] || '',
@@ -98,7 +95,7 @@ export default async ({ knex, csvObjStream, w2Company, now }) => {
     data.Subcontractor =
       data['Tech Type'] === 'W2' || !data['Tech Type'] ? null : sanitizeCompanyName(data['Tech Type'])
     if (!data['Tech User ID'] || data['Tech User ID'] === 'UNKNOWN') data['Tech User ID'] = null
-    return convertRowToStandardForm({ row: data, w2Company })
+    return convertRowToStandardForm({ row: data })
   })
 
   timer.split('Process Rows')

@@ -8,11 +8,16 @@ import Timer from 'server/util/Timer'
 import handleStandardRows from 'server/cli/commands/import/processors/routelog/handleStandardRows'
 import sanitizeCompanyName from '../sanitizeCompanyName'
 
-const convertRowToStandardForm = ({ row }) => ({
+const convertRowToStandardForm = ({ row, employee }) => ({
+  const getWorkGroup = type => (employee && _.find(employee.workGroups, { type })) || {}
   Source: 'Edge',
   'Partner Name': row.HSP || '',
+  Subcontractor: getWorkGroup('Subcontractor').externalId || '',
   'Activity ID': row['Activity ID'] || '',
-  'Tech ID': data['Tech ID'] || '',
+  'Tech ID': row['Tech ID'] || '', // this is updated below to be the Siebel ID
+  'Tech Name': (employee && employee.name) || '',
+  'Tech Team': getWorkGroup('Team').externalId || '',
+  'Tech Supervisor': getWorkGroup('Team').name || '',
   'Service Region': row['Service Region'] || '',
   'Order Type': row['Order Sub Type'] || '',
   Status: row['Status'] || '',
@@ -75,7 +80,7 @@ export default async ({ knex, csvObjStream, w2Company, now }) => {
   const { Tech } = rawModels
 
   timer.split('Load techs')
-  const techsByEdgeId = _.keyBy(await Tech.query(), 'alternateExternalId')
+  const techsByEdgeId = _.keyBy(await Tech.query().eager('workGroups'), 'alternateExternalId')
 
   timer.split('Stream to Array')
   const rows = await streamToArray(csvObjStream, data => {
@@ -84,8 +89,9 @@ export default async ({ knex, csvObjStream, w2Company, now }) => {
     data.Subcontractor =
       data['Tech Type'] === 'W2' || !data['Tech Type'] ? null : sanitizeCompanyName(data['Tech Type'])
     if (!data['Tech ID'] || data['Tech ID'] === 'UNKNOWN') data['Tech ID'] = null
-    data['Tech ID'] = data['Tech ID'] && techsByEdgeId[data['Tech ID']] && techsByEdgeId[data['Tech ID']].externalId
-    return convertRowToStandardForm({ row: data })
+    const employee = data['Tech ID'] && techsByEdgeId[data['Tech ID']] && techsByEdgeId[data['Tech ID']]
+    data['Tech ID'] = employee && employee.externalId
+    return convertRowToStandardForm({ row: data, employee })
   })
 
   timer.split('Process Rows')
