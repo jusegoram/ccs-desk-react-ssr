@@ -8,6 +8,7 @@ import moment from 'moment-timezone'
 import WorkGroup from 'server/api/models/WorkGroup'
 import Company from 'server/api/models/Company'
 import sanitizeCompanyName from 'server/cli/commands/import/processors/sanitizeCompanyName'
+import uuid from 'uuid/v4'
 
 class ExpectedError extends Error {}
 
@@ -29,6 +30,8 @@ export default async ({ csvObjStream, w2Company }) => {
     let invalidRowsDetected = []
     console.log(`${rows.length} rows to process`)
     let index = 0
+    const sdcrDataPointInserts = []
+    const workGroupSdcrDataPointsInserts = []
     await Promise.map(
       rows,
       async row => {
@@ -117,6 +120,7 @@ export default async ({ csvObjStream, w2Company }) => {
               row[workGroup.type] = workGroup.externalId
             })
             return {
+              id: uuid(),
               value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
               date: row['BGO Snapshot Date'],
               techId: tech.id,
@@ -127,10 +131,12 @@ export default async ({ csvObjStream, w2Company }) => {
             }
           })()
 
-          const sdcrDataPoint = await SdcrDataPoint.query()
-          .insert(sdcrPojo)
-          .returning('*')
-          await sdcrDataPoint.$relatedQuery('workGroups').relate(sdcrWorkGroups)
+          sdcrDataPointInserts.push(sdcrPojo)
+          workGroupSdcrDataPointsInserts.push(...sdcrWorkGroups.map(workGroup => ({
+            workGroupId: workGroup.id,
+            sdcrDataPointId: sdcrPojo.id,
+          })))
+
         } catch (e) {
           if (!(e instanceof ExpectedError)) {
             console.log(row)
@@ -144,6 +150,9 @@ export default async ({ csvObjStream, w2Company }) => {
       },
       { concurrency: 200 }
     )
+
+    await knex.batchInsert('Appointment', sdcrDataPointInserts).transacting(knex)
+    await knex.batchInsert('workGroupAppointments', workGroupSdcrDataPointsInserts).transacting(knex)
 
     if (invalidRowsDetected.length) {
       console.log('invalid row detected')
