@@ -40,7 +40,7 @@ export default async ({ csvObjStream, w2Company }) => {
     const sdcrDataPointInserts = []
     const workGroupSdcrDataPointsInserts = []
     await Promise.map(
-      rows,
+      rows.slice(0, 1000),
       async row => {
         index++
         if (!(index % 1000)) console.log(index / 1000)
@@ -64,13 +64,10 @@ export default async ({ csvObjStream, w2Company }) => {
             const rangeEnd = bgoSnapshotDate.clone().endOf('day')
             const appointment = await Appointment.query()
             .eager('assignedTech')
-            // give me the first one that overlaps with today
             .findOne(
               raw('lifespan && tstzrange(?, ?, \'[)\') and "externalId" = ?', [rangeStart, rangeEnd, externalId])
             )
-            // "first" as defined by looking backwards in time
             .orderBy('createdAt', 'desc')
-            // where there is a tech assigned
             .whereNotNull('techId')
             const tech = appointment && appointment.assignedTech
             return tech || null
