@@ -175,7 +175,7 @@ export default async ({ knex, rows, now }) => {
         const rowHsp = companiesByName[row['Partner Name']]
         const rowSubcontractor = row['Subcontractor'] && companiesByName[row['Subcontractor']]
         const hspWorkGroups = getWorkGroupsForCompany(rowHsp)
-        const subcontractorWorkGroups = getWorkGroupsForCompany(rowSubcontractor)
+        const subcontractorWorkGroups = !rowSubcontractor ? [] : getWorkGroupsForCompany(rowSubcontractor)
         const workGroups = hspWorkGroups.concat(subcontractorWorkGroups)
 
         workGroupAppointmentsInserts.push(
