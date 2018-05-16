@@ -96,6 +96,7 @@ export default async ({ knex, rows, now }) => {
       'Service Region'
     )
     await Promise.resolve(rows).mapSeries(row => {
+      if (row['Tech ID'] && (row['Tech ID'].slice(0, 2) !== 'MB' && row['Tech ID'].slice(0, 2) !== 'DS')) return
       const serviceRegion = row['Service Region']
       const srWorkGroupNames = srData[serviceRegion]
       const srGroupTypes = ['Division', 'DMA', 'Office', 'Service Region']
