@@ -103,7 +103,7 @@ export default async ({ csvObjStream, w2Company, now }) => {
           })()
 
           const badProps = [
-            'HSP Partner Name',
+            // 'HSP Partner Name',
             'DMA',
             'Office',
             'Service Region',
@@ -111,7 +111,7 @@ export default async ({ csvObjStream, w2Company, now }) => {
             'Tech ID',
             'Tech Name',
             'Subcontractor',
-            'Company Name',
+            // 'Company Name',
           ]
           badProps.forEach(prop => {
             delete row[prop]
