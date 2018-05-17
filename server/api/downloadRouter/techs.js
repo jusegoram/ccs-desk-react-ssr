@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
     'Content-Disposition': 'attachment; filename=Techs.csv',
   })
 
-  const knex = Tech.knex()
+  const knex = models.Tech.knex()
   const companyWorkGroupIds = knex('WorkGroup')
   .select('id')
   .where({ companyId: session.account.company.id })
