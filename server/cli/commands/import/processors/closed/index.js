@@ -84,6 +84,11 @@ export default async ({ csvObjStream, w2Company, now }) => {
             .orderBy('createdAt', 'desc')
             .whereNotNull('techId')
             const tech = appointment && appointment.assignedTech
+            if (externalId === '1-2WH2AHUI') {
+              console.log(row)
+              console.log(appointment)
+              console.log(tech)
+            }
             return tech || null
           })()
 
