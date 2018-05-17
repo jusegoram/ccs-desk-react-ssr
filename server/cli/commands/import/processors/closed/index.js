@@ -102,7 +102,7 @@ export default async ({ csvObjStream, w2Company, now }) => {
             return srWorkGroups.concat(techWorkGroups)
           })()
 
-          const sdcrPojo = (() => {
+          const sdcrDataPoint = await (async () => {
             const badProps = [
               'HSP Partner Name',
               'DMA',
@@ -123,8 +123,8 @@ export default async ({ csvObjStream, w2Company, now }) => {
             sdcrWorkGroups.forEach(workGroup => {
               row[workGroup.type] = workGroup.externalId
             })
-            return {
-              id: uuid(),
+            return await knex('SdcrDataPoint')
+            .insert({
               value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
               date: row['BGO Snapshot Date'],
               techId: tech ? tech.id : null,
@@ -132,14 +132,14 @@ export default async ({ csvObjStream, w2Company, now }) => {
               type: row['Activity Sub Type (Snapshot)'],
               dwellingType: row['Dwelling Type'],
               row: row,
-            }
+            })
+            .returning('*')
           })()
 
-          sdcrDataPointInserts.push(sdcrPojo)
           workGroupSdcrDataPointsInserts.push(
             ...sdcrWorkGroups.map(workGroup => ({
               workGroupId: workGroup.id,
-              sdcrDataPointId: sdcrPojo.id,
+              sdcrDataPointId: sdcrDataPoint.id,
             }))
           )
         } catch (e) {
@@ -156,7 +156,6 @@ export default async ({ csvObjStream, w2Company, now }) => {
       { concurrency: 200 }
     )
 
-    await knex.batchInsert('SdcrDataPoint', sdcrDataPointInserts).transacting(knex)
     await knex.batchInsert('workGroupSdcrDataPoints', workGroupSdcrDataPointsInserts).transacting(knex)
 
     if (invalidRowsDetected.length) {
