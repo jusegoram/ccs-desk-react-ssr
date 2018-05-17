@@ -19,10 +19,16 @@ router.get('/', async (req, res) => {
     'Content-Disposition': 'attachment; filename=Techs.csv',
   })
 
+  const knex = Tech.knex()
+  const companyWorkGroupIds = knex('WorkGroup')
+  .select('id')
+  .where({ companyId: session.account.company.id })
+  const visibleTechIds = knex('workGroupTechs')
+  .select('techId')
+  .whereIn('workGroupId', companyWorkGroupIds)
   const stringifier = stringify({ header: true })
   await models.Tech.query()
-  .mergeContext({ session, moment })
-  ._contextFilter()
+  .whereIn('id', visibleTechIds)
   .map(async tech => _.mapValues(tech, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val)))
   .map(tech => {
     stringifier.write(tech.row)
