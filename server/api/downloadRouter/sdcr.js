@@ -31,9 +31,9 @@ router.get('/', async (req, res) => {
     select row
     from "SdcrDataPoint"
     where id in (
-      select "sdcrDataPointWorkGroups"."sdcrDataPointId"
+      select "workGroupSdcrDataPoints"."sdcrDataPointId"
       from "WorkGroup" 
-      left join "sdcrDataPointWorkGroups" on "sdcrDataPointWorkGroups"."workGroupId" = "WorkGroup".id
+      left join "workGroupSdcrDataPoints" on "workGroupSdcrDataPoints"."workGroupId" = "WorkGroup".id
       where "WorkGroup"."companyId" = ?
     )
   `,
