@@ -77,18 +77,13 @@ export default async ({ csvObjStream, w2Company, now }) => {
             const rangeStart = bgoSnapshotDate.clone().startOf('day')
             const rangeEnd = bgoSnapshotDate.clone().endOf('day')
             const appointment = await Appointment.query()
-            .eager('assignedTech')
+            .eager('assignedTech.workGroups')
             .findOne(
               raw('lifespan && tstzrange(?, ?, \'[)\') and "externalId" = ?', [rangeStart, rangeEnd, externalId])
             )
             .orderBy('createdAt', 'desc')
             .whereNotNull('techId')
             const tech = appointment && appointment.assignedTech
-            if (externalId === '1-2WH2AHUI') {
-              console.log(row)
-              console.log(appointment)
-              console.log(tech)
-            }
             return tech || null
           })()
 
