@@ -50,9 +50,9 @@ router.get('/', async (req, res) => {
       'most_recent.createdAt'
     )
   })
-  .select('row', knex.raw("(case when (upper(lifespan) is null) then status else 'Rescheduled' end) as status"))
+  .select('row', 'dueDate')
   .map(async appointment => {
-    appointment.row.Status = appointment.status
+    if (moment(appointment.dueDate).isAfter(moment(date))) appointment.row.Status = 'Rescheduled'
     appointment.row = _.mapValues(appointment.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
     return appointment
   })
