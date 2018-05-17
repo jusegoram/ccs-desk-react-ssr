@@ -125,6 +125,7 @@ export default async ({ csvObjStream, w2Company, now }) => {
             })
             return await knex('SdcrDataPoint')
             .insert({
+              id: uuid(),
               value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
               date: row['BGO Snapshot Date'],
               techId: tech ? tech.id : null,
