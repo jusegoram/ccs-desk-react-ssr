@@ -102,40 +102,38 @@ export default async ({ csvObjStream, w2Company, now }) => {
             return srWorkGroups.concat(techWorkGroups)
           })()
 
-          const sdcrDataPoint = await (async () => {
-            const badProps = [
-              'HSP Partner Name',
-              'DMA',
-              'Office',
-              'Service Region',
-              'Tech Team',
-              'Tech ID',
-              'Tech Name',
-              'Subcontractor',
-              'Company Name',
-            ]
-            badProps.forEach(prop => {
-              delete row[prop]
-            })
-            row['Tech ID'] = tech ? tech.externalId : ''
-            const teamGroup = _.find(sdcrWorkGroups, { type: 'Team' })
-            row['Team Name'] = teamGroup ? teamGroup.name : ''
-            sdcrWorkGroups.forEach(workGroup => {
-              row[workGroup.type] = workGroup.externalId
-            })
-            return await knex('SdcrDataPoint')
-            .insert({
-              id: uuid(),
-              value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
-              date: row['BGO Snapshot Date'],
-              techId: tech ? tech.id : null,
-              externalId: row['Activity ID'],
-              type: row['Activity Sub Type (Snapshot)'],
-              dwellingType: row['Dwelling Type'],
-              row: row,
-            })
-            .returning('*')
-          })()
+          const badProps = [
+            'HSP Partner Name',
+            'DMA',
+            'Office',
+            'Service Region',
+            'Tech Team',
+            'Tech ID',
+            'Tech Name',
+            'Subcontractor',
+            'Company Name',
+          ]
+          badProps.forEach(prop => {
+            delete row[prop]
+          })
+          row['Tech ID'] = tech ? tech.externalId : ''
+          const teamGroup = _.find(sdcrWorkGroups, { type: 'Team' })
+          row['Team Name'] = teamGroup ? teamGroup.name : ''
+          sdcrWorkGroups.forEach(workGroup => {
+            row[workGroup.type] = workGroup.externalId
+          })
+          const sdcrDataPoint = await knex('SdcrDataPoint')
+          .insert({
+            id: uuid(),
+            value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
+            date: row['BGO Snapshot Date'],
+            techId: tech ? tech.id : null,
+            externalId: row['Activity ID'],
+            type: row['Activity Sub Type (Snapshot)'],
+            dwellingType: row['Dwelling Type'],
+            row: row,
+          })
+          .returning('*')
 
           workGroupSdcrDataPointsInserts.push(
             ...sdcrWorkGroups.map(workGroup => ({
