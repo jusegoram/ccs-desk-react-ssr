@@ -122,9 +122,10 @@ export default async ({ csvObjStream, w2Company, now }) => {
           sdcrWorkGroups.forEach(workGroup => {
             row[workGroup.type] = workGroup.externalId
           })
-          const sdcrDataPoint = await knex('SdcrDataPoint')
+          const sdcrDataPointId = uuid()
+          const sdcrDataPoint = await SdcrDataPoint.query()
           .insert({
-            id: uuid(),
+            id: sdcrDataPointId,
             value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
             date: row['BGO Snapshot Date'],
             techId: tech ? tech.id : null,
@@ -138,7 +139,7 @@ export default async ({ csvObjStream, w2Company, now }) => {
           workGroupSdcrDataPointsInserts.push(
             ...sdcrWorkGroups.map(workGroup => ({
               workGroupId: workGroup.id,
-              sdcrDataPointId: sdcrDataPoint.id,
+              sdcrDataPointId: sdcrDataPointId,
             }))
           )
         } catch (e) {
