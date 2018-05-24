@@ -58,6 +58,7 @@ router.get('/', async (req, res) => {
     )
   })
   .select('row', 'type', 'status', 'dueDate')
+  .whereIn('id', visibleAppointmentIds)
   .then(_.identity)
   .filter(appointment => {
     const { row, status } = appointment
