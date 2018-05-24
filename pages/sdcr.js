@@ -24,7 +24,6 @@ class SDCR extends React.Component {
       dateRange: {
         start: moment()
         .add(-1, 'day')
-        .startOf('month')
         .format('YYYY-MM-DD'),
         end: moment()
         .add(-1, 'day')
