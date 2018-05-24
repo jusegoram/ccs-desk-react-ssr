@@ -23,10 +23,10 @@ class SDCR extends React.Component {
       workOrderType: 'Production',
       dateRange: {
         start: moment()
-        .add(-2, 'day')
+        .add(-1, 'day')
         .format('YYYY-MM-DD'),
         end: moment()
-        .add(-2, 'day')
+        .add(-1, 'day')
         .format('YYYY-MM-DD'),
       },
     }
