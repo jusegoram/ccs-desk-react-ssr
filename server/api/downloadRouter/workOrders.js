@@ -11,10 +11,8 @@ Model.knex(knex)
 const router = express.Router()
 
 router.get('/', async (req, res) => {
-  if (!req.session) return res.sendStatus(401)
-
   const { session, moment } = req
-  const { date } = req.query
+  if (!session) return res.sendStatus(401)
 
   res.writeHead(200, {
     'Content-Type': 'text/csv',
@@ -24,8 +22,13 @@ router.get('/', async (req, res) => {
   const stringifier = stringify({ header: true })
   const { Appointment } = models
   const knex = Appointment.knex()
-  const endOfQueryDate = moment(date, 'YYYY-MM-DD')
+  const endOfQueryDate = moment(req.query.date, 'YYYY-MM-DD')
   .endOf('day')
+  .format()
+  const startOfDataImportsOnQueryDate = moment
+  .tz(req.query.date, 'YYYY-MM-DD', 'America/Chicago')
+  .startOf('day')
+  .add(5, 'hours')
   .format()
   const visibleWorkGroupIds = knex('WorkGroup')
   .select('id')
@@ -33,14 +36,19 @@ router.get('/', async (req, res) => {
   const visibleAppointmentIds = knex('workGroupAppointments')
   .select('appointmentId')
   .whereIn('workGroupId', visibleWorkGroupIds)
+  const scope = knex('Appointment')
+  .distinct('workOrderId')
+  .whereIn('id', visibleAppointmentIds)
+  .whereRaw("lifespan && tstzrange(?, ?, '[)')", [startOfDataImportsOnQueryDate, endOfQueryDate])
+  .where('dueDate', req.query.date)
+
   await knex('Appointment')
   .with('most_recent', qb => {
     qb
     .select('workOrderId', knex.raw('MAX("createdAt") as "createdAt"'))
     .from('Appointment')
-    .whereIn('id', visibleAppointmentIds)
-    .whereRaw('lifespan @> ?::timestamptz', [endOfQueryDate])
-    .where('dueDate', date)
+    .whereIn('workOrderId', scope)
+    .where('createdAt', '<=', endOfQueryDate)
     .groupBy('workOrderId')
   })
   .innerJoin('most_recent', function() {
@@ -50,18 +58,34 @@ router.get('/', async (req, res) => {
       'most_recent.createdAt'
     )
   })
-  .select('row', 'dueDate')
-  .map(async appointment => {
-    if (moment(appointment.dueDate).isAfter(moment(date))) appointment.row.Status = 'Rescheduled'
-    appointment.row = _.mapValues(appointment.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val))
-    return appointment
+  .select('row', 'type', 'status', 'dueDate')
+  .then(_.identity)
+  .filter(appointment => {
+    const { row, status } = appointment
+    if (status !== 'Cancelled') return true
+    const dueDate = appointment.dueDate && moment(appointment.dueDate).startOf('day')
+    if (!dueDate || !dueDate.isValid()) return true
+    const cancelledDate = moment(row['Cancelled Date'], 'YYYY-MM-DD HH:mm:ss').startOf('day')
+    if (!cancelledDate.isValid()) return true
+    const cancelledInThePast = cancelledDate.isBefore(dueDate)
+    console.log('is past', cancelledInThePast)
+    return !cancelledInThePast
   })
-  // .filter(appointment => {
-  //   if (!appointment.row['Cancelled Date']) return true
-  //   return !moment(appointment.row['Cancelled Date'].split(' ')[0], 'YYYY-MM-DD').isBefore(moment(date))
-  // })
-  .map(appointment => appointment.row)
-  .then(rows => _.sortBy(_.sortBy(rows, 'Tech ID'), 'DMA'))
+  .map(appointment => ({
+    ...appointment,
+    row: _.mapValues(appointment.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val)),
+  }))
+  .map(appointment => {
+    let { status } = appointment
+    const dueDate = appointment.dueDate && moment(appointment.dueDate)
+    const dueInTheFuture = dueDate.isAfter(endOfQueryDate)
+    if (dueInTheFuture) status = 'Rescheduled'
+    return {
+      ...appointment.row,
+      Status: status,
+    }
+  })
+  .then(rows => _.sortBy(rows, ['DMA', 'Tech ID']))
   .map(row => {
     stringifier.write(row)
   })

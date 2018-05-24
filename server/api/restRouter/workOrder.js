@@ -40,20 +40,30 @@ router.get('/meta', async (req, res) => {
     const endOfQueryDate = moment(req.query.date, 'YYYY-MM-DD')
     .endOf('day')
     .format()
+    const startOfDataImportsOnQueryDate = moment
+    .tz(req.query.date, 'YYYY-MM-DD', 'America/Chicago')
+    .startOf('day')
+    .add(5, 'hours')
+    .format()
     const visibleWorkGroupIds = knex('WorkGroup')
     .select('id')
     .where('companyId', session.account.company.id)
     const visibleAppointmentIds = knex('workGroupAppointments')
     .select('appointmentId')
     .whereIn('workGroupId', visibleWorkGroupIds)
+    const scope = knex('Appointment')
+    .distinct('workOrderId')
+    .whereIn('id', visibleAppointmentIds)
+    .whereRaw("lifespan && tstzrange(?, ?, '[)')", [startOfDataImportsOnQueryDate, endOfQueryDate])
+    .where('dueDate', req.query.date)
+
     const rawWorkOrderStats = await knex('Appointment')
     .with('most_recent', qb => {
       qb
       .select('workOrderId', knex.raw('MAX("createdAt") as "createdAt"'))
       .from('Appointment')
-      .whereRaw('lifespan @> ?::timestamptz', [endOfQueryDate])
-      .where('dueDate', req.query.date)
-      .whereIn('id', visibleAppointmentIds)
+      .whereIn('workOrderId', scope)
+      .where('createdAt', '<=', endOfQueryDate)
       .groupBy('workOrderId')
     })
     .innerJoin('most_recent', function() {
@@ -63,17 +73,42 @@ router.get('/meta', async (req, res) => {
         'most_recent.createdAt'
       )
     })
-    .select(
-      knex.raw("row->>'Source' as source"),
-      'type',
-      knex.raw("(case when (upper(lifespan) is null) then status else 'Rescheduled' end) as status")
-    )
-    .count()
-    .groupByRaw("row->>'Source', type, status, lifespan")
-    .orderBy('type', 'status')
-    .map(data => {
-      data.count = parseInt(data.count)
-      return data
+    .select('row', 'type', 'status', 'dueDate')
+    .then(_.identity)
+    .filter(appointment => {
+      const { row, status } = appointment
+      if (status !== 'Cancelled') return true
+      const dueDate = appointment.dueDate && moment(appointment.dueDate)
+      const cancelledDateString = row['Cancelled Date'] && row['Cancelled Date'].split(' ')[0]
+      const cancelledDate = cancelledDateString && moment(cancelledDateString, 'YYYY-MM-DD')
+      const cancelledInThePast = cancelledDate && dueDate && !cancelledDate.isAfter(moment(dueDate).startOf('day'))
+      return !cancelledInThePast
+    })
+    .map(appointment => {
+      let { status } = appointment
+      const dueDate = appointment.dueDate && moment(appointment.dueDate)
+      const dueInTheFuture = dueDate.isAfter(endOfQueryDate)
+      if (dueInTheFuture) status = 'Rescheduled'
+      return {
+        ...appointment,
+        status,
+      }
+    })
+    .then(results => {
+      const resultMap = {}
+      results.forEach(result => {
+        const { row, type, status } = result
+        const key = row.Source + '#' + type + '#' + status
+        resultMap[key] = resultMap[key] || {
+          source: row.Source,
+          type,
+          status,
+          count: 0,
+        }
+        resultMap[key].count += 1
+      })
+      const resultCounts = _.values(resultMap)
+      return _.sortBy(resultCounts, ['source', 'type', 'status'])
     })
     .map(data => ({
       ...data,
@@ -81,10 +116,10 @@ router.get('/meta', async (req, res) => {
       value: data.count,
       hex: statusColors[data.status],
     }))
-    const repairs = _.filter(rawWorkOrderStats, { source: 'Siebel' })
-    const repairsByType = _.sortBy(
+    const siebel = _.filter(rawWorkOrderStats, { source: 'Siebel' })
+    const siebelByType = _.sortBy(
       _.values(
-        _.mapValues(_.groupBy(repairs, 'type'), (group, groupName) => ({
+        _.mapValues(_.groupBy(siebel, 'type'), (group, groupName) => ({
           name: groupName,
           label: groupName,
           hex: colors[groupName],
@@ -94,10 +129,10 @@ router.get('/meta', async (req, res) => {
       ),
       'name'
     )
-    const production = _.difference(rawWorkOrderStats, repairs)
-    const productionByType = _.sortBy(
+    const edge = _.difference(rawWorkOrderStats, siebel)
+    const edgeByType = _.sortBy(
       _.values(
-        _.mapValues(_.groupBy(production, 'type'), (group, groupName) => ({
+        _.mapValues(_.groupBy(edge, 'type'), (group, groupName) => ({
           name: groupName,
           label: groupName,
           hex: colors[groupName],
@@ -112,15 +147,15 @@ router.get('/meta', async (req, res) => {
         name: 'Siebel',
         label: 'Siebel',
         hex: '#F6D18A',
-        value: _.sumBy(repairsByType, 'value'),
-        children: repairsByType,
+        value: _.sumBy(siebelByType, 'value'),
+        children: siebelByType,
       },
       {
         name: 'Edge',
         label: 'Edge',
         hex: '#F89570',
-        value: _.sumBy(productionByType, 'value'),
-        children: productionByType,
+        value: _.sumBy(edgeByType, 'value'),
+        children: edgeByType,
       },
     ]
     const workOrderStats = {
