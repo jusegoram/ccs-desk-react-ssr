@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
   .filter(appointment => {
     const { row, status } = appointment
     if (status !== 'Cancelled') return true
-    const dueDate = appointment.dueDate && moment(appointment.dueDate).startOf('day')
+    const dueDate = appointment.dueDate && moment.utc(appointment.dueDate).startOf('day')
     if (!dueDate || !dueDate.isValid()) return true
     const cancelledDate = moment(row['Cancelled Date'], 'YYYY-MM-DD').startOf('day')
     if (!cancelledDate.isValid()) return true
