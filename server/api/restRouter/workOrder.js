@@ -80,7 +80,7 @@ router.get('/meta', async (req, res) => {
       if (status !== 'Cancelled') return true
       const dueDate = appointment.dueDate && moment(appointment.dueDate).startOf('day')
       if (!dueDate || !dueDate.isValid()) return true
-      const cancelledDate = moment(row['Cancelled Date'], 'YYYY-MM-DD HH:mm:ss').startOf('day')
+      const cancelledDate = moment(row['Cancelled Date'], 'YYYY-MM-DD').startOf('day')
       if (!cancelledDate.isValid()) return true
       const cancelledInThePast = cancelledDate.isBefore(dueDate)
       return !cancelledInThePast
