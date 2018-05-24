@@ -1,10 +1,9 @@
-import { Model, raw } from 'objection'
+import { Model } from 'objection'
 import knex from 'server/knex'
 import * as models from 'server/api/models'
 import _ from 'lodash'
 import stringify from 'csv-stringify'
 import express from 'express'
-import Tech from 'server/api/models/Tech'
 
 Model.knex(knex)
 
@@ -68,7 +67,6 @@ router.get('/', async (req, res) => {
     const cancelledDate = moment(row['Cancelled Date'], 'YYYY-MM-DD HH:mm:ss').startOf('day')
     if (!cancelledDate.isValid()) return true
     const cancelledInThePast = cancelledDate.isBefore(dueDate)
-    console.log('is past', cancelledInThePast)
     return !cancelledInThePast
   })
   .map(appointment => ({
