@@ -145,7 +145,7 @@ export default async ({ csvObjStream, w2Company, now }) => {
         } catch (e) {
           if (!(e instanceof ExpectedError)) {
             console.log(row)
-            throw e
+            // throw e
           }
           invalidRowsDetected.push({
             failureReason: e.message,
