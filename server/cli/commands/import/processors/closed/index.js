@@ -123,36 +123,18 @@ export default async ({ csvObjStream, w2Company, now }) => {
             row[workGroup.type] = workGroup.externalId
           })
           const sdcrDataPointId = uuid()
-          const existingSdcr = await SdcrDataPoint.query().findOne({
+          const sdcrDataPoint = await SdcrDataPoint.query()
+          .insert({
+            id: sdcrDataPointId,
+            value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
             date: row['BGO Snapshot Date'],
+            techId: tech ? tech.id : null,
             externalId: row['Activity ID'],
+            type: row['Activity Sub Type (Snapshot)'],
+            dwellingType: row['Dwelling Type'],
+            row: row,
           })
-          let sdcrDataPoint = null
-          if (existingSdcr) {
-            sdcrDataPoint = await existingSdcr
-            .$query()
-            .patch({
-              value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
-              techId: tech ? tech.id : null,
-              type: row['Activity Sub Type (Snapshot)'],
-              dwellingType: row['Dwelling Type'],
-              row: row,
-            })
-            .returning('*')
-          } else {
-            sdcrDataPoint = await SdcrDataPoint.query()
-            .insert({
-              id: sdcrDataPointId,
-              date: row['BGO Snapshot Date'],
-              externalId: row['Activity ID'],
-              value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
-              techId: tech ? tech.id : null,
-              type: row['Activity Sub Type (Snapshot)'],
-              dwellingType: row['Dwelling Type'],
-              row: row,
-            })
-            .returning('*')
-          }
+          .returning('*')
 
           workGroupSdcrDataPointsInserts.push(
             ...sdcrWorkGroups.map(workGroup => ({
