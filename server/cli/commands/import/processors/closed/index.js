@@ -123,23 +123,28 @@ export default async ({ csvObjStream, w2Company, now }) => {
             row[workGroup.type] = workGroup.externalId
           })
           const sdcrDataPointId = uuid()
-          const sdcrDataPoint = await SdcrDataPoint.query()
-          .insert({
-            id: sdcrDataPointId,
-            value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
+          const existing = await SdcrDataPoint.query().findOne({
             date: row['BGO Snapshot Date'],
-            techId: tech ? tech.id : null,
             externalId: row['Activity ID'],
-            type: row['Activity Sub Type (Snapshot)'],
-            dwellingType: row['Dwelling Type'],
-            row: row,
           })
-          .returning('*')
-          const uniqueWorkGroups = _.uniqBy(sdcrWorkGroups, 'id')
+          const sdcrDataPoint =
+            existing ||
+            (await SdcrDataPoint.query()
+            .insert({
+              id: sdcrDataPointId,
+              value: row['# of Same Day Activity Closed Count'] === '1' ? 1 : 0,
+              date: row['BGO Snapshot Date'],
+              externalId: row['Activity ID'],
+              techId: tech ? tech.id : null,
+              type: row['Activity Sub Type (Snapshot)'],
+              dwellingType: row['Dwelling Type'],
+              row: row,
+            })
+            .returning('*'))
           workGroupSdcrDataPointsInserts.push(
-            ...uniqueWorkGroups.map(workGroup => ({
+            ...sdcrWorkGroups.map(workGroup => ({
               workGroupId: workGroup.id,
-              sdcrDataPointId: sdcrDataPointId,
+              sdcrDataPointId: sdcrDataPoint.id,
             }))
           )
         } catch (e) {
