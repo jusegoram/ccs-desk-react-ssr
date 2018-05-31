@@ -122,7 +122,7 @@ export default async ({ csvObjStream, w2Company, now }) => {
           sdcrWorkGroups.forEach(workGroup => {
             row[workGroup.type] = workGroup.externalId
           })
-          let sdcrDataPointId = uuid()
+          const sdcrDataPointId = uuid()
           const existingSdcr = await SdcrDataPoint.query().findOne({
             date: row['BGO Snapshot Date'],
             externalId: row['Activity ID'],
@@ -139,7 +139,6 @@ export default async ({ csvObjStream, w2Company, now }) => {
               row: row,
             })
             .returning('*')
-            sdcrDataPointId = sdcrDataPoint.id
           } else {
             sdcrDataPoint = await SdcrDataPoint.query()
             .insert({
