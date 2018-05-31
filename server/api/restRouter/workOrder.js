@@ -73,7 +73,7 @@ router.get('/meta', async (req, res) => {
         'most_recent.createdAt'
       )
     })
-    .select('row', 'type', 'status', 'dueDate')
+    .select('row', 'type', 'status', 'dueDate', 'Appointment.workOrderId')
     .whereIn('id', visibleAppointmentIds)
     .then(_.identity)
     .filter(appointment => {
@@ -86,15 +86,41 @@ router.get('/meta', async (req, res) => {
       const cancelledInThePast = cancelledDate.isBefore(dueDate)
       return !cancelledInThePast
     })
-    .map(appointment => {
-      let { status } = appointment
-      const dueDate = appointment.dueDate && moment(appointment.dueDate)
-      const dueInTheFuture = dueDate.isAfter(endOfQueryDate)
-      if (dueInTheFuture) status = 'Rescheduled'
-      return {
-        ...appointment,
-        status,
-      }
+    .then(appointments => {
+      const rescheduledWorkOrderIds = []
+      appointments.forEach(appointment => {
+        const dueDate = appointment.dueDate && moment(appointment.dueDate)
+        const dueInTheFuture = dueDate.isAfter(endOfQueryDate)
+        if (dueInTheFuture) {
+          rescheduledWorkOrderIds.push(appointment.workOrderId)
+        }
+      })
+      return knex('Appointment')
+      .with('most_recent', qb => {
+        qb
+        .select('workOrderId', knex.raw('MAX("createdAt") as "createdAt"'))
+        .from('Appointment')
+        .whereIn('workOrderId', rescheduledWorkOrderIds)
+        .where('dueDate', req.query.date)
+        .where('createdAt', '<=', endOfQueryDate)
+        .groupBy('workOrderId')
+      })
+      .innerJoin('most_recent', function() {
+        this.on('Appointment.workOrderId', '=', 'most_recent.workOrderId').on(
+          'Appointment.createdAt',
+          '=',
+          'most_recent.createdAt'
+        )
+      })
+      .select('row', 'type', knex.raw("'Rescheduled' as status"), 'dueDate', 'Appointment.workOrderId')
+      .whereIn('id', visibleAppointmentIds)
+      .then(overrides => {
+        const appointmentsById = _.keyBy(appointments, 'workOrderId')
+        overrides.forEach(override => {
+          appointmentsById[override.workOrderId] = override
+        })
+        return _.values(appointmentsById)
+      })
     })
     .then(results => {
       const resultMap = {}
