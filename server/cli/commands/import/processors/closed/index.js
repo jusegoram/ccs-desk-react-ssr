@@ -135,9 +135,9 @@ export default async ({ csvObjStream, w2Company, now }) => {
             row: row,
           })
           .returning('*')
-
+          const uniqueWorkGroups = _.uniqBy(sdcrWorkGroups, 'id')
           workGroupSdcrDataPointsInserts.push(
-            ...sdcrWorkGroups.map(workGroup => ({
+            ...uniqueWorkGroups.map(workGroup => ({
               workGroupId: workGroup.id,
               sdcrDataPointId: sdcrDataPointId,
             }))
