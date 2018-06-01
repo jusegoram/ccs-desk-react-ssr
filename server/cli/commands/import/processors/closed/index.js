@@ -102,17 +102,7 @@ export default async ({ csvObjStream, w2Company, now }) => {
             return srWorkGroups.concat(techWorkGroups)
           })()
 
-          const badProps = [
-            'HSP Partner Name',
-            'DMA',
-            'Office',
-            'Service Region',
-            'Tech Team',
-            'Tech ID',
-            'Tech Name',
-            'Subcontractor',
-            'Company Name',
-          ]
+          const badProps = ['Tech Team', 'Tech ID', 'Tech Name', 'Subcontractor']
           badProps.forEach(prop => {
             delete row[prop]
           })
