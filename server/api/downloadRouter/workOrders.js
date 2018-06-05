@@ -57,7 +57,7 @@ router.get('/', async (req, res) => {
       'most_recent.createdAt'
     )
   })
-  .select('row', 'type', 'status', 'dueDate')
+  .select('row', 'type', 'status', 'dueDate', 'Appointment.workOrderId')
   .whereIn('id', visibleAppointmentIds)
   .then(_.identity)
   .filter(appointment => {
@@ -74,16 +74,46 @@ router.get('/', async (req, res) => {
     ...appointment,
     row: _.mapValues(appointment.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val)),
   }))
-  .map(appointment => {
-    let { status } = appointment
-    const dueDate = appointment.dueDate && moment(appointment.dueDate)
-    const dueInTheFuture = dueDate.isAfter(endOfQueryDate)
-    if (dueInTheFuture) status = 'Rescheduled'
-    return {
-      ...appointment.row,
-      Status: status,
-    }
+  .then(appointments => {
+    const rescheduledWorkOrderIds = []
+    appointments.forEach(appointment => {
+      const dueDate = appointment.dueDate && moment(appointment.dueDate)
+      const dueInTheFuture = dueDate.isAfter(endOfQueryDate)
+      if (dueInTheFuture) {
+        rescheduledWorkOrderIds.push(appointment.workOrderId)
+      }
+    })
+    return knex('Appointment')
+    .with('most_recent', qb => {
+      qb
+      .select('workOrderId', knex.raw('MAX("createdAt") as "createdAt"'))
+      .from('Appointment')
+      .whereIn('workOrderId', rescheduledWorkOrderIds)
+      .where('dueDate', req.query.date)
+      .where('createdAt', '<=', endOfQueryDate)
+      .groupBy('workOrderId')
+    })
+    .innerJoin('most_recent', function() {
+      this.on('Appointment.workOrderId', '=', 'most_recent.workOrderId').on(
+        'Appointment.createdAt',
+        '=',
+        'most_recent.createdAt'
+      )
+    })
+    .select('row', 'type', knex.raw("'Rescheduled' as status"), 'dueDate', 'Appointment.workOrderId')
+    .whereIn('id', visibleAppointmentIds)
+    .then(overrides => {
+      const appointmentsById = _.keyBy(appointments, 'workOrderId')
+      overrides.forEach(override => {
+        appointmentsById[override.workOrderId] = override
+      })
+      return _.values(appointmentsById)
+    })
   })
+  .map(appointment => ({
+    ...appointment.row,
+    Status: appointment.status,
+  }))
   .then(rows => _.sortBy(rows, ['DMA', 'Tech ID']))
   .map(row => {
     stringifier.write(row)
