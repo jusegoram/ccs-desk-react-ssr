@@ -57,7 +57,7 @@ router.get('/meta', async (req, res) => {
     .whereRaw("lifespan && tstzrange(?, ?, '[)')", [startOfDataImportsOnQueryDate, endOfQueryDate])
     .where('dueDate', req.query.date)
 
-    const query = await knex('Appointment')
+    const query = knex('Appointment')
     .with('most_recent', qb => {
       qb
       .select('workOrderId', knex.raw('MAX("createdAt") as "createdAt"'))
