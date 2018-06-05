@@ -8,7 +8,7 @@ const fs = require('fs')
 
 Promise.promisifyAll(fs)
 
-const timeout = 20 * 60 * 1000
+const timeout = 40 * 60 * 1000
 
 const availableReports = {
   'Tech Profile': 'Tech Profile',
