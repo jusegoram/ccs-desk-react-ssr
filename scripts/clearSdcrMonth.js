@@ -1,7 +1,7 @@
-import Knex from 'knex'
-import moment from 'moment-timezone'
+const Knex = require('knex')
+const moment = require('moment-timezone')
 
-import knexfile from '../knexfile'
+const knexfile = require('../knexfile')
 
 const knex = Knex(knexfile['production'])
 moment.tz.setDefault('America/Chicago')
