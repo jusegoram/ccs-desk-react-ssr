@@ -179,7 +179,10 @@ export default async ({ knex, rows, now }) => {
           _.filter(
             groupTypes.map(type => {
               const externalId = row[typeToIdProp[type]]
-              return company.workGroupIndex[type][externalId]
+              if (!(company.workGroupIndex[type] && company.workGroupIndex[type][externalId])) {
+                console.log(`Missing from workGroupIndex for type "${type}": ${externalId}`)
+              }
+              return (company.workGroupIndex[type] && company.workGroupIndex[type][externalId]) || null
             })
           )
         const rowHsp = companiesByName[row['Partner Name']]
