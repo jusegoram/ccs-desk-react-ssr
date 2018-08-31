@@ -180,6 +180,7 @@ export default async ({ knex, rows, now }) => {
             groupTypes.map(type => {
               const externalId = row[typeToIdProp[type]]
               if (!(company.workGroupIndex[type] && company.workGroupIndex[type][externalId])) {
+                console.log(appointment)
                 console.log(`Missing from workGroupIndex for type "${type}": ${externalId}`)
               }
               return (company.workGroupIndex[type] && company.workGroupIndex[type][externalId]) || null
