@@ -12,7 +12,7 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   const { session, moment } = req
   if (!session) return res.sendStatus(401)
-
+  console.log('hello')
   res.writeHead(200, {
     'Content-Type': 'text/csv',
     'Access-Control-Allow-Origin': '*',
@@ -74,7 +74,8 @@ router.get('/', async (req, res) => {
     ...appointment,
     row: _.mapValues(appointment.row, val => (val === true ? 'TRUE' : val === false ? 'FALSE' : val)),
   }))
-  .then(appointments => {
+    .then(appointments => {
+    console.log('processing appointments')
     const rescheduledWorkOrderIds = []
     appointments.forEach(appointment => {
       const dueDate = appointment.dueDate && moment(appointment.dueDate)
