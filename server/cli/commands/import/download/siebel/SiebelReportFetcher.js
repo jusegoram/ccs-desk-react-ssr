@@ -86,7 +86,7 @@ class SiebelReportFetcher {
         }
       }, 1000)
     })
-    .timeout(20 * 60 * 1000)
+    .timeout(40 * 60 * 1000)
     .finally(async () => {
       clearInterval(fileWatchInterval)
     })
