@@ -26,7 +26,7 @@ module.exports = {
   production: {
     client: 'postgresql',
     connection: {
-      host: 'ccs.cm2jturmggw8.us-east-1.rds.amazonaws.com',
+      host: 'ccs2.cljr4tpdvim0.us-east-1.rds.amazonaws.com',
       user: 'master',
       password: process.env.DB_PASSWORD_PRODUCTION,
       database: 'ccs',
@@ -48,7 +48,7 @@ module.exports = {
   legacy: {
     client: 'postgresql',
     connection: {
-      host: 'ccsdesk.cm2jturmggw8.us-east-1.rds.amazonaws.com',
+      host: 'ccsdesk.cljr4tpdvim0.us-east-1.rds.amazonaws.com',
       user: 'master',
       password: process.env.LEGACY_DB_PASSWORD,
       database: 'ccsdesk',
