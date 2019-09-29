@@ -7,5 +7,17 @@ import Session from './Session'
 import Timecard from './Timecard'
 import VehicleClaim from './VehicleClaim'
 import WorkGroup from './WorkGroup'
-
-export default { Account, DataImport, Employee, Invite, Session, Timecard, VehicleClaim, WorkGroup }
+import TechDashConsumerElectronics from './TechDashConsumerElectronics'
+import TechDashUpSell from './TechDashUpSell'
+export default {
+  Account,
+  DataImport,
+  Employee,
+  Invite,
+  Session,
+  Timecard,
+  VehicleClaim,
+  WorkGroup,
+  TechDashConsumerElectronics,
+  TechDashUpSell,
+}

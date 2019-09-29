@@ -3,8 +3,9 @@ const localConfig = {
   client: 'postgresql',
   connection: {
     host: 'localhost',
+    user: 'master',
     password: process.env.DB_PASSWORD_DEVELOPMENT,
-    database: 'ccs',
+    database: 'ccs_development',
     multipleStatements: true,
     charset: 'utf8',
   },
