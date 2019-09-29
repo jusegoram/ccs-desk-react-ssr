@@ -125,7 +125,7 @@ export default class TechDashConsumerElectronics extends APIModel {
             await sendEmail({ recipient: 'david.long@ccs-live.com', subject, html })
             await sendEmail({ recipient: 'jseb16@gmail.com', subject, html })
             // await sendEmail({ recipient: inboxEmail, subject, html })
-           // await sendEmail({ recipient: dmaEmail, subject, html })
+            // await sendEmail({ recipient: dmaEmail, subject, html })
           } catch (e) {
             console.error(e) // eslint-disable-line no-console
           }
