@@ -1,4 +1,4 @@
-import React from 'react'
+//import React from 'react'
 import * as Icons from 'react-feather'
 
 export default {
@@ -52,6 +52,29 @@ export default {
     {
       name: 'Work Order Data',
       url: '/data/work-orders',
+      icon: Icons.Clipboard,
+    },
+    {
+      title: true,
+      name: 'TECH DASH',
+      wrapper: {
+        element: 'span',
+      },
+      class: 'text-center',
+    },
+    {
+      name: 'Tech Dash Up Sell',
+      url: '/techDashUpSell',
+      icon: Icons.Users,
+    },
+    {
+      name: 'Consumer Electronics',
+      url: '/techDashConsumerElectronics',
+      icon: Icons.Clipboard,
+    },
+    {
+      name: 'EOD Executive Summary',
+      url: '/techDashReport',
       icon: Icons.Clipboard,
     },
   ],

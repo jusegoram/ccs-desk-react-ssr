@@ -66,3 +66,13 @@
 ## Call (for call log)
 
 ## ReferenceDatum <-- just hardcode it
+
+
+TODO:
+
+CONSUMER ELECTRONICS
+
+
+UPSELL - selling other products while we are in their home.
+
+Tech Dash

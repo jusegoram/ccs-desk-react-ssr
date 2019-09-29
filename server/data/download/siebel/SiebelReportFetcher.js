@@ -10,8 +10,8 @@ const moment = require('moment-timezone')
 const userAgent =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36' +
   ' (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36'
-const baseUrl = 'https://sesar.directv.com/analytics/'
-const logInUrl = baseUrl + 'saw.dll?Dashboard'
+const baseUrl = 'http://s11.leadsrain.com/leadsrain/admin.php'
+const logInUrl = baseUrl + 'admin.php'
 
 const selector = {
   usernameInput: '#username',

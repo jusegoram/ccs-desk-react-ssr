@@ -8,5 +8,6 @@
     "__error": "Not found",
     ".template": true,
     ".next": true
-  }
+  },
+  "deepcode.review.results.hideInformationIssues": true
 }
