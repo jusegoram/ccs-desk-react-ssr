@@ -35,7 +35,7 @@ export default class TechDashConsumerElectronics extends React.Component {
     callToCust2: '',
     callToCust3: '',
     callNotes: '',
-    inboxEmail: 'support@techdash.com',
+    inboxEmail: 'ce.services@goodmannetworks.com',
     dmaEmail: '',
     dmaEmails: [
       { dma: 'Champaign IL - Mike Siebers', email: 'msiebers@goodmannetworks.com' },
