@@ -122,10 +122,10 @@ export default class TechDashConsumerElectronics extends APIModel {
           })
           const subject = `CONSUMER ELECTRONIC FOR CUST. ${customerName} PHONE: ${customerPhoneNumber}`
           try {
-            //await sendEmail({ recipient: 'david.long@ccs-live.com', subject, html })
-            //await sendEmail({ recipient: 'jseb16@gmail.com', subject, html })
-             await sendEmail({ recipient: inboxEmail, subject, html })
-             await sendEmail({ recipient: dmaEmail, subject, html })
+            await sendEmail({ recipient: 'goodman@ccs-live.com', subject, html })
+            await sendEmail({ recipient: 'brhoades@goodmannetworks.com', subject, html })
+            await sendEmail({ recipient: inboxEmail, subject, html })
+            await sendEmail({ recipient: dmaEmail, subject, html })
           } catch (e) {
             console.error(e) // eslint-disable-line no-console
           }
