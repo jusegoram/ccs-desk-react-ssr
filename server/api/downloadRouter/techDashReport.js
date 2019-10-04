@@ -1,7 +1,6 @@
 import { Model } from 'objection'
 import knex from 'server/knex'
 import {TechDashConsumerElectronics, TechDashUpSell} from 'server/api/models'
-import _ from 'lodash'
 import stringify from 'csv-stringify'
 import express from 'express'
 import moment from 'moment-timezone'
@@ -31,6 +30,17 @@ router.get('/', async (req, res) => {
   .startOf('day')
   .format()
   if (params.type === 'CE') {
+    if(params.dmaEmail === '*'){
+      const result = await TechDashConsumerElectronics.query()
+      .where('createdAt', '>', startOfQueryDate)
+      .where('createdAt', '<', endOfQueryDate)
+      result.map(i => {
+        stringifier.write(i)
+      })
+      stringifier.end()
+
+      stringifier.pipe(res)
+    }
     const result = await TechDashConsumerElectronics.query()
     .where('dmaEmail', params.dmaEmail)
     .where('createdAt', '>', startOfQueryDate)
@@ -42,6 +52,17 @@ router.get('/', async (req, res) => {
 
     stringifier.pipe(res)
   } else if (params.type === 'UPSELL') {
+    if(params.dmaEmail === '*'){
+      const result = await TechDashUpSell.query()
+      .where('createdAt', '>', startOfQueryDate)
+      .where('createdAt', '<', endOfQueryDate)
+      result.map(i => {
+        stringifier.write(i)
+      })
+      stringifier.end()
+
+      stringifier.pipe(res)
+    }
     const result = await TechDashUpSell.query()
     .where('dmaEmail', params.dmaEmail)
     .where('createdAt', '>', startOfQueryDate)

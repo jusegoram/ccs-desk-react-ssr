@@ -167,6 +167,7 @@ export default class TechDashUpSell extends React.Component {
               onChange={e => this.update('dmaEmail', e)}
             >
               <option value=""> CHOOSE DMA REGIONAL MANAGER</option>
+              <option value="*">ALL</option>
               {this.state.dmaEmails.map((item, index) => (
                 <option value={item.email} key={index}>
                   {item.dma}
