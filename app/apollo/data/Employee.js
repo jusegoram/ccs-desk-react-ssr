@@ -4,7 +4,6 @@ import gql from 'graphql-tag'
 const props = `
   id
   name
-  role
   externalId
   phoneNumber
   email
@@ -24,7 +23,7 @@ export default class Employee {
   static QUERY_techs = {
     query: gql`
       query techs {
-        employees(role: "Tech") {
+        techs {
           ${props}
         }
       }
@@ -41,8 +40,8 @@ export default class Employee {
   }
   static GET = {
     query: gql`
-      query employee($id: String!) {
-        employee(id: $id) {
+      query tech($id: String!) {
+        tech(id: $id) {
           ${props}
         }
       }

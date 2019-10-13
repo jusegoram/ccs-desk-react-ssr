@@ -5,13 +5,14 @@ const props = `
   id
   type
   name
-  managers {
-    id
-    name
-    phoneNumber
-    email
-  }
+  externalId
 `
+// managers {
+//   id
+//   name
+//   phoneNumber
+//   email
+// }
 export default class WorkGroup {
   static props = props
   static QUERY = {

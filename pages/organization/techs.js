@@ -57,8 +57,8 @@ export default class Employees extends React.Component {
                     style={{ backgroundColor: 'white', height: 'calc(100vh - 146px)' }}
                     filterable
                     className="-striped -highlight"
-                    loading={!data.employees && loading}
-                    data={data && data.employees}
+                    loading={!data.techs && loading}
+                    data={data && data.techs}
                     defaultPageSize={20}
                     columns={columns}
                     defaultFilterMethod={(filter, row) =>

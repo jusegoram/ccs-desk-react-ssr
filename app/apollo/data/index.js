@@ -9,6 +9,7 @@ import VehicleClaim from './VehicleClaim'
 import WorkGroup from './WorkGroup'
 import TechDashConsumerElectronics from './TechDashConsumerElectronics'
 import TechDashUpSell from './TechDashUpSell'
+
 export default {
   Account,
   DataImport,

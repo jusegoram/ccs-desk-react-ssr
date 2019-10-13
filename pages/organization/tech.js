@@ -24,13 +24,13 @@ export default class Employee extends React.Component {
                   <Col>Loading...</Col>
                 </Row>
               )
-            const { employee } = data
-            const workGroupIds = employee && _.map(employee.workGroups || [], 'id')
+            const { tech } = data
+            const workGroupIds = tech && _.map(tech.workGroups || [], 'id')
             return (
               <div>
                 <Row>
                   <Col>
-                    <h2>{employee.name}</h2>
+                    <h2>{tech.name}</h2>
                   </Col>
                   <Col style={{ textAlign: 'end' }}>
                     {/* <Button size="sm" color="primary">
@@ -47,19 +47,15 @@ export default class Employee extends React.Component {
                           <tbody>
                             <tr>
                               <th>Employee ID</th>
-                              <td>{employee.externalId}</td>
-                            </tr>
-                            <tr>
-                              <th>Role</th>
-                              <td>{employee.role}</td>
+                              <td>{tech.externalId}</td>
                             </tr>
                             <tr>
                               <th>Phone Number</th>
-                              <td>{employee.phoneNumber}</td>
+                              <td>{tech.phoneNumber}</td>
                             </tr>
                             <tr>
                               <th>Email</th>
-                              <td>{employee.email}</td>
+                              <td>{tech.email}</td>
                             </tr>
                           </tbody>
                         </Table>
@@ -74,11 +70,11 @@ export default class Employee extends React.Component {
                           <tbody>
                             <tr>
                               <th>Schedule</th>
-                              <td>{employee.schedule}</td>
+                              <td>{tech.schedule}</td>
                             </tr>
                             <tr>
                               <th>Skills</th>
-                              <td>{employee.skills}</td>
+                              <td>{tech.skills}</td>
                             </tr>
                           </tbody>
                         </Table>
