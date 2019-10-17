@@ -5,7 +5,7 @@ import axios from 'axios'
 import Link from 'next/link'
 import moment from 'moment-timezone'
 import DateRangePicker from 'app/ui/widgets/DateRangePIcker'
-import alert from 'sweetalert'
+import swal from 'sweetalert'
 
 import { Row, Col, Card, CardHeader, CardBody, Table, Button, Input } from 'reactstrap'
 // import alert from 'sweetalert'
@@ -16,6 +16,21 @@ import ApolloData from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'
 
+function IsEmptyWarning(props){
+  const {techs} = props.variables
+
+  if(techs.length === 0){
+    swal({
+      title: 'Oops...',
+      text:'There are no Techs in this Team! Please check, our system has empty duplicates, go back and select another record with the same name',
+      icon:'warning',
+    })
+    return(
+      <div></div>
+    )
+  }
+  else return null
+}
 export default class Team extends React.Component {
   constructor(props){
     super()
@@ -80,12 +95,12 @@ export default class Team extends React.Component {
     axios.post(`/api/team/${this.props.location.query.workGroupId}/claim`, tempClaim
     )
     .then(function (response) {
-      alert('Great!', 'Team has be claimed for the period chosen', 'success')
+      swal.fire('Great!', 'Team has be claimed for the period chosen', 'success')
       console.log(response)
     })
     .catch(function (error) {
       const {message} = error.response.data
-      alert('Try Again,', message, 'warning')
+      swal.fire('Try Again,', message, 'warning')
     })
   }
 
@@ -236,6 +251,7 @@ export default class Team extends React.Component {
                             .indexOf(String(filter.value).toLowerCase()) !== -1
                           }
                         />
+                        <IsEmptyWarning variables= {{techs: techs}}></IsEmptyWarning>
                       </CardBody>
                     </Card>
                   </Col>
