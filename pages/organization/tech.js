@@ -317,7 +317,7 @@ export default class Employee extends React.Component {
   }
 
   componentDidMount() {
-    axios.get(`http://localhost:3000/api/tech/${this.props.location.query.employeeId}/row`)
+    axios.get(`/api/tech/${this.props.location.query.employeeId}/row`)
     .then(res => {
 
       this.setState({row: res.data.row})
