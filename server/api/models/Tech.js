@@ -54,9 +54,49 @@ export default class Tech extends APIModel {
       createdAt: { type: 'string', format: 'date-time' },
       updatedAt: { type: 'string', format: 'date-time' },
       terminatedAt: { type: ['string', 'null'], format: 'date-time' },
+      tempClaimId: { type: ['string', 'null'] },
+      tempClaimTeamId: { type: ['string', 'null'] },
+      tempClaimTeamName: { type: ['string', 'null'] },
+      tempClaimTeamPhone: { type: ['string', 'null'] },
+      tempClaimFromDate: { type: ['string', 'null'], format: 'date-time' },
+      tempClaimToDate: { type: ['string', 'null'], format: 'date-time' },
     },
   }
-
+  // , properties: {
+  //   'Company': { type: 'string'},
+  //   'DMA': { type: 'string'},
+  //   'End Of Day City': { type: 'string'},
+  //   'EndofDayLatitude': { type: 'string', resolve: (parent) => parent.row['End of Day Latitude']  },
+  //   'EndofDayLongitude': { type: 'string' , resolve: (parent) => parent['End of Day Latitude']},
+  //   'EndofDayState': { type: 'string' , resolve: (parent) => parent['End of Day State']},
+  //   'EndofDayStreet': { type: 'string' , resolve: (parent) => parent['End of Day Street']},
+  //   'EndofDayZip': { type: 'string' , resolve: (parent) => parent['End of Day Zip']},
+  //   'MaxTravelMiles': { type: 'string' , resolve: (parent) => parent['Max Travel Miles']},
+  //   'Office': { type: 'string'},
+  //   'Region': { type: 'string'},
+  //   'ServiceRegion': { type: 'string' , resolve: (parent) => parent['Service Region']},
+  //   'SkillPackage': { type: 'string' , resolve: (parent) => parent['Skill Package']},
+  //   'StartCity': { type: 'string' , resolve: (parent) => parent['Start City']},
+  //   'StartLatitude': { type: 'string' , resolve: (parent) => parent['Start Latitude']},
+  //   'StartLongitude': { type: 'string' , resolve: (parent) => parent['Start Longitude']},
+  //   'StartState': { type: 'string' , resolve: (parent) => parent['Start State']},
+  //   'StartStreet': { type: 'string' , resolve: (parent) => parent['Start Street']},
+  //   'StartZip': { type: 'string' , resolve: (parent) => parent['Start Zip']},
+  //   'Team': { type: 'string'},
+  //   'teamEmail': { type: 'string'},
+  //   'TeamID': { type: 'string' , resolve: (parent) => parent['Team ID']},
+  //   'TeamName': { type: 'string' , resolve: (parent) => parent['Team Name']},
+  //   'Tech': { type: 'string' },
+  //   'TechATTUID': { type: 'string' , resolve: (parent) => parent['Tech ATT UID']},
+  //   'TechEfficiency': { type: 'string' , resolve: (parent) => parent['Tech Efficiency']},
+  //   'TechFullName': { type: 'string' , resolve: (parent) => parent['Tech Full Name']},
+  //   'TechMobilePhone': { type: 'string' , resolve: (parent) => parent['Tech Mobile Phone #']},
+  //   'TechSchedule': { type: 'string' , resolve: (parent) => parent['Tech Schedule']},
+  //   'TechTeamSupervisorLogin': { type: 'string' , resolve: (parent) => parent['Tech Team Supervisor Login']},
+  //   'TechTeamSupervisorMobile': { type: 'string' , resolve: (parent) => parent['Tech Team Supervisor Mobile #']},
+  //   'TechType': { type: 'string' , resolve: (parent) => parent['Tech Type']},
+  //   'TechUserID': { type: 'string' , resolve: (parent) => parent['Tech User ID']},
+  // },
   static visible = [
     'id',
     'name',
@@ -72,13 +112,29 @@ export default class Tech extends APIModel {
     'vehicleClaims',
     'company',
     'workGroups',
+    'tempClaimId',
+    'tempClaimTeamId',
+    'tempClaimTeamName',
+    'tempClaimTeamPhone',
+    'tempClaimFromDate',
+    'tempClaimToDate',
+    'row',
   ]
 
   static get QueryBuilder() {
     return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = super._contextFilter().context()
-        if (!session) return this
+        if (session.rootAccount && session.account.id === session.rootAccount.id) return this
+
+        const knex = this.knex()
+        const companyWorkGroupIds = knex('WorkGroup')
+        .select('id')
+        .where({ companyId: session.account.company.id })
+        const visibleTechIds = knex('workGroupTechs')
+        .select('techId')
+        .whereIn('workGroupId', companyWorkGroupIds)
+        this.whereIn('id', visibleTechIds)
         return this
       }
     }

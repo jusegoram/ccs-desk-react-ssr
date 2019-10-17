@@ -7,54 +7,49 @@ import { Card, CardHeader, CardBody, Button } from 'reactstrap'
 import Link from 'next/link'
 
 import data from 'app/apollo/data'
+import axios from 'axios'
 
 import Layout from 'app/ui/Layout'
 
-export default class Employees extends React.Component {
+export default class Teams extends React.Component {
+  state = {
+    activeWorkGroups: [],
+    dmaEmail: '',
+  };
+  update = (name, e) => {
+    this.setState({ [name]: e.target.value })
+  };
+
   render() {
     const columns = [
       {
-        Header: 'Employee ID',
+        Header: 'Team ID',
         accessor: 'externalId',
         Cell: ({ original }) => (
-          <Link shallow href={`/organization/tech/${original.id}`}>
+          <Link shallow href={`/organization/team/${original.id}`}>
             <a href="#">{original.externalId}</a>
           </Link>
         ),
       },
-      { Header: 'Employee', accessor: 'name' },
-      { Header: 'Phone', accessor: 'phoneNumber' },
-      {
-        Header: 'Company',
-        accessor: 'company.name',
-      },
+      { Header: 'Team Supervisor', accessor: 'name' },
     ]
     return (
       <Layout>
-        <Query {...data.Employee.QUERY_techs} fetchPolicy="cache-and-network">
+        <Query {...data.WorkGroup.QUERY} variables={{ order: 6}} fetchPolicy="cache-and-network">
           {({ loading, data }) => {
             return (
               <Card>
                 <CardHeader style={{ position: 'relative' }}>
                   {/*relative because card-actions is absolute*/}
-                  <i className="icon-menu" /> Techs
-                  <Link shallow href={`/organization/teams`}>
-                    <Button
-                      className="card-actions mt-0 h-100"
-                      color="primary"
-                      onClick={() => {}}
-                    >
-                      CLAIM TEAM
-                    </Button>
-                  </Link>
+                  <i className="icon-menu" /> Teams
                 </CardHeader>
                 <CardBody className="p-0">
                   <ReactTable
                     style={{ backgroundColor: 'white', height: 'calc(100vh - 146px)' }}
                     filterable
                     className="-striped -highlight"
-                    loading={!data.techs && loading}
-                    data={data && data.techs}
+                    loading={!data.workGroups && loading}
+                    data={data && data.workGroups}
                     defaultPageSize={20}
                     columns={columns}
                     defaultFilterMethod={(filter, row) =>

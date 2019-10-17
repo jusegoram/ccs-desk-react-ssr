@@ -10,6 +10,12 @@ const props = `
   skills
   schedule
   terminatedAt
+  tempClaimId
+  tempClaimTeamId
+  tempClaimTeamName
+  tempClaimTeamPhone
+  tempClaimFromDate
+  tempClaimToDate
   company {
     id
     name
@@ -18,6 +24,8 @@ const props = `
     id
   }
 `
+
+
 export default class Employee {
   static props = props
   static QUERY_techs = {
@@ -29,16 +37,18 @@ export default class Employee {
       }
     `,
   }
-  static QUERY_managers = {
+
+  static GET = {
     query: gql`
-      query managers {
-        employees(role: "Manager") {
+      query tech($id: String!) {
+        tech(id: $id) {
           ${props}
         }
       }
     `,
   }
-  static GET = {
+
+  static QUERY_workgroupTechs = {
     query: gql`
       query tech($id: String!) {
         tech(id: $id) {

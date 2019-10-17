@@ -3,21 +3,21 @@ import * as Icons from 'react-feather'
 
 export default {
   items: [
-    // {
-    //   title: true,
-    //   name: 'Organization',
-    //   wrapper: {
-    //     // optional wrapper object
-    //     element: 'span', // required valid HTML5 element tag
-    //     attributes: {}, // optional valid JS object with JS API naming ex: { className: 'my-class' }
-    //   },
-    //   class: 'text-center', // optional class names space delimited list for title item ex: 'text-center'
-    // },
-    // {
-    //   name: 'Techs',
-    //   url: '/organization/techs',
-    //   icon: 'fa fa-users',
-    // },
+    {
+      title: true,
+      name: 'Organization',
+      wrapper: {
+        // optional wrapper object
+        element: 'span', // required valid HTML5 element tag
+        attributes: {}, // optional valid JS object with JS API naming ex: { className: 'my-class' }
+      },
+      class: 'text-center', // optional class names space delimited list for title item ex: 'text-center'
+    },
+    {
+      name: 'Techs',
+      url: '/organization/techs',
+      icon: Icons.Briefcase,
+    },
     {
       title: true,
       name: 'Analytics',
@@ -65,12 +65,12 @@ export default {
     {
       name: 'Tech Dash Up Sell',
       url: '/techDashUpSell',
-      icon: Icons.Users,
+      icon: Icons.TrendingUp,
     },
     {
       name: 'Consumer Electronics',
       url: '/techDashConsumerElectronics',
-      icon: Icons.Clipboard,
+      icon: Icons.UserCheck,
     },
     {
       name: 'EOD Executive Summary',

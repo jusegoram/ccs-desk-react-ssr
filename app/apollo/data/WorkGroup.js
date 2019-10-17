@@ -13,12 +13,13 @@ const props = `
 //   phoneNumber
 //   email
 // }
+
 export default class WorkGroup {
   static props = props
   static QUERY = {
     query: gql`
-      query workGroups {
-        workGroups {
+      query workGroups($order: Float) {
+        workGroups(order: $order) {
           ${props}
         }
       }
@@ -28,6 +29,15 @@ export default class WorkGroup {
     query: gql`
       query workGroups($ids: [String!]!) {
         workGroups(idIn: $ids) {
+          ${props}
+        }
+      }
+    `,
+  }
+  static QUERY_workGroupTechs = {
+    query: gql`
+      query workGroup($id: String!) {
+        workGroup(id: $id) {
           ${props}
         }
       }

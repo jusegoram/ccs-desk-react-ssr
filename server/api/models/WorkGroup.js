@@ -68,7 +68,8 @@ export default class WorkGroup extends APIModel {
     return class extends BaseQueryBuilder {
       _contextFilter() {
         const { session } = super._contextFilter().context()
-        this.where({ 'WorkGroup.companyId': session.account.company.id })
+        if (session.rootAccount && session.account.id === session.rootAccount.id) return this
+        this.where('WorkGroup.companyId', session.account.company.id )
         this.orderBy('WorkGroup.order')
         return this
       }

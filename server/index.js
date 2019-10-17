@@ -52,7 +52,6 @@ export default async app => {
     req.moment = createClientMoment(timezone)
     next()
   })
-
   app.use(async (req, res, next) => {
     let session = null
     const clientContext = req.headers.clientcontext || 'Website'
