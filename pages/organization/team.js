@@ -16,24 +16,26 @@ import ApolloData from 'app/apollo/data'
 
 import Layout from 'app/ui/Layout'
 
-function IsEmptyWarning(props){
-  const {techs} = props.variables
-  setTimeout(() => {
-    if(techs.length === 0){
-      swal({
-        title: 'Oops...',
-        text:'There are no Techs in this Team! Please check, our system has empty duplicates, go back and select another record with the same name',
-        icon:'warning',
-      })
-      return(
-        <div></div>
-      )
-    }
-    else return null
-  }, 500)
+function IsEmptyWarning(props) {
+  const { techs } = props.variables
+  if (techs.length === 0) {
+    setTimeout(() => {
+      if (techs.length === 0) {
+        swal({
+          title: 'Oops...',
+          text: 'There are no Techs in this Team! Please check, our system has empty duplicates, go back and select another record with the same name',
+          icon: 'warning',
+        })
+      }
+    }, 1000)
+    return (
+      <div></div>
+    )
+  }
+  else return null
 }
 export default class Team extends React.Component {
-  constructor(props){
+  constructor(props) {
     super()
   }
   state = {
@@ -55,7 +57,7 @@ export default class Team extends React.Component {
       tempClaimId: '',
       tempClaimTeamId: '',
       tempClaimTeamName: '',
-      tempClaimFromDate:'',
+      tempClaimFromDate: '',
       tempClaimToDate: '',
     },
     choosenTeam: {
@@ -72,16 +74,16 @@ export default class Team extends React.Component {
     axios.get(`/api/team/${this.props.location.query.workGroupId}/techs`)
     .then(res => {
       const mappedTechs = res.data.map(i => {
-        i.company = {name: 'DirecTV'}
+        i.company = { name: 'DirecTV' }
         return i
       })
-      this.setState({techs: mappedTechs})
+      this.setState({ techs: mappedTechs })
     })
   }
 
-  onClaim(e){
+  onClaim(e) {
     e.preventDefault()
-    const {choosenTeam, dateRange} = this.state
+    const { choosenTeam, dateRange } = this.state
     this.onAccept({
       tempClaimId: choosenTeam.id,
       tempClaimTeamId: choosenTeam.externalId,
@@ -92,7 +94,6 @@ export default class Team extends React.Component {
   }
 
   onAccept(tempClaim) {
-    console.log(tempClaim)
     axios.post(`/api/team/${this.props.location.query.workGroupId}/claim`, tempClaim
     )
     .then(function (response) {
@@ -138,7 +139,7 @@ export default class Team extends React.Component {
               <div>
                 <Row>
                   <Col>
-                    <h2>{workGroup.name+ "'s"} Team</h2>
+                    <h2>{workGroup.name + "'s"} Team</h2>
                   </Col>
                   <Col style={{ textAlign: 'end' }}>
                   </Col>
@@ -163,15 +164,15 @@ export default class Team extends React.Component {
                       </CardBody>
                     </Card>
                   </Col>
-                  <Query {...ApolloData.WorkGroup.QUERY} variables={{ order: 6}} fetchPolicy="cache-and-network">
+                  <Query {...ApolloData.WorkGroup.QUERY} variables={{ order: 6 }} fetchPolicy="cache-and-network">
                     {({ loading, data }) => {
-                      if(loading){
-                        return(
+                      if (loading) {
+                        return (
                           <h2>...Loading</h2>
                         )
-                      }else{
-                        const workGroups = data.workGroups.slice().sort((a, b) => a.name.localeCompare(b.name) && a.externalId.localeCompare(b.externalId) )
-                        return(
+                      } else {
+                        const workGroups = data.workGroups.slice().sort((a, b) => a.name.localeCompare(b.name) && a.externalId.localeCompare(b.externalId))
+                        return (
                           <Col xs="12" md="6">
                             <Card>
                               <CardHeader>Claim Team Temporarily</CardHeader>
@@ -181,14 +182,14 @@ export default class Team extends React.Component {
                                     <tr>
                                       <th>TEMPORAL OWNER OF THIS TEAM</th>
                                       <td>
-                                      <Input
+                                        <Input
                                           type="select"
                                           name="workGroup"
                                           id="workGroup"
                                           style={{ width: '100%', marginBottom: '20px' }}
-                                          onChange={e => this.setState({choosenTeam: workGroups[e.target.value], currentWorkGroup: workGroup})}>
+                                          onChange={e => this.setState({ choosenTeam: workGroups[e.target.value], currentWorkGroup: workGroup })}>
                                           <option value=""> CHOOSE OWNER</option>
-                                          { workGroups.map((item, index) => (
+                                          {workGroups.map((item, index) => (
                                             <option value={index} key={index}>
                                               {item.externalId + '  -  ' + item.name}
                                             </option>
@@ -250,7 +251,7 @@ export default class Team extends React.Component {
                             .indexOf(String(filter.value).toLowerCase()) !== -1
                           }
                         />
-                        <IsEmptyWarning variables= {{techs: techs}}></IsEmptyWarning>
+                        <IsEmptyWarning variables={{ techs: techs }}></IsEmptyWarning>
                       </CardBody>
                     </Card>
                   </Col>
