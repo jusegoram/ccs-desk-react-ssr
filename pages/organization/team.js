@@ -18,18 +18,19 @@ import Layout from 'app/ui/Layout'
 
 function IsEmptyWarning(props){
   const {techs} = props.variables
-
-  if(techs.length === 0){
-    swal({
-      title: 'Oops...',
-      text:'There are no Techs in this Team! Please check, our system has empty duplicates, go back and select another record with the same name',
-      icon:'warning',
-    })
-    return(
-      <div></div>
-    )
-  }
-  else return null
+  setTimeout(() => {
+    if(techs.length === 0){
+      swal({
+        title: 'Oops...',
+        text:'There are no Techs in this Team! Please check, our system has empty duplicates, go back and select another record with the same name',
+        icon:'warning',
+      })
+      return(
+        <div></div>
+      )
+    }
+    else return null
+  }, 500)
 }
 export default class Team extends React.Component {
   constructor(props){
@@ -96,11 +97,9 @@ export default class Team extends React.Component {
     )
     .then(function (response) {
       swal.fire('Great!', 'Team has be claimed for the period chosen', 'success')
-      console.log(response)
     })
     .catch(function (error) {
-      const {message} = error.response.data
-      swal.fire('Try Again,', message, 'warning')
+¡      swal.fire('Please, try the other Record', 'Sorry, sometimes we have empty duplicates in the system', 'warning')
     })
   }
 
