@@ -99,7 +99,7 @@ export default class Team extends React.Component {
       swal.fire('Great!', 'Team has be claimed for the period chosen', 'success')
     })
     .catch(function (error) {
-¡      swal.fire('Please, try the other Record', 'Sorry, sometimes we have empty duplicates in the system', 'warning')
+      swal.fire('Please, try the other Record', 'Sorry, sometimes we have empty duplicates in the system', 'warning')
     })
   }
 
