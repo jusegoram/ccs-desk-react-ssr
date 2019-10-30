@@ -97,10 +97,10 @@ export default class Team extends React.Component {
     axios.post(`/api/team/${this.props.location.query.workGroupId}/claim`, tempClaim
     )
     .then(function (response) {
-      swal.fire('Great!', 'Team has be claimed for the period chosen', 'success')
+      swal({title: 'Great!', text: 'Team has be claimed for the period chosen', icon:'success'})
     })
     .catch(function (error) {
-      swal.fire('Please, try the other Record', 'Sorry, sometimes we have empty duplicates in the system', 'warning')
+      swal({title: 'Please, try the other Record', text: 'Sorry, sometimes we have empty duplicates in the system',icon:'warning'})
     })
   }
 
